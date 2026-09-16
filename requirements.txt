@@ -1,0 +1,3 @@
+# Serving/runtime dependencies only. Model runtime dependencies are pending AI model handoff.
+streamlit>=1.39,<2
+

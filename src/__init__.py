@@ -1,0 +1,2 @@
+"""Cognivex application package."""
+
