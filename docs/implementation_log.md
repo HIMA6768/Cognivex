@@ -1,5 +1,11 @@
 # Implementation log
 
+## 2026-09-18 — R4 Leak-safe preprocessing
+
+Implemented framework-independent eligibility/metadata contracts and three fresh sklearn-compatible factories. Track A applies training-only tumor-size median and ER-IHC mode imputation, schema-ordered unknown-safe categorical encoding, exact original-value missing indicators, and no numeric scaling. Track B appends exactly 489 canonically ordered mRNA features with a training-fitted `StandardScaler`. Track C retains those canonical expression Z-scores unchanged; source subtype labels are normalized separately as y.
+
+Canonical read-only verification reports Track A 1,903 eligible (1,332/285/286 by train/validation/test), Track B the same, and Track C 1,898 eligible (1,330/285/283), with six NC exclusions only from Track C. The zero-duration validation row is excluded only from survival tasks and remains Track C eligible. R4 confirms 20 tumor-size and 30 ER-IHC indicators, 16/505/489 transformed features, zero mutation predictors, zero forbidden predictors, unchanged fit state after holdout transforms, and unchanged raw/prepared hashes. No model or metric was created.
+
 ## 2026-09-17 — R3 Biomedical data quality validation
 
 Implemented a framework-independent, deterministic R3 quality scanner that runs only after R2 structural validation returns `DATA_READY`. It reads the canonical prepared CSV and existing R2 schema, feature-group, subtype, mapping, and manifest artifacts without modifying any data. The scanner returns aggregate-only error/warning/information findings and engineering readiness status; its 1,200-month survival-duration sentinel is a documented non-clinical review heuristic.

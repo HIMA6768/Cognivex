@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-09-18 — R4 Leak-safe preprocessing
+
+- Added separate fresh sklearn-compatible preprocessors for Track A clinical survival, Track B clinical-plus-489-mRNA survival, and Track C mRNA-only subtype classification.
+- Added train-only tumor-size/ER-IHC imputation, exact original-value missing indicators, deterministic schema-ordered encoding, Track B mRNA scaling, and approved Track C no-additional-scaler behavior.
+- Added independent task eligibility, separate subtype target normalization, locked-manifest alignment, stable exclusion reasons, immutable-artifact verification, and fail-loud target/ID/split/mutation/eligibility leakage guards.
+- Canonical verification reports 1,903 Track A rows, 1,903 Track B rows, and 1,898 Track C rows eligible; no model, prediction, C-index, gene selection, mutation Track D, or clinical decision behavior was introduced.
+
 ## 2026-09-17 — R3 Biomedical data quality validation
 
 - Added framework-independent, aggregate-only quality contracts and a deterministic R3 scan gated by R2 `DATA_READY`.

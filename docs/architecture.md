@@ -1,10 +1,12 @@
 # Architecture
 
-## Current R3 state
+## Current R4 state
 
 `app.py` configures Streamlit and delegates to `src/ui/shell.py`. The shell applies the package-owned theme, renders typed navigation, dispatches focused page renderers, and displays the research-only disclaimer after every page.
 
 `src/data/metabric.py` resolves repository-relative canonical paths, verifies imported checksums, validates the prepared schema, patient/sample mapping, and manifest, then returns aggregate-only frozen contracts from `src/contracts/analysis.py`. `src/data/metabric_quality.py` runs only after that result is `DATA_READY`; it scans canonical prepared data and R2 metadata read-only, then returns aggregate quality contracts. `src/ui/data_cohort_state.py` caches both aggregate contracts. The Data / Cohort page never receives patient rows.
+
+`src/preprocessing/` adds a separate R4 layer: immutable metadata loading, patient-aligned task eligibility, explicit predictor selection, three fresh sklearn-compatible factories, and canonical aggregate verification. R4 contracts live in `src/contracts/preprocessing.py` and remain serializable without Streamlit or sklearn values. Predictor transformations never receive IDs, targets, split fields, mutation annotations, or eligibility metadata.
 
 ## Navigation
 
@@ -15,7 +17,7 @@ The active order is Overview, Data / Cohort, Survival Analysis, Subtype Classifi
 ```text
 R2 validated data ingestion
   -> R3 data quality review and engineering-readiness findings
-  -> R4 leak-safe preprocessing
+  -> R4 leak-safe preprocessing (complete)
   -> R5 clinical-only survival baseline
   -> R6 clinical-plus-genomic prognosis
   -> R7 molecular subtype classification
@@ -24,7 +26,7 @@ R2 validated data ingestion
   -> R10 results and visualization
 ```
 
-R3 confirms only the defined engineering-quality checks and records aggregate limitations. Preprocessing, model artifacts, training behavior, evaluation values, predictions, and clinical interpretation remain pending later approved increments.
+R4 confirms preprocessing readiness only. Model artifacts, predictive fitting, evaluation values, predictions, gene ranking, and clinical interpretation remain pending later approved increments.
 
 ## Reused infrastructure
 

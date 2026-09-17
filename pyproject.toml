@@ -16,7 +16,6 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = ["pytest>=8,<10"]
-data-preparation = []
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

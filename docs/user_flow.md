@@ -1,6 +1,6 @@
 # User flow
 
-## R3
+## R4
 
 1. Open the Streamlit application.
 2. Review the research-prototype status and healthcare disclaimer.
@@ -9,9 +9,10 @@
 5. Review validation status, cohort/matching/split totals, clinical schema names, subtype taxonomy, provenance resolution, and aggregate R3 data-quality status.
 6. Review aggregate survival/event, clinical missingness, subtype/NC policy, genomic, split, and actionable quality findings.
 7. Use Refresh validated data to reload the canonical package and recompute its cached quality report after a controlled repository update.
+8. R4 preprocessing remains an internal research-engineering boundary; it does not expose transformed rows or add a patient prediction flow.
 
-There is no uploader, raw-data editing, patient-row display, model execution, metric, gene ranking, patient result, imputation, encoding, scaling, filtering, or split regeneration in R3.
+There is no uploader, raw-data editing, patient-row display, model execution, metric, gene ranking, patient result, or split regeneration. R4 performs preprocessing only inside tested engineering services and does not render matrices or row-level eligibility.
 
 ## Future flow
 
-After approval, R4 may add a leak-safe preprocessing design using R3's aggregate findings. Later increments may add censoring-aware survival analysis, subtype classification based on the confirmed labels, and model-associated gene insights. Each capability requires its own increment gate.
+After approval, R5 may consume Track A for a clinical-only censoring-aware baseline. R6 may consume Track B, and R7 may consume Track C. Each modeling capability requires its own increment gate.

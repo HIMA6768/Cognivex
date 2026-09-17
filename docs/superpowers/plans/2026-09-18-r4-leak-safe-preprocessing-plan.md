@@ -162,10 +162,10 @@ def test_missing_indicators_use_original_values_and_exact_names(schema) -> None:
 
 **Interfaces:** Human-facing documentation reflects implemented behavior only and reports no model metrics.
 
-- [ ] **Step 1: Document** the three task factories, training-only fit policy, future fold-local CV architecture, exact indicators, eligibility and reason codes, zero-duration/NC separation, deterministic ordering, Track B scaler, Track C no-scaler policy, mutation deferment, leakage guard, dependency boundary, and R4/R5/R6/R7 separation.
-- [ ] **Step 2: Record actual canonical counts produced by the implementation, with no patient-level records or fabricated model results.**
-- [ ] **Step 3: Run documentation-facing regression tests and review terminology for the frozen Track names.**
-- [ ] **Step 4: Commit the documentation slice.**
+- [x] **Step 1: Document** the three task factories, training-only fit policy, future fold-local CV architecture, exact indicators, eligibility and reason codes, zero-duration/NC separation, deterministic ordering, Track B scaler, Track C no-scaler policy, mutation deferment, leakage guard, dependency boundary, and R4/R5/R6/R7 separation.
+- [x] **Step 2: Record actual canonical counts produced by the implementation, with no patient-level records or fabricated model results.**
+- [x] **Step 3: Run documentation-facing regression tests and review terminology for the frozen Track names.**
+- [x] **Step 4: Commit the documentation slice.**
 
 ### Task 6: Complete fresh R4 verification and gate review
 
