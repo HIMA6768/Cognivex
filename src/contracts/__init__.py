@@ -1,0 +1,41 @@
+"""Stable framework-independent contracts for the planned assessment pipeline."""
+
+from .assessment import (
+    AssessmentResult,
+    BoundingBox,
+    ClassificationResult,
+    Detection,
+    LocalizationResult,
+    LabelScore,
+    ModelExecutionMode,
+    ModelMetadata,
+    QualityCheckName,
+    QualityCheckResult,
+    QualityReasonCode,
+    QualityReport,
+    RoutingDecision,
+    RoutingReason,
+    RoutingStatus,
+    ValidationError,
+    ValidationResult,
+)
+
+__all__ = [
+    "AssessmentResult",
+    "BoundingBox",
+    "ClassificationResult",
+    "Detection",
+    "LocalizationResult",
+    "LabelScore",
+    "ModelExecutionMode",
+    "ModelMetadata",
+    "QualityCheckName",
+    "QualityCheckResult",
+    "QualityReasonCode",
+    "QualityReport",
+    "RoutingDecision",
+    "RoutingReason",
+    "RoutingStatus",
+    "ValidationError",
+    "ValidationResult",
+]
