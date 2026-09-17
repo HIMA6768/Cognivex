@@ -31,12 +31,14 @@ from .analysis import (
     ValidationIssueSeverity,
 )
 from .preprocessing import (
+    CanonicalPreprocessingReport,
     EligibilityReasonCode,
     EligibilityResult,
     ExclusionCount,
     PreprocessingMetadata,
     PreprocessingTask,
     PreprocessingTrack,
+    SplitEligibilityCount,
 )
 
 __all__ = [
@@ -69,9 +71,11 @@ __all__ = [
     "SurvivalQualitySummary",
     "ValidationIssueSeverity",
     "EligibilityReasonCode",
+    "CanonicalPreprocessingReport",
     "EligibilityResult",
     "ExclusionCount",
     "PreprocessingMetadata",
     "PreprocessingTask",
     "PreprocessingTrack",
+    "SplitEligibilityCount",
 ]

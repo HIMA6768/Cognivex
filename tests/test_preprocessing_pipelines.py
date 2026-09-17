@@ -9,9 +9,13 @@ from sklearn.base import clone
 
 from src.preprocessing.pipelines import (
     assert_safe_feature_names,
+    build_clinical_mrna_survival_preprocessor,
     build_clinical_survival_preprocessor,
+    build_subtype_preprocessor,
     get_transformed_feature_names,
+    select_task_features,
 )
+from src.contracts import PreprocessingTask
 from src.preprocessing.schema import PreprocessingSchema
 
 
@@ -192,3 +196,91 @@ def test_forbidden_feature_guard_fails_loudly(unsafe_name: str) -> None:
     """Silent post-fit target or metadata dropping would permit leakage upstream."""
     with pytest.raises(ValueError, match="Forbidden predictor"):
         assert_safe_feature_names(("age_at_diagnosis", unsafe_name))
+
+
+def test_track_b_scales_only_with_training_statistics_and_preserves_gene_order(
+    schema: PreprocessingSchema,
+    train_frame: pd.DataFrame,
+) -> None:
+    """Fitting the scaler on holdout values or reordering genes would leak and change Coxnet input."""
+    train = train_frame.assign(gene_a=[0.0, 2.0, 4.0], gene_b=[10.0, 20.0, 30.0])
+    validation = train.iloc[[0]].assign(gene_a=1000.0, gene_b=-1000.0)
+    pipeline = build_clinical_mrna_survival_preprocessor(schema)
+    pipeline.fit(train)
+    names = get_transformed_feature_names(pipeline)
+    scaler = pipeline.named_steps["columns"].named_transformers_["mrna"]
+    mean_before = scaler.mean_.copy()
+
+    pipeline.transform(validation)
+
+    np.testing.assert_array_equal(mean_before, [2.0, 20.0])
+    np.testing.assert_array_equal(scaler.mean_, mean_before)
+    assert names[-2:] == ("gene_a", "gene_b")
+    assert len(names) == 18
+
+
+def test_track_c_preserves_canonical_z_scores_without_target_or_scaler(
+    schema: PreprocessingSchema,
+) -> None:
+    """Adding R4 scaling or subtype target data would violate the approved Track C boundary."""
+    full = pd.DataFrame(
+        {
+            "gene_a": [0.25, -0.5],
+            "gene_b": [1.5, 2.0],
+            "pam50_+_claudin-low_subtype": ["LumA", "Basal"],
+            "gene_a_mut": ["0", "H1047R"],
+        }
+    )
+    selected = select_task_features(full, PreprocessingTask.SUBTYPE_CLASSIFICATION, schema)
+    pipeline = build_subtype_preprocessor(schema)
+    transformed = pipeline.fit_transform(selected)
+
+    assert tuple(selected.columns) == ("gene_a", "gene_b")
+    assert get_transformed_feature_names(pipeline) == ("gene_a", "gene_b")
+    np.testing.assert_array_equal(transformed, [[0.25, 1.5], [-0.5, 2.0]])
+    assert not any("scaler" in name for name in pipeline.named_steps)
+
+
+def test_task_feature_selection_excludes_targets_ids_splits_and_mutations(
+    schema: PreprocessingSchema,
+    train_frame: pd.DataFrame,
+) -> None:
+    """Selecting from the full canonical frame must never pass forbidden fields downstream."""
+    full = train_frame.assign(
+        patient_id=["P1", "P2", "P3"],
+        split=["train", "train", "train"],
+        overall_survival_months=[1.0, 2.0, 3.0],
+        overall_survival=[1, 0, 1],
+        **{
+            "pam50_+_claudin-low_subtype": ["LumA", "LumB", "Basal"],
+            "gene_a": [0.0, 1.0, 2.0],
+            "gene_b": [2.0, 1.0, 0.0],
+            "gene_a_mut": ["0", "H1047R", "0"],
+        },
+    )
+
+    assert tuple(select_task_features(full, PreprocessingTask.CLINICAL_SURVIVAL, schema).columns) == (
+        schema.clinical_features
+    )
+    assert tuple(select_task_features(full, PreprocessingTask.CLINICAL_MRNA_SURVIVAL, schema).columns) == (
+        schema.clinical_features + schema.mrna_features
+    )
+    assert tuple(select_task_features(full, PreprocessingTask.SUBTYPE_CLASSIFICATION, schema).columns) == (
+        schema.mrna_features
+    )
+
+
+def test_genomic_factories_are_fresh_cloneable_and_deterministic(
+    schema: PreprocessingSchema,
+    train_frame: pd.DataFrame,
+) -> None:
+    """Shared fitted singleton state would leak across folds and application reruns."""
+    track_b_frame = train_frame.assign(gene_a=[0.0, 1.0, 2.0], gene_b=[2.0, 1.0, 0.0])
+    for factory, frame in (
+        (build_clinical_mrna_survival_preprocessor, track_b_frame),
+        (build_subtype_preprocessor, track_b_frame.loc[:, ["gene_a", "gene_b"]]),
+    ):
+        first = factory(schema)
+        second = clone(first)
+        np.testing.assert_array_equal(first.fit_transform(frame), second.fit_transform(frame))
+        assert get_transformed_feature_names(first) == get_transformed_feature_names(second)

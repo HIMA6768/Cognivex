@@ -7,12 +7,14 @@ import json
 import pytest
 
 from src.contracts import (
+    CanonicalPreprocessingReport,
     EligibilityReasonCode,
     EligibilityResult,
     ExclusionCount,
     PreprocessingMetadata,
     PreprocessingTask,
     PreprocessingTrack,
+    SplitEligibilityCount,
 )
 
 
@@ -76,6 +78,79 @@ def test_preprocessing_metadata_serializes_without_patient_identifiers() -> None
         {"reason": "NON_POSITIVE_SURVIVAL_DURATION", "count": 1}
     ]
     assert "patient_id" not in str(decoded)
+
+
+def test_canonical_report_requires_all_three_task_metadata_contracts() -> None:
+    """Dropping a task from the R4 gate would permit incomplete preprocessing readiness."""
+    common = dict(
+        source_dataset="METABRIC",
+        source_version="Version 1",
+        fitted_on_split="train",
+        eligible_row_count=1,
+        excluded_row_count=0,
+        exclusion_counts=(),
+        raw_feature_count=1,
+        transformed_feature_count=1,
+        final_feature_names=("gene_a",),
+        imputation_strategy="none",
+        missing_indicator_strategy="none",
+        categorical_encoding_strategy="none",
+        mutation_policy="excluded",
+        forbidden_feature_guard_passed=True,
+    )
+    tasks = (
+        PreprocessingMetadata(
+            task=PreprocessingTask.CLINICAL_SURVIVAL,
+            track=PreprocessingTrack.TRACK_A,
+            clinical_feature_names=("gene_a",),
+            mrna_feature_names=(),
+            scaling_strategy="no scaling",
+            nc_policy="allowed",
+            zero_duration_policy="excluded",
+            split_counts=(SplitEligibilityCount("train", 1, 0),),
+            **common,
+        ),
+        PreprocessingMetadata(
+            task=PreprocessingTask.CLINICAL_MRNA_SURVIVAL,
+            track=PreprocessingTrack.TRACK_B,
+            clinical_feature_names=(),
+            mrna_feature_names=("gene_a",),
+            scaling_strategy="training-only scaling",
+            nc_policy="allowed",
+            zero_duration_policy="excluded",
+            split_counts=(SplitEligibilityCount("train", 1, 0),),
+            **common,
+        ),
+        PreprocessingMetadata(
+            task=PreprocessingTask.SUBTYPE_CLASSIFICATION,
+            track=PreprocessingTrack.TRACK_C,
+            clinical_feature_names=(),
+            mrna_feature_names=("gene_a",),
+            scaling_strategy="canonical Z-scores retained",
+            nc_policy="excluded",
+            zero_duration_policy="not applicable",
+            split_counts=(SplitEligibilityCount("train", 1, 0),),
+            **common,
+        ),
+    )
+
+    report = CanonicalPreprocessingReport(
+        tasks=tasks,
+        tumor_size_missing_indicator_count=20,
+        er_ihc_missing_indicator_count=30,
+        mutation_feature_count=0,
+        forbidden_feature_count=0,
+        train_only_fit_verified=True,
+        raw_sha256="a" * 64,
+        prepared_sha256="b" * 64,
+        canonical_artifacts_unchanged=True,
+    )
+
+    assert [task["task"] for task in report.to_dict()["tasks"]] == [
+        "clinical_survival",
+        "clinical_mrna_survival",
+        "subtype_classification",
+    ]
 
 
 @pytest.mark.parametrize(

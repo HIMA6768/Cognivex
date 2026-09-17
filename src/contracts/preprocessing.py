@@ -107,6 +107,21 @@ class EligibilityResult(SerializableContract):
 
 
 @dataclass(frozen=True, slots=True)
+class SplitEligibilityCount(SerializableContract):
+    """Aggregate task eligibility within one immutable manifest split."""
+
+    split: str
+    eligible_count: int
+    excluded_count: int
+
+    def __post_init__(self) -> None:
+        if self.split not in {"train", "validation", "test"}:
+            raise ValueError("split must be train, validation, or test")
+        _require_non_negative_integer(self.eligible_count, "eligible_count")
+        _require_non_negative_integer(self.excluded_count, "excluded_count")
+
+
+@dataclass(frozen=True, slots=True)
 class PreprocessingMetadata(SerializableContract):
     """Aggregate, serializable explanation of one fitted preprocessing contract."""
 
@@ -131,6 +146,7 @@ class PreprocessingMetadata(SerializableContract):
     nc_policy: str
     zero_duration_policy: str
     forbidden_feature_guard_passed: bool
+    split_counts: tuple[SplitEligibilityCount, ...] = ()
 
     def __post_init__(self) -> None:
         if not isinstance(self.task, PreprocessingTask):
@@ -179,3 +195,49 @@ class PreprocessingMetadata(SerializableContract):
             raise ValueError("transformed_feature_count must match final_feature_names")
         if not isinstance(self.forbidden_feature_guard_passed, bool):
             raise TypeError("forbidden_feature_guard_passed must be a bool")
+        if not isinstance(self.split_counts, tuple) or not all(
+            isinstance(item, SplitEligibilityCount) for item in self.split_counts
+        ):
+            raise TypeError("split_counts must be an ordered tuple of SplitEligibilityCount values")
+
+
+@dataclass(frozen=True, slots=True)
+class CanonicalPreprocessingReport(SerializableContract):
+    """Aggregate read-only evidence that canonical R4 preprocessing is ready."""
+
+    tasks: tuple[PreprocessingMetadata, ...]
+    tumor_size_missing_indicator_count: int
+    er_ihc_missing_indicator_count: int
+    mutation_feature_count: int
+    forbidden_feature_count: int
+    train_only_fit_verified: bool
+    raw_sha256: str
+    prepared_sha256: str
+    canonical_artifacts_unchanged: bool
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.tasks, tuple) or not all(
+            isinstance(item, PreprocessingMetadata) for item in self.tasks
+        ):
+            raise TypeError("tasks must be an ordered tuple of PreprocessingMetadata values")
+        if tuple(item.task for item in self.tasks) != tuple(PreprocessingTask):
+            raise ValueError("tasks must contain Track A, Track B, and Track C metadata in task order")
+        for value, field_name in (
+            (self.tumor_size_missing_indicator_count, "tumor_size_missing_indicator_count"),
+            (self.er_ihc_missing_indicator_count, "er_ihc_missing_indicator_count"),
+            (self.mutation_feature_count, "mutation_feature_count"),
+            (self.forbidden_feature_count, "forbidden_feature_count"),
+        ):
+            _require_non_negative_integer(value, field_name)
+        for value, field_name in (
+            (self.train_only_fit_verified, "train_only_fit_verified"),
+            (self.canonical_artifacts_unchanged, "canonical_artifacts_unchanged"),
+        ):
+            if not isinstance(value, bool):
+                raise TypeError(f"{field_name} must be a bool")
+        for value, field_name in (
+            (self.raw_sha256, "raw_sha256"),
+            (self.prepared_sha256, "prepared_sha256"),
+        ):
+            if len(value) != 64 or any(character not in "0123456789abcdef" for character in value):
+                raise ValueError(f"{field_name} must be a lowercase SHA-256 digest")

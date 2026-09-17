@@ -137,12 +137,12 @@ def test_missing_indicators_use_original_values_and_exact_names(schema) -> None:
 - `build_preprocessing_metadata(task, schema, eligibility, fitted_preprocessor, fitted_on_split="train") -> PreprocessingMetadata`
 - `verify_canonical_preprocessing(paths: MetabricPaths | None = None) -> CanonicalPreprocessingReport`
 
-- [ ] **Step 1: Write failing tests** for exact 489-gene inclusion/order, train-only Track B scaler state, transform-only state stability, Track C identity behavior, target exclusion from X, zero mutation fields, deterministic feature names, cloneability, and leakage guard failure.
-- [ ] **Step 2: Write a failing canonical integration test** asserting R2/R3 gates, aggregate task counts, missingness counts, transformed counts, zero mutation features, zero forbidden names, and immutable artifact hashes before/after verification.
-- [ ] **Step 3: Run focused tests and confirm failures for the missing factories/service.**
-- [ ] **Step 4: Implement Tracks B/C, explicit ordered feature selectors, fitted metadata extraction, and read-only canonical verification that fits only eligible training rows and transforms holdouts.**
-- [ ] **Step 5: Run focused integration tests and existing R2/R3 regressions; confirm pass.**
-- [ ] **Step 6: Commit the independently green Track B/C and integration slice.**
+- [x] **Step 1: Write failing tests** for exact 489-gene inclusion/order, train-only Track B scaler state, transform-only state stability, Track C identity behavior, target exclusion from X, zero mutation fields, deterministic feature names, cloneability, and leakage guard failure.
+- [x] **Step 2: Write a failing canonical integration test** asserting R2/R3 gates, aggregate task counts, missingness counts, transformed counts, zero mutation features, zero forbidden names, and immutable artifact hashes before/after verification.
+- [x] **Step 3: Run focused tests and confirm failures for the missing factories/service.**
+- [x] **Step 4: Implement Tracks B/C, explicit ordered feature selectors, fitted metadata extraction, and read-only canonical verification that fits only eligible training rows and transforms holdouts.**
+- [x] **Step 5: Run focused integration tests and existing R2/R3 regressions; confirm pass.**
+- [x] **Step 6: Commit the independently green Track B/C and integration slice.**
 
 ### Task 5: Document R4 architecture and boundaries
 
