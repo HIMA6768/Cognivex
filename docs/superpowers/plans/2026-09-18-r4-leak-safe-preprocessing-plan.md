@@ -174,11 +174,11 @@ def test_missing_indicators_use_original_values_and_exact_names(schema) -> None:
 
 **Interfaces:** The final report is derived from fresh commands and the canonical report contract.
 
-- [ ] **Step 1: Run focused R4 tests:** `python -m pytest tests/test_preprocessing_contracts.py tests/test_preprocessing_eligibility.py tests/test_preprocessing_pipelines.py tests/test_preprocessing_integration.py -q`.
-- [ ] **Step 2: Run full regression:** `python -m pytest`.
-- [ ] **Step 3: Run compile check:** `python -m compileall app.py src tests scripts`.
-- [ ] **Step 4: Run dependency checks:** import NumPy/pandas/sklearn/Streamlit and run `python -m pip check`.
-- [ ] **Step 5: Run canonical preprocessing smoke verification** and print Track A/B/C counts, exclusions, indicator counts, raw/transformed feature counts, 489-gene checks, mutation count, forbidden count, and fitted-state invariance.
-- [ ] **Step 6: Verify canonical raw/prepared SHA-256 values are unchanged and inspect `git diff --check`, `git diff --stat`, and `git status --short` while preserving unrelated `ai_handoff_data/`.**
-- [ ] **Step 7: If active Streamlit code changed, start Streamlit headlessly, confirm HTTP health, and stop it; otherwise record that UI behavior was unchanged.**
-- [ ] **Step 8: Update this plan's checkboxes, commit final verification/documentation corrections if any, and stop at the R4 gate without beginning model work.**
+- [x] **Step 1: Run focused R4 tests:** `python -m pytest tests/test_preprocessing_contracts.py tests/test_preprocessing_eligibility.py tests/test_preprocessing_pipelines.py tests/test_preprocessing_integration.py -q`.
+- [x] **Step 2: Run full regression:** `python -m pytest`.
+- [x] **Step 3: Run compile check:** `python -m compileall app.py src tests scripts`.
+- [x] **Step 4: Run dependency checks:** import NumPy/pandas/sklearn/Streamlit and run `python -m pip check`.
+- [x] **Step 5: Run canonical preprocessing smoke verification** and print Track A/B/C counts, exclusions, indicator counts, raw/transformed feature counts, 489-gene checks, mutation count, forbidden count, and fitted-state invariance.
+- [x] **Step 6: Verify canonical raw/prepared SHA-256 values are unchanged and inspect `git diff --check`, `git diff --stat`, and `git status --short` while preserving unrelated `ai_handoff_data/`.**
+- [x] **Step 7: If active Streamlit code changed, start Streamlit headlessly, confirm HTTP health, and stop it; otherwise record that UI behavior was unchanged.**
+- [x] **Step 8: Update this plan's checkboxes, commit final verification/documentation corrections if any, and stop at the R4 gate without beginning model work.**

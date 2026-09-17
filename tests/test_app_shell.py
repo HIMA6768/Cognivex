@@ -10,11 +10,12 @@ from streamlit.testing.v1 import AppTest
 
 
 ROOT = Path(__file__).resolve().parents[1]
+APP_TEST_TIMEOUT_SECONDS = 15
 
 
 def _run_app() -> AppTest:
     app = AppTest.from_file(ROOT / "app.py")
-    app.run()
+    app.run(timeout=APP_TEST_TIMEOUT_SECONDS)
     return app
 
 
@@ -81,7 +82,7 @@ def test_data_cohort_page_shows_validated_aggregates_without_patient_rows() -> N
     """Replacing aggregate rendering with source rows or an unvalidated state must fail this test."""
     app = _run_app()
     app.sidebar.radio[0].set_value("Data / Cohort")
-    app.run()
+    app.run(timeout=APP_TEST_TIMEOUT_SECONDS)
 
     text = _visible_text(app)
     assert not app.exception
@@ -96,7 +97,7 @@ def test_data_cohort_page_shows_r3_quality_aggregates_without_patient_rows() -> 
     """Removing R3 readiness context or exposing source rows would break the Cohort boundary."""
     app = _run_app()
     app.sidebar.radio[0].set_value("Data / Cohort")
-    app.run()
+    app.run(timeout=APP_TEST_TIMEOUT_SECONDS)
 
     text = _visible_text(app)
     assert not app.exception
@@ -121,7 +122,7 @@ def test_each_page_has_an_honest_pending_state_and_persistent_disclaimer() -> No
 
     for destination, pending_copy in expected_copy.items():
         app.sidebar.radio[0].set_value(destination)
-        app.run()
+        app.run(timeout=APP_TEST_TIMEOUT_SECONDS)
 
         text = _visible_text(app)
         assert not app.exception
@@ -132,7 +133,7 @@ def test_each_page_has_an_honest_pending_state_and_persistent_disclaimer() -> No
 def test_subtype_page_does_not_freeze_or_invent_a_taxonomy() -> None:
     app = _run_app()
     app.sidebar.radio[0].set_value("Subtype Classification")
-    app.run()
+    app.run(timeout=APP_TEST_TIMEOUT_SECONDS)
 
     text = _visible_text(app)
     assert "Exact subtype labels will be taken from the selected dataset after handoff." in text
