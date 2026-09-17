@@ -4,12 +4,15 @@ from __future__ import annotations
 
 from dataclasses import asdict, dataclass, is_dataclass
 from enum import Enum, StrEnum
+from pathlib import Path
 from typing import Any
 
 
 def _serializable(value: Any) -> Any:
     if isinstance(value, Enum):
         return value.value
+    if isinstance(value, Path):
+        return value.as_posix()
     if is_dataclass(value):
         return {key: _serializable(item) for key, item in asdict(value).items()}
     if isinstance(value, tuple):
@@ -44,9 +47,11 @@ def _require_optional_count(value: int | None, field_name: str) -> None:
 
 
 class AnalysisStatus(StrEnum):
-    """R1 availability states; no scientific result is available yet."""
+    """Availability states independent of any modeling result."""
 
     PENDING_DATA = "PENDING_DATA"
+    DATA_READY = "DATA_READY"
+    DATA_INVALID = "DATA_INVALID"
     PENDING_MODEL = "PENDING_MODEL"
 
 
@@ -92,22 +97,115 @@ class DatasetValidationReport(SerializableContract):
 
 
 @dataclass(frozen=True, slots=True)
+class CohortSplitSummary(SerializableContract):
+    """Aggregate patient counts for the locked handoff partitions."""
+
+    train_patients: int
+    validation_patients: int
+    test_patients: int
+
+    def __post_init__(self) -> None:
+        _require_optional_count(self.train_patients, "train_patients")
+        _require_optional_count(self.validation_patients, "validation_patients")
+        _require_optional_count(self.test_patients, "test_patients")
+
+
+@dataclass(frozen=True, slots=True)
 class CohortSummary(SerializableContract):
-    """Pending cohort counts without assuming source columns or identifiers."""
+    """Aggregate cohort counts without exposing source records."""
 
     status: AnalysisStatus
     message: str
     clinical_records: int | None = None
+    patient_records: int | None = None
     genomic_samples: int | None = None
     matched_samples: int | None = None
+    split_summary: CohortSplitSummary | None = None
 
     def __post_init__(self) -> None:
         if not isinstance(self.status, AnalysisStatus):
             raise TypeError("status must be an AnalysisStatus")
         _require_text(self.message, "message")
         _require_optional_count(self.clinical_records, "clinical_records")
+        _require_optional_count(self.patient_records, "patient_records")
         _require_optional_count(self.genomic_samples, "genomic_samples")
         _require_optional_count(self.matched_samples, "matched_samples")
+        if self.split_summary is not None and not isinstance(self.split_summary, CohortSplitSummary):
+            raise TypeError("split_summary must be CohortSplitSummary or None")
+
+
+@dataclass(frozen=True, slots=True)
+class DataArtifactStatus(SerializableContract):
+    """Checksum status for a repository-owned handoff artifact."""
+
+    source_name: str
+    relative_path: Path
+    checksum_verified: bool
+
+    def __post_init__(self) -> None:
+        _require_text(self.source_name, "source_name")
+        if not isinstance(self.relative_path, Path) or self.relative_path.is_absolute():
+            raise ValueError("relative_path must be a relative Path")
+        if not isinstance(self.checksum_verified, bool):
+            raise TypeError("checksum_verified must be a bool")
+
+
+@dataclass(frozen=True, slots=True)
+class DatasetMetadata(SerializableContract):
+    """Validated descriptive metadata without source rows or model results."""
+
+    dataset_name: str
+    column_count: int
+    clinical_feature_count: int
+    mrna_feature_count: int
+    mutation_feature_count: int
+    clinical_feature_names: tuple[str, ...]
+    subtype_labels: tuple[str, ...]
+    subtype_nc_policy: str
+    prepared_dataset_path: Path
+
+    def __post_init__(self) -> None:
+        _require_text(self.dataset_name, "dataset_name")
+        for value, field_name in (
+            (self.column_count, "column_count"),
+            (self.clinical_feature_count, "clinical_feature_count"),
+            (self.mrna_feature_count, "mrna_feature_count"),
+            (self.mutation_feature_count, "mutation_feature_count"),
+        ):
+            _require_optional_count(value, field_name)
+        if not isinstance(self.clinical_feature_names, tuple) or not self.clinical_feature_names:
+            raise ValueError("clinical_feature_names must be a non-empty ordered tuple")
+        if not all(isinstance(name, str) and name.strip() for name in self.clinical_feature_names):
+            raise ValueError("clinical_feature_names must contain non-empty strings")
+        if not isinstance(self.subtype_labels, tuple) or not self.subtype_labels:
+            raise ValueError("subtype_labels must be a non-empty ordered tuple")
+        if not all(isinstance(label, str) and label.strip() for label in self.subtype_labels):
+            raise ValueError("subtype_labels must contain non-empty strings")
+        _require_text(self.subtype_nc_policy, "subtype_nc_policy")
+        if not isinstance(self.prepared_dataset_path, Path) or self.prepared_dataset_path.is_absolute():
+            raise ValueError("prepared_dataset_path must be a relative Path")
+
+
+@dataclass(frozen=True, slots=True)
+class MetabricIngestionResult(SerializableContract):
+    """Validated aggregate-only result from the canonical METABRIC package."""
+
+    validation: DatasetValidationReport
+    cohort: CohortSummary
+    metadata: DatasetMetadata | None
+    artifacts: tuple[DataArtifactStatus, ...]
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.validation, DatasetValidationReport):
+            raise TypeError("validation must be DatasetValidationReport")
+        if not isinstance(self.cohort, CohortSummary):
+            raise TypeError("cohort must be CohortSummary")
+        if self.metadata is not None and not isinstance(self.metadata, DatasetMetadata):
+            raise TypeError("metadata must be DatasetMetadata or None")
+        if not isinstance(self.artifacts, tuple) or not all(
+            isinstance(artifact, DataArtifactStatus) for artifact in self.artifacts
+        ):
+            raise TypeError("artifacts must be an ordered tuple of DataArtifactStatus values")
 
 
 @dataclass(frozen=True, slots=True)

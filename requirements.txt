@@ -1,2 +1,2 @@
-# R1 serving/runtime dependency only. Data and model dependencies remain pending handoff.
+# R2 serving/runtime dependency only. Data preparation dependencies are optional in pyproject.toml.
 streamlit>=1.39,<2

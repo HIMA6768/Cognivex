@@ -11,7 +11,7 @@ def render() -> None:
         "A research workspace for comparing clinical and genomic breast-cancer analyses.",
     )
     render_empty_state(
-        "No cohort has been loaded",
-        "R1 provides the application shell only. No patient, cohort, model, or evaluation data is active.",
-        "Proceed to Data / Cohort after R2 dataset ingestion is approved and implemented.",
+        "Canonical cohort data is available",
+        "R2 validates repository-owned METABRIC artifacts and exposes aggregate cohort information only.",
+        "Open Data / Cohort to review the validated cohort. Modeling and patient-specific output remain out of scope.",
     )

@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-09-17 — R2 Canonical METABRIC data ingestion
+
+- Added one repository-owned corrected METABRIC handoff package with immutable raw data, canonical prepared data, locked manifest, patient/sample mapping, schema metadata, original checksum manifest, historical provenance, preparation script, and strategy documentation.
+- Added framework-independent checksum, schema, identifier, mapping, and locked split validation returning aggregate-only typed results and stable data-validation error codes.
+- Added session-backed Data / Cohort rendering for validated aggregate counts, clinical schema names, confirmed handoff subtype taxonomy, NC policy, and separately documented verified Kaggle provenance.
+- Added semantic preparation reproducibility coverage without requiring byte-identical cross-version CSV output. No preprocessing, fitting, prediction, metric, gene-importance, or clinical decision behavior was introduced.
+
 ## 2026-09-17 — R1 Biomedical domain reset
 
 - Checkpointed the complete P8 auto-insurance prototype before migration and archived its domain documentation, specifications, and plans for traceability.

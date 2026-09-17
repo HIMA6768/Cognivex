@@ -1,5 +1,11 @@
 # Implementation log
 
+## 2026-09-17 — R2 Canonical METABRIC data ingestion
+
+Installed one checksum-verified, repository-owned corrected METABRIC handoff under `data/metabric/`: immutable raw source, canonical prepared data, schema, feature groups, summary, patient mapping, locked 70/15/15 manifest, original provenance/checksum artifacts, strategy, and preparation script. The raw CSV is 8.00 MiB and the prepared CSV is 7.86 MiB, so Git LFS was not introduced.
+
+Implemented framework-independent aggregate-only validation of required artifacts, imported checksums, declared schema, unique identifiers, one-to-one patient/sample mapping, and manifest partitions. The Data / Cohort page caches only a typed aggregate result, renders no source rows, and identifies the preserved historical provenance separately from the verified Kaggle provenance resolution. Semantic preparation reproduction is tested without requiring byte-identical serialization. No preprocessing, model, prediction, evaluation, gene importance, or clinical decision behavior was added.
+
 ## 2026-09-17 — R1 Biomedical domain reset
 
 Created `codex/r1-biomedical-domain-reset` and committed the unchanged P8 tree as `3cb90f7` before migration. Superseded P1–P8 plans, specifications, and domain documents were moved into `docs/legacy/auto-insurance/`.

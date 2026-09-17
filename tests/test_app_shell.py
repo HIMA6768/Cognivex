@@ -1,4 +1,4 @@
-"""End-to-end contracts for the R1 biomedical Streamlit shell."""
+"""End-to-end contracts for the R2 biomedical Streamlit shell."""
 
 from __future__ import annotations
 
@@ -26,6 +26,7 @@ def _visible_text(app: AppTest) -> str:
         "caption",
         "markdown",
         "info",
+        "success",
         "warning",
         "error",
     )
@@ -68,19 +69,34 @@ def test_app_starts_with_biomedical_branding_and_approved_navigation() -> None:
     assert DISCLAIMER in text
 
 
-def test_r1_contains_no_dataset_uploader_metrics_or_patient_results() -> None:
+def test_overview_contains_no_dataset_uploader_metrics_or_patient_results() -> None:
     app = _run_app()
 
     assert not app.file_uploader
     assert not app.metric
-    assert "No cohort has been loaded" in _visible_text(app)
+    assert "Canonical cohort data is available" in _visible_text(app)
+
+
+def test_data_cohort_page_shows_validated_aggregates_without_patient_rows() -> None:
+    """Replacing aggregate rendering with source rows or an unvalidated state must fail this test."""
+    app = _run_app()
+    app.sidebar.radio[0].set_value("Data / Cohort")
+    app.run()
+
+    text = _visible_text(app)
+    assert not app.exception
+    assert "1,904" in text
+    assert "Canonical METABRIC artifacts passed integrity and structural validation." in text
+    assert "Luminal A" in text
+    assert "Version 1" in text
+    assert "patient_id" not in text.lower()
 
 
 def test_each_page_has_an_honest_pending_state_and_persistent_disclaimer() -> None:
     app = _run_app()
     expected_copy = {
-        "Overview": "No cohort has been loaded",
-        "Data / Cohort": "Dataset ingestion begins in R2",
+        "Overview": "Canonical cohort data is available",
+        "Data / Cohort": "Validated cohort",
         "Survival Analysis": "Survival analysis is pending validated cohort data and model handoff",
         "Subtype Classification": "Subtype classification is pending gene-expression data and confirmed dataset labels",
         "Gene Insights": "Gene-level insights are pending evaluated model outputs",

@@ -1,15 +1,13 @@
 from __future__ import annotations
 
 import json
-import os
 from pathlib import Path
 
 import pandas as pd
 from sklearn.model_selection import train_test_split
 
-BASE_DIR = Path(__file__).resolve().parent
-RAW_CSV = BASE_DIR / "METABRIC_RNA_Mutation.csv"
-PREPARED_CSV = BASE_DIR / "METABRIC_prepared.csv"
+REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
+CANONICAL_DATA_ROOT = REPOSITORY_ROOT / "data" / "metabric"
 
 CLINICAL_FEATURES = [
     "age_at_diagnosis",
@@ -147,9 +145,18 @@ def _feature_groups(columns: list[str]) -> dict[str, object]:
     }
 
 
-def main() -> None:
-    print(f"Loading data from: {RAW_CSV}")
-    raw_df = pd.read_csv(RAW_CSV, low_memory=False)
+def prepare_dataset(raw_csv: Path, output_root: Path) -> None:
+    """Rebuild prepared METABRIC artifacts without modifying the raw source CSV."""
+    raw_csv = Path(raw_csv)
+    output_root = Path(output_root)
+    prepared_dir = output_root / "prepared"
+    metadata_dir = output_root / "metadata"
+    prepared_dir.mkdir(parents=True, exist_ok=True)
+    metadata_dir.mkdir(parents=True, exist_ok=True)
+    prepared_csv = prepared_dir / "METABRIC_prepared.csv"
+
+    print(f"Loading data from: {raw_csv}")
+    raw_df = pd.read_csv(raw_csv, low_memory=False)
     raw_df.columns = raw_df.columns.str.strip().str.lower().str.replace(" ", "_", regex=False)
 
     required = set(ID_COLUMNS + CLINICAL_FEATURES + SURVIVAL_TARGETS + [SUBTYPE_TARGET])
@@ -172,18 +179,18 @@ def main() -> None:
         raise ValueError("overall_survival must be binary before event inversion")
     prepared["overall_survival"] = 1 - source_event.astype(int)
 
-    prepared.to_csv(PREPARED_CSV, index=False)
-    print(f"Saved canonical prepared dataset: {PREPARED_CSV}")
+    prepared.to_csv(prepared_csv, index=False)
+    print(f"Saved canonical prepared dataset: {prepared_csv}")
 
     mapping = pd.DataFrame({
         "patient_id": prepared["patient_id"],
         "genomic_sample_id": prepared["patient_id"],
         "mapping_rule": "1:1 patient_id mapping in uploaded merged METABRIC file",
     })
-    mapping.to_csv(BASE_DIR / "patient_mapping.csv", index=False)
+    mapping.to_csv(metadata_dir / "patient_mapping.csv", index=False)
 
     manifest = _split_dataframe(prepared)
-    manifest.to_csv(BASE_DIR / "manifest.csv", index=False)
+    manifest.to_csv(metadata_dir / "manifest.csv", index=False)
 
     schema = {
         "input_features": {
@@ -204,10 +211,10 @@ def main() -> None:
         },
         "schema_status": "EARLY_DATA_HANDOFF",
     }
-    (BASE_DIR / "clinical_schema.json").write_text(json.dumps(schema, indent=2) + "\n", encoding="utf-8")
+    (metadata_dir / "clinical_schema.json").write_text(json.dumps(schema, indent=2) + "\n", encoding="utf-8")
 
     feature_groups = _feature_groups(prepared.columns.tolist())
-    (BASE_DIR / "feature_groups.json").write_text(json.dumps(feature_groups, indent=2) + "\n", encoding="utf-8")
+    (metadata_dir / "feature_groups.json").write_text(json.dumps(feature_groups, indent=2) + "\n", encoding="utf-8")
 
     prepared_event_counts = prepared["overall_survival"].value_counts().to_dict()
     summary = {
@@ -234,7 +241,7 @@ def main() -> None:
             "nc_policy": "NC is retained for survival Tracks A/B when survival data are valid and excluded only from Track C subtype classification.",
         },
     }
-    (BASE_DIR / "dataset_summary.json").write_text(json.dumps(summary, indent=2) + "\n", encoding="utf-8")
+    (metadata_dir / "dataset_summary.json").write_text(json.dumps(summary, indent=2) + "\n", encoding="utf-8")
 
     provenance = {
         "dataset_name": "METABRIC (Molecular Taxonomy of Breast Cancer International Consortium)",
@@ -245,11 +252,15 @@ def main() -> None:
         "provenance_status": "PENDING_CONFIRMATION",
         "notes": "The supplied handoff identifies METABRIC via Kaggle but does not provide the exact Kaggle URL, dataset version/date, or license. These fields are intentionally left null until confirmed by the data engineer.",
     }
-    (BASE_DIR / "dataset_provenance.json").write_text(json.dumps(provenance, indent=2) + "\n", encoding="utf-8")
+    (metadata_dir / "dataset_provenance.json").write_text(json.dumps(provenance, indent=2) + "\n", encoding="utf-8")
 
     print("Verified application event coding (1=Deceased/Event, 0=Living/Censored):")
     print(prepared["overall_survival"].value_counts().sort_index())
     print("Generated manifest, patient mapping, clinical schema, feature groups, dataset summary, and provenance metadata.")
+
+
+def main() -> None:
+    prepare_dataset(CANONICAL_DATA_ROOT / "raw" / "METABRIC_RNA_Mutation.csv", CANONICAL_DATA_ROOT)
 
 
 if __name__ == "__main__":

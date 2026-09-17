@@ -2,15 +2,19 @@
 
 ## Boundary
 
-`src.contracts` is independent of Streamlit, pandas, lifelines, scikit-learn, and model runtimes. R1 contracts represent pending states only and contain no scientific result values.
+`src.contracts` is independent of Streamlit, pandas, lifelines, scikit-learn, and model runtimes. R2 adds data-ingestion contracts but contains no scientific result values.
 
 ## Contracts
 
-- `AnalysisStatus`: `PENDING_DATA` or `PENDING_MODEL`.
+- `AnalysisStatus`: `PENDING_DATA`, `DATA_READY`, `DATA_INVALID`, or `PENDING_MODEL`.
 - `ValidationIssueSeverity`: `ERROR`, `WARNING`, or `INFORMATION`.
 - `DatasetValidationIssue`: stable code, typed severity, and safe message.
 - `DatasetValidationReport`: availability, message, and ordered issues.
-- `CohortSummary`: optional clinical, genomic, and matched counts without assuming source columns.
+- `CohortSplitSummary`: aggregate train, validation, and test counts only.
+- `CohortSummary`: optional clinical, patient, genomic, matched, and split counts without rows.
+- `DataArtifactStatus`: a repository-relative artifact name/path and checksum status.
+- `DatasetMetadata`: validated aggregate feature counts, clinical field names, confirmed subtype labels/NC policy, and prepared dataset path.
+- `MetabricIngestionResult`: typed validation, cohort, metadata, and checksum artifact statuses; it never carries CSV rows.
 - `ModelMetadata`: optional provenance fields pending model handoff.
 - `ExperimentMetadata`: optional experiment, task, dataset, and feature-set identifiers.
 - `SurvivalPredictionResult` and `SurvivalEvaluationResult`: pending-only prognosis boundaries.

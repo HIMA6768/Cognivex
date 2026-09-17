@@ -13,6 +13,10 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = ["pytest>=8,<10"]
+data-preparation = [
+    "pandas>=3,<4",
+    "scikit-learn>=1.5,<2",
+]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
