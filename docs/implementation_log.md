@@ -1,5 +1,11 @@
 # Implementation log
 
+## 2026-09-17 — R1 Biomedical domain reset
+
+Created `codex/r1-biomedical-domain-reset` and committed the unchanged P8 tree as `3cb90f7` before migration. Superseded P1–P8 plans, specifications, and domain documents were moved into `docs/legacy/auto-insurance/`.
+
+The active application now presents a seven-page biomedical research shell, domain-neutral settings, pending-only analysis contracts, and a persistent healthcare safety disclaimer. Image processing, damage/localization adapters, and insurance policy modules were removed from the active tree together with their obsolete tests. No data ingestion or model behavior was added; the exact dataset schema and subtype taxonomy remain pending handoff.
+
 ## 2026-09-17 — P8 Policy-only routing decision engine
 
 Implemented `evaluate_routing()` as a pure P5/P6/P7 contract consumer. Quality failure has highest precedence and preserves P5 remediation; unavailable classification routes to review; moderate/severe labels, missing or low scores, and configured signal conflicts accumulate ordered human-review reasons; only a qualifying minor case receives `FAST_TRACK_ELIGIBLE`.

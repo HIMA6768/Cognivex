@@ -1,1 +1,1 @@
-"""Safe static page renderers for the pre-model prototype."""
+"""Safe pending-state pages for the biomedical research prototype."""

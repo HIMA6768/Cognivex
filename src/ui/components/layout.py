@@ -26,9 +26,9 @@ def render_empty_state(title: str, message: str, next_step: str) -> None:
 
 
 def render_shell_status() -> None:
-    """Render a high-contrast, text-and-shape prototype status indicator."""
+    """Render a high-contrast, text-and-shape research status indicator."""
     st.markdown(
         '<div class="cv-status-pill" role="status">'
-        '<span aria-hidden="true">●</span> Prototype status: pre-model</div>',
+        '<span aria-hidden="true">●</span> Research prototype</div>',
         unsafe_allow_html=True,
     )

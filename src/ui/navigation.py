@@ -1,4 +1,4 @@
-"""Typed metadata and rendering for the application's stable navigation."""
+"""Typed metadata and rendering for biomedical research navigation."""
 
 from __future__ import annotations
 
@@ -9,16 +9,18 @@ import streamlit as st
 
 
 class Page(str, Enum):
-    """Destinations available in the pre-model application shell."""
+    """Approved R1 destinations in stable display order."""
 
-    ASSESSMENT = "assessment"
+    OVERVIEW = "overview"
+    DATA_COHORT = "data_cohort"
+    SURVIVAL_ANALYSIS = "survival_analysis"
+    SUBTYPE_CLASSIFICATION = "subtype_classification"
+    GENE_INSIGHTS = "gene_insights"
     MODEL_COMPARISON = "model_comparison"
-    MODEL_INSIGHTS = "model_insights"
-    MONITORING = "monitoring"
-    SYSTEM_ABOUT = "system_about"
+    METHODOLOGY_ABOUT = "methodology_about"
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class PageSpec:
     """Display metadata required to dispatch a page renderer."""
 
@@ -27,24 +29,30 @@ class PageSpec:
 
 
 PAGE_ORDER: tuple[Page, ...] = (
-    Page.ASSESSMENT,
+    Page.OVERVIEW,
+    Page.DATA_COHORT,
+    Page.SURVIVAL_ANALYSIS,
+    Page.SUBTYPE_CLASSIFICATION,
+    Page.GENE_INSIGHTS,
     Page.MODEL_COMPARISON,
-    Page.MODEL_INSIGHTS,
-    Page.MONITORING,
-    Page.SYSTEM_ABOUT,
+    Page.METHODOLOGY_ABOUT,
 )
 
 PAGE_SPECS: dict[Page, PageSpec] = {
-    Page.ASSESSMENT: PageSpec("Assessment", "assessment"),
+    Page.OVERVIEW: PageSpec("Overview", "overview"),
+    Page.DATA_COHORT: PageSpec("Data / Cohort", "data_cohort"),
+    Page.SURVIVAL_ANALYSIS: PageSpec("Survival Analysis", "survival_analysis"),
+    Page.SUBTYPE_CLASSIFICATION: PageSpec(
+        "Subtype Classification", "subtype_classification"
+    ),
+    Page.GENE_INSIGHTS: PageSpec("Gene Insights", "gene_insights"),
     Page.MODEL_COMPARISON: PageSpec("Model Comparison", "model_comparison"),
-    Page.MODEL_INSIGHTS: PageSpec("Model Insights", "model_insights"),
-    Page.MONITORING: PageSpec("Monitoring", "monitoring"),
-    Page.SYSTEM_ABOUT: PageSpec("System / About", "system_about"),
+    Page.METHODOLOGY_ABOUT: PageSpec("Methodology / About", "methodology_about"),
 }
 
 
 def render_navigation() -> Page:
-    """Render and return the current page selection with rerun-stable state."""
+    """Render and return a rerun-stable page selection."""
     return st.sidebar.radio(
         "Navigation",
         PAGE_ORDER,

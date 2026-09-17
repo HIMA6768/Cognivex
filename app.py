@@ -1,4 +1,4 @@
-"""Streamlit entrypoint for the pre-model assessment prototype."""
+"""Streamlit entrypoint for the biomedical research prototype."""
 
 from __future__ import annotations
 
@@ -8,8 +8,8 @@ from src.ui.shell import render_app
 
 
 st.set_page_config(
-    page_title="Auto Insurance Damage Assessment",
-    page_icon="🚗",
+    page_title="Breast Cancer Prognosis & Subtype Classification",
+    page_icon="🔬",
     layout="wide",
     initial_sidebar_state="auto",
 )

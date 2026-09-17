@@ -1,0 +1,7 @@
+# Limitations
+
+This is a pre-model P8 Streamlit prototype, not a production assessment system. P4 validates uploads, P5 checks image quality, P6 defines schemas, P7 provides development-only mock adapters, and P8 provides a pure policy that returns routing recommendations. It does not include real classifier/localizer adapters, ONNX runtime integration, end-to-end orchestration, result UI, production threshold calibration, model evaluation metrics, monitoring integration, or external service access.
+
+Image dimensions in `ThresholdSettings` are provisional development-only defaults. Model confidence is optional and has no calibrated value. Model preprocessing, model choice, model index mappings, metrics, and production thresholds are unknown. Pending AI model handoff.
+
+The configured upload and geometry limits are operational safeguards. P5 thresholds are **PROVISIONAL ENGINEERING DEFAULTS**. P8 score cutoffs and its single `scratch -> structural` conflict pair are **PROVISIONAL DEVELOPMENT POLICY**, not calibrated probabilities or validated insurance-outcome policy. P7 mock labels, scores, and boxes are deterministic integration fixtures marked `mock: true`; routing from them is demo behavior only. P8 cannot identify non-vehicle, out-of-distribution, AI-generated, or no-visible-damage images without validated upstream signals. No production readiness, accuracy, security, deployment, approval, rejection, settlement, or operational claims are made.

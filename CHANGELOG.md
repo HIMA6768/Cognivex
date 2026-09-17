@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-09-17 — R1 Biomedical domain reset
+
+- Checkpointed the complete P8 auto-insurance prototype before migration and archived its domain documentation, specifications, and plans for traceability.
+- Replaced the active product identity, seven-page navigation, configuration, contracts, and Streamlit pending states for Breast Cancer Prognosis & Subtype Classification.
+- Removed active image validation/quality, damage adapters/contracts, localization, insurance routing, and their obsolete tests; retained the responsive theme, safe layout utilities, configuration patterns, and AppTest infrastructure.
+- Added a persistent research/educational disclaimer. No dataset processing, scientific metric, subtype taxonomy, model artifact, prediction, gene ranking, or patient-specific output was introduced.
+
 ## 2026-09-17 — P8 Policy-only routing decision engine
 
 - Added a pure, deterministic routing engine returning the frozen P6 `RoutingDecision` contract with explicit quality, availability, severity, score, conflict, and minor-eligibility precedence.
