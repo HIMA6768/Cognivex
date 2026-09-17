@@ -30,6 +30,14 @@ from .analysis import (
     SurvivalQualitySummary,
     ValidationIssueSeverity,
 )
+from .preprocessing import (
+    EligibilityReasonCode,
+    EligibilityResult,
+    ExclusionCount,
+    PreprocessingMetadata,
+    PreprocessingTask,
+    PreprocessingTrack,
+)
 
 __all__ = [
     "AnalysisResult",
@@ -60,4 +68,10 @@ __all__ = [
     "SurvivalPredictionResult",
     "SurvivalQualitySummary",
     "ValidationIssueSeverity",
+    "EligibilityReasonCode",
+    "EligibilityResult",
+    "ExclusionCount",
+    "PreprocessingMetadata",
+    "PreprocessingTask",
+    "PreprocessingTrack",
 ]

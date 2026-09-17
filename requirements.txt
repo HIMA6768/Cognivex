@@ -1,2 +1,4 @@
-# R2 serving/runtime dependency only. Data preparation dependencies are optional in pyproject.toml.
+numpy>=2,<3
+pandas>=3,<4
+scikit-learn>=1.5,<2
 streamlit>=1.39,<2

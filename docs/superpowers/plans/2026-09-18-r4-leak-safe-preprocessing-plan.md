@@ -41,7 +41,7 @@
 - `EligibilityResult(mask: tuple[bool, ...], reasons: tuple[tuple[EligibilityReasonCode, ...], ...])` validates aligned lengths and exposes aggregate exclusion counts without patient identifiers.
 - `PreprocessingMetadata` serializes ordered feature and policy tuples without pandas or sklearn types.
 
-- [ ] **Step 1: Write failing contract tests** for stable enum values, aligned masks/reasons, aggregate exclusion counts, serialization, invalid counts, exact policy fields, and absence of patient IDs.
+- [x] **Step 1: Write failing contract tests** for stable enum values, aligned masks/reasons, aggregate exclusion counts, serialization, invalid counts, exact policy fields, and absence of patient IDs.
 
 ```python
 def test_eligibility_contract_aggregates_stable_reason_codes() -> None:
@@ -55,10 +55,10 @@ def test_eligibility_contract_aggregates_stable_reason_codes() -> None:
     )
 ```
 
-- [ ] **Step 2: Run `python -m pytest tests/test_preprocessing_contracts.py -q` and confirm import failure.**
-- [ ] **Step 3: Implement validated frozen contracts and exports; promote `numpy`, `pandas`, and `scikit-learn` to project/runtime requirements.**
-- [ ] **Step 4: Re-run the focused contract tests and confirm pass.**
-- [ ] **Step 5: Commit the independently green contract/dependency slice.**
+- [x] **Step 2: Run `python -m pytest tests/test_preprocessing_contracts.py -q` and confirm import failure.**
+- [x] **Step 3: Implement validated frozen contracts and exports; promote `numpy`, `pandas`, and `scikit-learn` to project/runtime requirements.**
+- [x] **Step 4: Re-run the focused contract tests and confirm pass.**
+- [x] **Step 5: Commit the independently green contract/dependency slice.**
 
 ### Task 2: Implement immutable metadata loading and task eligibility
 
