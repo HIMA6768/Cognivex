@@ -1,0 +1,78 @@
+{
+  "input_features": {
+    "age_at_diagnosis": {
+      "type": "float",
+      "unit": "years",
+      "required": true,
+      "nullable": false
+    },
+    "tumor_size": {
+      "type": "float",
+      "unit": "mm",
+      "required": true,
+      "nullable": true,
+      "missing_policy": "training-only median imputation"
+    },
+    "tumor_stage": {
+      "type": "categorical",
+      "categories": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "Unknown"
+      ],
+      "required": true,
+      "nullable": false,
+      "missing_policy": "missing/0 mapped to Unknown during canonical preparation"
+    },
+    "lymph_nodes_examined_positive": {
+      "type": "integer",
+      "unit": "count",
+      "required": true,
+      "nullable": false
+    },
+    "er_status_measured_by_ihc": {
+      "type": "categorical",
+      "categories": [
+        "Positive",
+        "Negative"
+      ],
+      "required": true,
+      "nullable": true,
+      "missing_policy": "training-only categorical missing handling"
+    },
+    "pr_status": {
+      "type": "categorical",
+      "categories": [
+        "Positive",
+        "Negative"
+      ],
+      "required": true,
+      "nullable": false
+    },
+    "her2_status": {
+      "type": "categorical",
+      "categories": [
+        "Positive",
+        "Negative"
+      ],
+      "required": true,
+      "nullable": false
+    }
+  },
+  "survival_targets": {
+    "time_column": "overall_survival_months",
+    "time_unit": "months",
+    "event_column": "overall_survival",
+    "event_coding": {
+      "0": "Living / Censored",
+      "1": "Deceased (Event)"
+    },
+    "source_event_coding_before_preparation": {
+      "0": "Deceased",
+      "1": "Living"
+    }
+  },
+  "schema_status": "EARLY_DATA_HANDOFF"
+}

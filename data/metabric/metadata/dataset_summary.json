@@ -1,0 +1,119 @@
+{
+  "dataset_name": "METABRIC (Molecular Taxonomy of Breast Cancer International Consortium)",
+  "cohort_size_patients": 1904,
+  "matched_genomic_samples": 1904,
+  "patient_id_unique": true,
+  "survival_event_counts": {
+    "deceased_events": 1103,
+    "living_or_censored": 801
+  },
+  "raw_source_event_counts_before_inversion": {
+    "0": 1103,
+    "1": 801
+  },
+  "missingness_summary": {
+    "clinical_features": {
+      "age_at_diagnosis": {
+        "raw_missing_count": 0,
+        "raw_missing_pct": 0.0,
+        "handling": "No raw missing values; no imputation currently required"
+      },
+      "tumor_size": {
+        "raw_missing_count": 20,
+        "raw_missing_pct": 1.0504,
+        "handling": "Median imputation fitted on the training split only during modeling"
+      },
+      "tumor_stage": {
+        "raw_missing_count": 501,
+        "raw_missing_pct": 26.313,
+        "handling": "Map missing/0 to categorical 'Unknown'"
+      },
+      "lymph_nodes_examined_positive": {
+        "raw_missing_count": 0,
+        "raw_missing_pct": 0.0,
+        "handling": "No raw missing values; no imputation currently required"
+      },
+      "er_status_measured_by_ihc": {
+        "raw_missing_count": 30,
+        "raw_missing_pct": 1.5756,
+        "handling": "Categorical missing-value handling defined/fitted in the training-only preprocessing pipeline"
+      },
+      "pr_status": {
+        "raw_missing_count": 0,
+        "raw_missing_pct": 0.0,
+        "handling": "No raw missing values; no imputation currently required"
+      },
+      "her2_status": {
+        "raw_missing_count": 0,
+        "raw_missing_pct": 0.0,
+        "handling": "No raw missing values; no imputation currently required"
+      }
+    },
+    "genomic_features": {
+      "mrna_selected_block_missing_cells": 0,
+      "note": "Missingness reported on the uploaded merged file; model-time preprocessing remains training-only."
+    }
+  },
+  "split_summary": {
+    "train": {
+      "patients": 1332,
+      "deceased_events": 760,
+      "living_or_censored": 572,
+      "subtype_counts_raw": {
+        "LumA": 485,
+        "LumB": 330,
+        "Her2": 149,
+        "claudin-low": 137,
+        "Basal": 134,
+        "Normal": 95,
+        "NC": 2
+      },
+      "subtype_classification_eligible": 1330,
+      "subtype_nc_excluded_track_c": 2
+    },
+    "validation": {
+      "patients": 286,
+      "deceased_events": 168,
+      "living_or_censored": 118,
+      "subtype_counts_raw": {
+        "LumA": 94,
+        "LumB": 66,
+        "Her2": 39,
+        "Basal": 34,
+        "claudin-low": 31,
+        "Normal": 21,
+        "NC": 1
+      },
+      "subtype_classification_eligible": 285,
+      "subtype_nc_excluded_track_c": 1
+    },
+    "test": {
+      "patients": 286,
+      "deceased_events": 175,
+      "living_or_censored": 111,
+      "subtype_counts_raw": {
+        "LumA": 100,
+        "LumB": 65,
+        "Her2": 32,
+        "claudin-low": 31,
+        "Basal": 31,
+        "Normal": 24,
+        "NC": 3
+      },
+      "subtype_classification_eligible": 283,
+      "subtype_nc_excluded_track_c": 3
+    }
+  },
+  "subtype_policy": {
+    "taxonomy_column": "pam50_+_claudin-low_subtype",
+    "mapping": {
+      "LumA": "Luminal A",
+      "LumB": "Luminal B",
+      "Her2": "Her2",
+      "Basal": "Basal",
+      "Normal": "Normal-like",
+      "claudin-low": "Claudin-low"
+    },
+    "nc_policy": "NC is retained for survival Tracks A/B when survival data are valid and excluded only from Track C subtype classification."
+  }
+}

@@ -1,0 +1,4 @@
+# Keep the imported, checksum-verified METABRIC handoff byte-stable across platforms.
+data/metabric/** binary
+docs/data_strategy.md -text
+scripts/prepare_data.py -text

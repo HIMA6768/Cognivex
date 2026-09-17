@@ -1,0 +1,9 @@
+{
+  "dataset_name": "METABRIC (Molecular Taxonomy of Breast Cancer International Consortium)",
+  "distribution_channel": "Kaggle",
+  "exact_source_url": null,
+  "dataset_version": null,
+  "license": null,
+  "provenance_status": "PENDING_CONFIRMATION",
+  "notes": "The supplied handoff identifies METABRIC via Kaggle but does not provide the exact Kaggle URL, dataset version/date, or license. These fields are intentionally left null until confirmed by the data engineer."
+}

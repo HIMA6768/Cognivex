@@ -1,0 +1,20 @@
+{
+  "taxonomy_column": "pam50_+_claudin-low_subtype",
+  "classes": [
+    "Luminal A",
+    "Luminal B",
+    "Her2",
+    "Basal",
+    "Normal-like",
+    "Claudin-low"
+  ],
+  "mapping": {
+    "LumA": "Luminal A",
+    "LumB": "Luminal B",
+    "Her2": "Her2",
+    "Basal": "Basal",
+    "Normal": "Normal-like",
+    "claudin-low": "Claudin-low"
+  },
+  "nc_policy": "Patients labeled as 'NC' (Not Classified) in the raw data are excluded during Track C (classification) model training, but are retained for Track A and Track B survival models if their survival data is valid."
+}
