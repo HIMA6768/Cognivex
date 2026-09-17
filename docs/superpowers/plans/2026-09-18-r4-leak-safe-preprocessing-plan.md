@@ -75,7 +75,7 @@ def test_eligibility_contract_aggregates_stable_reason_codes() -> None:
 - `evaluate_subtype_eligibility(prepared: pd.DataFrame, manifest: pd.DataFrame, schema: PreprocessingSchema) -> EligibilityResult`
 - `normalize_subtype_target(prepared: pd.DataFrame, schema: PreprocessingSchema) -> pd.Series`
 
-- [ ] **Step 1: Write synthetic failing eligibility tests** proving positive-duration/event rules, exact zero-duration reason, missing and invalid target reasons, locked-split validation, mRNA numeric/finite requirements, NC independence for A/B, NC exclusion for C, zero-duration independence for C, and source-to-canonical subtype mapping.
+- [x] **Step 1: Write synthetic failing eligibility tests** proving positive-duration/event rules, exact zero-duration reason, missing and invalid target reasons, locked-split validation, mRNA numeric/finite requirements, NC independence for A/B, NC exclusion for C, zero-duration independence for C, and source-to-canonical subtype mapping.
 
 ```python
 def test_zero_duration_affects_only_survival_tasks() -> None:
@@ -86,10 +86,10 @@ def test_zero_duration_affects_only_survival_tasks() -> None:
     assert subtype.mask == (True,)
 ```
 
-- [ ] **Step 2: Run the eligibility tests and confirm they fail because the package is absent.**
-- [ ] **Step 3: Implement strict JSON metadata loading, one-to-one patient-ID alignment, independent task rules, row-aligned reasons, and separate subtype target normalization.**
-- [ ] **Step 4: Re-run eligibility and existing R2/R3 tests; confirm all pass.**
-- [ ] **Step 5: Commit the independently green eligibility slice.**
+- [x] **Step 2: Run the eligibility tests and confirm they fail because the package is absent.**
+- [x] **Step 3: Implement strict JSON metadata loading, one-to-one patient-ID alignment, independent task rules, row-aligned reasons, and separate subtype target normalization.**
+- [x] **Step 4: Re-run eligibility and existing R2/R3 tests; confirm all pass.**
+- [x] **Step 5: Commit the independently green eligibility slice.**
 
 ### Task 3: Implement exact clinical preprocessing and Track A factory
 
