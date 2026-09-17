@@ -1,6 +1,6 @@
 # Testing
 
-R2 tests cover repository-relative canonical paths, imported SHA-256 integrity, metadata/schema mismatch, duplicate identifiers, one-to-one mapping, locked manifest partitions, aggregate cohort summaries, semantic preparation reproducibility, session reuse/refresh, aggregate-only rendering, persistent disclaimer, and prior shell/configuration contracts.
+R3 tests cover R2 gating, typed/serializable quality reports, invalid survival targets, duplicate identifiers, mapping and split contamination, clinical schema/Unknown handling, genomic feature/value/variance checks, subtype/NC policy, deterministic aggregate output, quality-cache refresh, aggregate-only rendering, and prior R1/R2 shell/configuration contracts.
 
 Obsolete tests for the superseded domain were removed with their production modules. Test count is not used as a success metric.
 

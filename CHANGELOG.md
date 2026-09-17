@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-09-17 — R3 Biomedical data quality validation
+
+- Added framework-independent, aggregate-only quality contracts and a deterministic R3 scan gated by R2 `DATA_READY`.
+- Added read-only survival, clinical, mapping/split, genomic, subtype/NC-policy, and aggregate-distribution findings with stable error/warning/information severity and engineering readiness statuses.
+- Added cached Data / Cohort quality rendering, synthetic invalid-data coverage, and the documented non-clinical 1,200-month duration-review sentinel.
+- No cohort mutation, imputation, encoding, scaling, filtering, rebalancing, model, prediction, metric, or clinical-decision behavior was introduced.
+
 ## 2026-09-17 — R2 Canonical METABRIC data ingestion
 
 - Added one repository-owned corrected METABRIC handoff package with immutable raw data, canonical prepared data, locked manifest, patient/sample mapping, schema metadata, original checksum manifest, historical provenance, preparation script, and strategy documentation.

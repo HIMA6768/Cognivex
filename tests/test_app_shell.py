@@ -74,7 +74,7 @@ def test_overview_contains_no_dataset_uploader_metrics_or_patient_results() -> N
 
     assert not app.file_uploader
     assert not app.metric
-    assert "Canonical cohort data is available" in _visible_text(app)
+    assert "Canonical cohort quality is available" in _visible_text(app)
 
 
 def test_data_cohort_page_shows_validated_aggregates_without_patient_rows() -> None:
@@ -92,10 +92,25 @@ def test_data_cohort_page_shows_validated_aggregates_without_patient_rows() -> N
     assert "patient_id" not in text.lower()
 
 
+def test_data_cohort_page_shows_r3_quality_aggregates_without_patient_rows() -> None:
+    """Removing R3 readiness context or exposing source rows would break the Cohort boundary."""
+    app = _run_app()
+    app.sidebar.radio[0].set_value("Data / Cohort")
+    app.run()
+
+    text = _visible_text(app)
+    assert not app.exception
+    assert "Data quality" in text
+    assert "Clinical missingness" in text
+    assert "Survival endpoint" in text
+    assert "Genomic data quality" in text
+    assert "patient_id" not in text.lower()
+
+
 def test_each_page_has_an_honest_pending_state_and_persistent_disclaimer() -> None:
     app = _run_app()
     expected_copy = {
-        "Overview": "Canonical cohort data is available",
+        "Overview": "Canonical cohort quality is available",
         "Data / Cohort": "Validated cohort",
         "Survival Analysis": "Survival analysis is pending validated cohort data and model handoff",
         "Subtype Classification": "Subtype classification is pending gene-expression data and confirmed dataset labels",

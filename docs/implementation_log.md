@@ -1,5 +1,11 @@
 # Implementation log
 
+## 2026-09-17 — R3 Biomedical data quality validation
+
+Implemented a framework-independent, deterministic R3 quality scanner that runs only after R2 structural validation returns `DATA_READY`. It reads the canonical prepared CSV and existing R2 schema, feature-group, subtype, mapping, and manifest artifacts without modifying any data. The scanner returns aggregate-only error/warning/information findings and engineering readiness status; its 1,200-month survival-duration sentinel is a documented non-clinical review heuristic.
+
+The canonical scan is `DATA_QUALITY_READY_WITH_WARNINGS`: 0 errors, 3 warnings, and 6 information findings. It reports 1,904 records, 1,103 events, 801 censored records, one zero survival duration, 20 missing tumor-size values, 30 missing ER-IHC values, 505 accepted `Unknown` tumor-stage values, 489 mRNA and 173 mutation features, and no missing/non-numeric/infinite/zero-variance genomic features. Mutation columns are validated as annotation fields rather than forced through an invented numeric encoding. No imputation, scaling, encoding, filtering, rebalancing, split regeneration, modeling, prediction, metric, or clinical decision behavior was added.
+
 ## 2026-09-17 — R2 Canonical METABRIC data ingestion
 
 Installed one checksum-verified, repository-owned corrected METABRIC handoff under `data/metabric/`: immutable raw source, canonical prepared data, schema, feature groups, summary, patient mapping, locked 70/15/15 manifest, original provenance/checksum artifacts, strategy, and preparation script. The raw CSV is 8.00 MiB and the prepared CSV is 7.86 MiB, so Git LFS was not introduced.
