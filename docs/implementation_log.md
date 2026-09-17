@@ -1,5 +1,11 @@
 # Implementation log
 
+## 2026-09-17 — P8 Policy-only routing decision engine
+
+Implemented `evaluate_routing()` as a pure P5/P6/P7 contract consumer. Quality failure has highest precedence and preserves P5 remediation; unavailable classification routes to review; moderate/severe labels, missing or low scores, and configured signal conflicts accumulate ordered human-review reasons; only a qualifying minor case receives `FAST_TRACK_ELIGIBLE`.
+
+`PolicySettings` owns environment-backed score thresholds and a deliberately narrow `scratch -> structural` conflict pair. Localization remains supplementary: missing, unavailable, or zero detections do not block classifier policy. P7 mock inputs are supported only as deterministic development fixtures. Thresholds remain **PROVISIONAL DEVELOPMENT POLICY**, with real calibration, outcome evaluation, orchestration, and result UI deferred.
+
 ## 2026-09-17 — P5 blur scene-coverage correction
 
 Replaced P5's median-tile sharpness criterion with a configured usable-sharp-tile ratio. A P5 blur pass now requires global Laplacian variance to clear its existing floor and at least 75% of 4×4 spatial tiles to clear the configured local sharpness floor. This prevents sharp text, line overlays, and footer/banner graphics from replacing scene-level sharpness, without detecting or removing any watermark. The ratio is a **PROVISIONAL ENGINEERING DEFAULT** selected only with controlled fixtures; it requires representative vehicle-photo calibration.

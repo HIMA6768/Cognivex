@@ -20,4 +20,4 @@ P5 does not execute a model; localize damage; apply routing; render a result; ma
 
 ## Increment boundary
 
-P8 remains a separate routing-policy increment. This quality gate only reports quality observations; it does not select a routing status. P5 thresholds need representative vehicle-image evaluation before any production use.
+P8 now exists as a separate pure routing-policy module, but the Streamlit flow does not invoke or render it yet. P5 quality observations and P8 routes remain independent contracts until a later orchestration/result increment.

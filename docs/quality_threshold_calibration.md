@@ -27,3 +27,7 @@ Reviewers assess image usability only. They do not make coverage, repair, fraud,
 ## Change control
 
 Threshold changes must be configuration-only changes, reviewed with the evaluation artifact and a regression suite covering representative boundary fixtures. Update `.env.example`, setup documentation, and the release record together. Do not present any tuning as empirical validation until the representative evaluation and holdout analysis are complete.
+
+## P8 policy separation
+
+P8 score cutoffs are separate **PROVISIONAL DEVELOPMENT POLICY** values. They require model-score calibration and policy/outcome evaluation after the AI handoff; image-quality calibration alone cannot validate them. See [decision_policy.md](decision_policy.md).

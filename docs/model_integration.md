@@ -24,7 +24,7 @@ Every P7 adapter result contains `model.execution_mode: "MOCK"` and `model.mock:
 
 `MOCK INFERENCE — awaiting trained model handoff`
 
-Mock labels, boxes, and scores are integration fixtures only; they are not evidence of model performance, real confidence, probability calibration, or suitability for claim decisions. Scores are illustrative normalized mock values with no P8 policy threshold.
+Mock labels, boxes, and scores are integration fixtures only; they are not evidence of model performance, real confidence, probability calibration, or suitability for claim decisions. P8 can consume these scores using explicitly provisional development thresholds, but the resulting route remains demo behavior rather than validated decision performance.
 
 For the default scenario, the adapters calculate a SHA-256 digest of P4's stable image digest and use it to choose canonical labels and a zero/one/two detection layout. Explicit development scenarios provide normal minor/scratch, severe, low-score, unavailable classifier, and unavailable/no/one/multiple/disabled localization outputs. No unseeded randomness is used, so the same validated image produces the same output across reruns and processes.
 

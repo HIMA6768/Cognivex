@@ -38,6 +38,6 @@ These are **PROVISIONAL ENGINEERING DEFAULTS**, not empirically validated thresh
 
 ## Scope boundary
 
-P5 does not repeat P4 upload safety validation and does not produce `FAST_TRACK_ELIGIBLE`, `HUMAN_REVIEW_REQUIRED`, `RESUBMIT_IMAGE`, model confidence, OOD results, YOLO output, routing, or any production decision policy. Those remain later increments.
+P5 does not repeat P4 validation and does not produce routing statuses, model confidence, OOD results, or localization. P8 separately maps P5/P7 contracts to development routing recommendations; P5 itself remains policy-free.
 
 P6 defines those routing status values as schemas only. It does not select one or change P5 behavior.

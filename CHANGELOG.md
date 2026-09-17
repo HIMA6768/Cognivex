@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-09-17 — P8 Policy-only routing decision engine
+
+- Added a pure, deterministic routing engine returning the frozen P6 `RoutingDecision` contract with explicit quality, availability, severity, score, conflict, and minor-eligibility precedence.
+- Added centralized stable reason codes, ordered multi-reason support, P5 remediation preservation, supplementary localization handling, and one configured `scratch -> structural` conflict rule.
+- Added environment-backed **PROVISIONAL DEVELOPMENT POLICY** score thresholds and comprehensive table-driven P8/P7 integration tests. No inference, UI result rendering, orchestration, persistence, approval/rejection, or cost estimation was added.
+
 ## 2026-09-17 — P5 blur scene-coverage correction
 
 - Replaced P5's median-tile blur criterion with a configured usable-sharp-tile ratio, preserving the global Laplacian safeguard and all stable P5 interfaces.

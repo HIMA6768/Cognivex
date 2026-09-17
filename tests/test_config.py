@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import pytest
 
+from src.config import PolicySettings
 from src.config.labels import DamageTypeLabel, SeverityLabel
 from src.config.settings import AppSettings, ConfigurationError
 
@@ -43,6 +44,12 @@ def test_development_defaults_leave_model_configuration_unset() -> None:
     assert settings.thresholds.max_bright_pixel_ratio == 0.65
     assert settings.inference.mock_inference is True
     assert settings.inference.localization_enabled is True
+    assert settings.policy.min_severity_score == 0.75
+    assert settings.policy.min_damage_type_score == 0.75
+    assert settings.policy.min_localization_conflict_score == 0.8
+    assert settings.policy.conflict_pairs == (
+        (DamageTypeLabel.SCRATCH, DamageTypeLabel.STRUCTURAL),
+    )
 
 
 def test_environment_overrides_are_parsed() -> None:
@@ -71,6 +78,9 @@ def test_environment_overrides_are_parsed() -> None:
             "COGNIVEX_MAX_BRIGHT_PIXEL_RATIO": "0.45",
             "COGNIVEX_MOCK_INFERENCE": "false",
             "COGNIVEX_LOCALIZATION_ENABLED": "false",
+            "COGNIVEX_POLICY_MIN_SEVERITY_SCORE": "0.82",
+            "COGNIVEX_POLICY_MIN_DAMAGE_TYPE_SCORE": "0.79",
+            "COGNIVEX_POLICY_MIN_LOCALIZATION_CONFLICT_SCORE": "0.91",
         }
     )
 
@@ -97,6 +107,9 @@ def test_environment_overrides_are_parsed() -> None:
     assert settings.thresholds.max_bright_pixel_ratio == 0.45
     assert settings.inference.mock_inference is False
     assert settings.inference.localization_enabled is False
+    assert settings.policy.min_severity_score == 0.82
+    assert settings.policy.min_damage_type_score == 0.79
+    assert settings.policy.min_localization_conflict_score == 0.91
 
 
 def test_blank_optional_model_fields_are_unset() -> None:
@@ -156,6 +169,9 @@ def test_out_of_range_or_non_finite_model_confidence_raises_configuration_error(
         ("COGNIVEX_MAX_MEDIAN_LUMINANCE", "bright"),
         ("COGNIVEX_MAX_DARK_PIXEL_RATIO", "1.01"),
         ("COGNIVEX_MAX_BRIGHT_PIXEL_RATIO", "-0.01"),
+        ("COGNIVEX_POLICY_MIN_SEVERITY_SCORE", "1.01"),
+        ("COGNIVEX_POLICY_MIN_DAMAGE_TYPE_SCORE", "NaN"),
+        ("COGNIVEX_POLICY_MIN_LOCALIZATION_CONFLICT_SCORE", "low"),
     ],
 )
 def test_zero_negative_or_invalid_image_dimensions_raise_configuration_error(
@@ -187,3 +203,13 @@ def test_luminance_thresholds_accept_the_full_zero_to_255_measurement_range() ->
 
     assert settings.thresholds.min_mean_luminance == 0.0
     assert settings.thresholds.max_mean_luminance == 255.0
+
+
+def test_policy_settings_reject_invalid_conflict_pairs() -> None:
+    """Malformed or self-conflicting labels would make policy behavior ambiguous."""
+    with pytest.raises(ValueError, match="different canonical damage-type labels"):
+        PolicySettings(
+            conflict_pairs=((DamageTypeLabel.SCRATCH, DamageTypeLabel.SCRATCH),)
+        )
+    with pytest.raises(TypeError, match="canonical damage-type labels"):
+        PolicySettings(conflict_pairs=(("scratch", DamageTypeLabel.STRUCTURAL),))  # type: ignore[arg-type]

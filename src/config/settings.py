@@ -6,6 +6,7 @@ from math import isfinite
 import os
 
 from .inference import InferenceSettings
+from .policy import PolicySettings
 from .thresholds import ThresholdSettings
 from .uploads import UploadSettings
 
@@ -106,6 +107,7 @@ class AppSettings:
     thresholds: ThresholdSettings
     upload: UploadSettings
     inference: InferenceSettings
+    policy: PolicySettings
 
     @classmethod
     def from_env(cls, environ: Mapping[str, str] | None = None) -> "AppSettings":
@@ -182,6 +184,19 @@ class AppSettings:
                 mock_inference=_parse_bool(source, "COGNIVEX_MOCK_INFERENCE", default=True),
                 localization_enabled=_parse_bool(
                     source, "COGNIVEX_LOCALIZATION_ENABLED", default=True
+                ),
+            ),
+            policy=PolicySettings(
+                min_severity_score=_parse_ratio(
+                    source, "COGNIVEX_POLICY_MIN_SEVERITY_SCORE", default=0.75
+                ),
+                min_damage_type_score=_parse_ratio(
+                    source, "COGNIVEX_POLICY_MIN_DAMAGE_TYPE_SCORE", default=0.75
+                ),
+                min_localization_conflict_score=_parse_ratio(
+                    source,
+                    "COGNIVEX_POLICY_MIN_LOCALIZATION_CONFLICT_SCORE",
+                    default=0.80,
                 ),
             ),
         )

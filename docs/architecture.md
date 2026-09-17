@@ -2,7 +2,7 @@
 
 ## Current state
 
-The repository is a pre-model Python/Streamlit prototype. `app.py` is a thin entrypoint that configures Streamlit and delegates to `src/ui/shell.py`. The shell applies the package-owned visual theme, renders typed navigation, and dispatches to page modules. The Assessment page consumes pure P4 structural validation/session-state helpers and pure P5 quality reports; it does not access a model or external service. `src/contracts/assessment.py` freezes independent cross-stage types, and `src/adapters/` contains isolated P7 development mocks. `src/config/` loads environment-backed settings through frozen dataclasses without external side effects.
+The repository is a pre-model Python/Streamlit prototype. `app.py` is a thin entrypoint that configures Streamlit and delegates to `src/ui/shell.py`. The shell applies the package-owned visual theme, renders typed navigation, and dispatches to page modules. The Assessment page consumes pure P4 structural validation/session-state helpers and pure P5 quality reports; it does not yet invoke P7/P8. `src/contracts/assessment.py` freezes independent cross-stage types, `src/adapters/` contains isolated P7 development mocks, and `src/decision/` contains the pure P8 policy. `src/config/` loads environment-backed settings through frozen dataclasses without external side effects.
 
 ## Planned flow
 
@@ -10,7 +10,7 @@ The planned runtime is:
 
 `Upload -> Validation -> Quality Gate -> Classifier -> YOLO localization -> Decision Engine -> Routing`
 
-P4 implements a single still-image upload, actual decode/format validation, configured byte and geometry limits, decompression safeguards, session-only retention, EXIF-aware RGB/RGBA preview normalization, and invalid-file guidance. P5 evaluates the P4 preview with deterministic blur and extreme-luminance checks before enabling the existing no-prediction placeholder. P6 freezes P4–P9 data contracts. P7 adds mock-only classifier/localizer implementations under those contracts; they remain outside the Streamlit assessment path. Real model execution, localization, decisioning, routing, results, and external-service behavior remain unimplemented.
+P4 implements upload validation and normalized preview handling. P5 evaluates deterministic image quality. P6 freezes P4–P9 data contracts. P7 adds mock-only classifier/localizer implementations, and P8 now evaluates their contracts through a pure precedence-ordered policy. P7/P8 remain outside the Streamlit assessment path. Real model execution, real localization, end-to-end orchestration, result rendering, and external-service behavior remain unimplemented.
 
 ## UI composition
 
@@ -22,6 +22,9 @@ P4 implements a single still-image upload, actual decode/format validation, conf
 - `src/contracts/assessment.py` owns P6 cross-stage schemas and JSON-compatible serialization.
 - `src/adapters/interfaces.py` owns replacement-safe P7 adapter protocols.
 - `src/adapters/mock.py` owns deterministic mock-only P7 behavior.
+- `src/decision/reasons.py` owns stable P8 reason codes and safe messages.
+- `src/decision/conflicts.py` owns the narrow configured localization-conflict check.
+- `src/decision/engine.py` owns pure P8 precedence and returns `RoutingDecision`.
 - `src/ui/shell.py` owns page dispatch through `PAGE_RENDERERS`.
 - `src/ui/pages/` owns presentation-only content for the five destinations.
 
@@ -32,6 +35,7 @@ The shell does not read model artifacts, call external services, or implement as
 - `AppSettings`: `environment`, `debug`, optional `model_path`, and nested `thresholds` and `upload` settings; construct with `AppSettings.from_env(...)`.
 - `ThresholdSettings`: optional `model_confidence`; structural image dimensions default to minimum `640 × 480`, maximum `8192 × 8192`, and `40,000,000` pixels; P5 defaults combine global Laplacian variance `80.0`, a `0.75` usable-sharp-tile ratio over a 4×4 grid with a local floor of `40.0`, mean/median luminance `25.0`–`230.0`, and configurable extreme dark/bright tail ratios.
 - `UploadSettings`: operational `max_upload_mb` limit, defaulting to `10`; it is not an AI threshold.
+- `PolicySettings`: provisional P8 severity/damage score floors of `0.75`, localization-conflict score floor of `0.80`, and the centralized conflict-pair tuple.
 - `SeverityLabel`: `minor`, `moderate`, `severe`.
 - `DamageTypeLabel`: `dent`, `scratch`, `broken_glass`, `structural`.
 - `ConfigurationError`: raised for invalid environment values.
@@ -62,9 +66,12 @@ COGNIVEX_BRIGHT_PIXEL_LUMINANCE
 COGNIVEX_MAX_BRIGHT_PIXEL_RATIO
 COGNIVEX_MOCK_INFERENCE
 COGNIVEX_LOCALIZATION_ENABLED
+COGNIVEX_POLICY_MIN_SEVERITY_SCORE
+COGNIVEX_POLICY_MIN_DAMAGE_TYPE_SCORE
+COGNIVEX_POLICY_MIN_LOCALIZATION_CONFLICT_SCORE
 ```
 
-Model-dependent paths and confidence remain unset by default. P4 validation checks allowed suffix/type, non-empty bytes, configured size, actual decoded format, still-image status, dimensions, pixels, and safely normalizes orientation/mode for preview. P5 accepts only that normalized preview, composites transparency over white, measures bounded global and tile-based grayscale Laplacian variance plus mean/median luminance and extreme-pixel ratios, and returns a report without a routing disposition. P6 adds independent `ValidationResult`, `QualityReport`, classification/localization, routing, and aggregate contracts; `RoutingDecision` has a required ordered `reasons` collection but no policy implementation. P7 adds `InferenceSettings` (`COGNIVEX_MOCK_INFERENCE`, `COGNIVEX_LOCALIZATION_ENABLED`) and mock-only adapters marked with serialized `mock: true`; real model identifiers and preprocessing fields remain optional pending the AI handoff. The native Streamlit server upload limit is set to the same 10 MB default in `.streamlit/config.toml`; operators must keep both values aligned when overriding the limit. P5 thresholds are **PROVISIONAL ENGINEERING DEFAULTS** rather than calibrated vehicle-photo thresholds. Pending AI model handoff.
+Model-dependent paths and confidence remain unset by default. P4 validates/normalizes uploads; P5 returns quality reports; P6 owns the cross-stage contracts; P7 returns mock-only classification/localization marked `mock: true`; and P8 applies configured precedence without altering those inputs. `AssessmentResult` can preserve P7 metadata beside a P8 route when P9 orchestration is added. The native Streamlit upload limit remains 10 MB by default. P5 thresholds are **PROVISIONAL ENGINEERING DEFAULTS** and P8 thresholds are **PROVISIONAL DEVELOPMENT POLICY** values, not calibrated probabilities or outcome-validated policy. Pending AI model handoff.
 
 ## Model evaluation status
 

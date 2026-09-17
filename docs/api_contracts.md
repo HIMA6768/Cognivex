@@ -12,7 +12,7 @@
 | P5 | `QualityReport` | overall state, ordered checks, reason codes, latency | `evaluate_quality()` |
 | P7 | `ClassificationResult` | frozen severity/damage labels and `ModelMetadata` | Pending AI handoff |
 | P7 | `LocalizationResult` | `Detection` list and `ModelMetadata` | Pending AI handoff |
-| P8 | `RoutingDecision` | contract status and ordered `RoutingReason` collection | Pending policy increment |
+| P8 | `RoutingDecision` | contract status and ordered `RoutingReason` collection | `evaluate_routing()` |
 | P9 | `AssessmentResult` | aggregate of each stage; downstream entries are optional | Pending result increment |
 
 `AssessmentResult` permits optional P5–P8 entries so a partial pipeline can be serialized safely while later stages are pending.
@@ -27,7 +27,7 @@ Available `ClassificationResult.severity` accepts only `SeverityLabel`: `minor`,
 - `HUMAN_REVIEW_REQUIRED`
 - `RESUBMIT_IMAGE`
 
-P6 defines no policy that selects a routing status. `RoutingDecision.reasons` is a required, non-empty ordered tuple of `RoutingReason` values, so a future policy can preserve every independently actionable reason. `RoutingReason` is intentionally a non-empty code/message pair, leaving the controlled reason vocabulary to P8.
+`RoutingDecision.reasons` is a required, non-empty ordered tuple of `RoutingReason` values. P8 supplies the controlled reason vocabulary and deterministic precedence documented in [decision_policy.md](decision_policy.md), while P6 remains policy-free.
 
 ## Model provenance
 
