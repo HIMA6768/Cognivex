@@ -104,7 +104,7 @@ def test_zero_duration_affects_only_survival_tasks() -> None:
 - `get_transformed_feature_names(preprocessor: Pipeline) -> tuple[str, ...]`
 - `assert_safe_feature_names(feature_names: tuple[str, ...]) -> None`
 
-- [ ] **Step 1: Write failing tests** for train-only tumor median, train-only ER mode, exact original-value indicator names/values, accepted `Unknown` stage, ignored unseen categories, no Track A scaling, cloneability, deterministic output, and forbidden-name rejection.
+- [x] **Step 1: Write failing tests** for train-only tumor median, train-only ER mode, exact original-value indicator names/values, accepted `Unknown` stage, ignored unseen categories, no Track A scaling, cloneability, deterministic output, and forbidden-name rejection.
 
 ```python
 def test_missing_indicators_use_original_values_and_exact_names(schema) -> None:
@@ -116,10 +116,10 @@ def test_missing_indicators_use_original_values_and_exact_names(schema) -> None:
     assert transformed[missing_row, names.index("tumor_size_was_missing")] == 1
 ```
 
-- [ ] **Step 2: Run the focused pipeline tests and confirm the factory/import failures.**
-- [ ] **Step 3: Implement the minimal cloneable indicator, schema guard, deterministic clinical `ColumnTransformer`, explicit schema categories, and Track A factory.**
-- [ ] **Step 4: Run the focused tests, refactor only while green, and run contract/eligibility regression tests.**
-- [ ] **Step 5: Commit the independently green Track A slice.**
+- [x] **Step 2: Run the focused pipeline tests and confirm the factory/import failures.**
+- [x] **Step 3: Implement the minimal cloneable indicator, schema guard, deterministic clinical `ColumnTransformer`, explicit schema categories, and Track A factory.**
+- [x] **Step 4: Run the focused tests, refactor only while green, and run contract/eligibility regression tests.**
+- [x] **Step 5: Commit the independently green Track A slice.**
 
 ### Task 4: Implement Tracks B/C, task feature selection, and fitted metadata
 
