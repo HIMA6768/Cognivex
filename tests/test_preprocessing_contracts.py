@@ -11,6 +11,9 @@ from src.contracts import (
     EligibilityReasonCode,
     EligibilityResult,
     ExclusionCount,
+    MutationFeatureSelection,
+    MutationPreprocessingMetadata,
+    MutationSelectionMetadata,
     PreprocessingMetadata,
     PreprocessingTask,
     PreprocessingTrack,
@@ -40,6 +43,138 @@ def test_eligibility_contract_aggregates_stable_reason_codes() -> None:
         ExclusionCount(EligibilityReasonCode.NON_POSITIVE_SURVIVAL_DURATION, 1),
     )
     assert result.to_dict()["reasons"][1] == ["NON_POSITIVE_SURVIVAL_DURATION"]
+
+
+def _mutation_metadata() -> MutationPreprocessingMetadata:
+    selection = MutationSelectionMetadata(
+        threshold=0.05,
+        comparison="greater_than_or_equal",
+        fit_row_count=20,
+        features=(
+            MutationFeatureSelection(
+                raw_column="gene_a_mut",
+                gene="gene_a",
+                derived_feature_name="gene_a_mut_present",
+                prevalence=0.05,
+                retained=True,
+            ),
+            MutationFeatureSelection(
+                raw_column="gene_b_mut",
+                gene="gene_b",
+                derived_feature_name="gene_b_mut_present",
+                prevalence=0.0,
+                retained=False,
+            ),
+        ),
+    )
+    return MutationPreprocessingMetadata(
+        representation_policy="zero absent; nonzero annotation present",
+        source_feature_names=("gene_a_mut", "gene_b_mut"),
+        selection=selection,
+        burden_source_feature_count=2,
+        burden_feature_name="mutation_burden_log1p",
+        burden_transformation="log1p of presence count across all source genes",
+    )
+
+
+def test_track_d_mutation_metadata_serializes_fit_evidence_and_scaling_groups() -> None:
+    """Dropping fitted selection or scale-group evidence would make Track D unauditable."""
+    metadata = PreprocessingMetadata(
+        task=PreprocessingTask.CLINICAL_MUTATION_SURVIVAL,
+        track=PreprocessingTrack.TRACK_D,
+        source_dataset="METABRIC",
+        source_version="Version 1",
+        fitted_on_split="train",
+        eligible_row_count=20,
+        excluded_row_count=0,
+        exclusion_counts=(),
+        raw_feature_count=9,
+        transformed_feature_count=3,
+        clinical_feature_names=("age_at_diagnosis",),
+        mrna_feature_names=(),
+        final_feature_names=(
+            "age_at_diagnosis",
+            "gene_a_mut_present",
+            "mutation_burden_log1p",
+        ),
+        imputation_strategy="training-only clinical imputation",
+        missing_indicator_strategy="original-value indicators",
+        categorical_encoding_strategy="schema categories",
+        scaling_strategy="continuous only",
+        mutation_policy="fit-local binary selector and all-gene burden",
+        nc_policy="NC does not affect Track D",
+        zero_duration_policy="excluded from survival tasks",
+        forbidden_feature_guard_passed=True,
+        mutation_metadata=_mutation_metadata(),
+        standardized_continuous_feature_names=(
+            "age_at_diagnosis",
+            "mutation_burden_log1p",
+        ),
+        unscaled_binary_feature_names=("gene_a_mut_present",),
+    )
+
+    decoded = metadata.to_dict()
+
+    assert decoded["task"] == "clinical_mutation_survival"
+    assert decoded["track"] == "Track D"
+    assert decoded["mutation_metadata"]["selection"]["threshold"] == 0.05
+    assert decoded["mutation_metadata"]["selection"]["retained_genes"] == ["gene_a"]
+    assert decoded["mutation_metadata"]["selection"]["excluded_genes"] == ["gene_b"]
+    assert decoded["mutation_metadata"]["selection"]["retained_feature_names"] == [
+        "gene_a_mut_present"
+    ]
+    assert decoded["standardized_continuous_feature_names"] == [
+        "age_at_diagnosis",
+        "mutation_burden_log1p",
+    ]
+    assert decoded["unscaled_binary_feature_names"] == ["gene_a_mut_present"]
+
+
+@pytest.mark.parametrize(
+    ("standardized", "unscaled"),
+    [
+        (("age_at_diagnosis",), ("gene_a_mut_present",)),
+        (
+            ("age_at_diagnosis", "mutation_burden_log1p"),
+            ("age_at_diagnosis", "gene_a_mut_present"),
+        ),
+    ],
+)
+def test_track_d_metadata_requires_an_exact_disjoint_final_feature_partition(
+    standardized: tuple[str, ...], unscaled: tuple[str, ...]
+) -> None:
+    """Missing or overlapping scaling classifications would misstate fitted preprocessing."""
+    with pytest.raises(ValueError, match="partition"):
+        PreprocessingMetadata(
+            task=PreprocessingTask.CLINICAL_MUTATION_SURVIVAL,
+            track=PreprocessingTrack.TRACK_D,
+            source_dataset="METABRIC",
+            source_version="Version 1",
+            fitted_on_split="train",
+            eligible_row_count=20,
+            excluded_row_count=0,
+            exclusion_counts=(),
+            raw_feature_count=9,
+            transformed_feature_count=3,
+            clinical_feature_names=("age_at_diagnosis",),
+            mrna_feature_names=(),
+            final_feature_names=(
+                "age_at_diagnosis",
+                "gene_a_mut_present",
+                "mutation_burden_log1p",
+            ),
+            imputation_strategy="training-only clinical imputation",
+            missing_indicator_strategy="original-value indicators",
+            categorical_encoding_strategy="schema categories",
+            scaling_strategy="continuous only",
+            mutation_policy="fit-local binary selector and all-gene burden",
+            nc_policy="NC does not affect Track D",
+            zero_duration_policy="excluded from survival tasks",
+            forbidden_feature_guard_passed=True,
+            mutation_metadata=_mutation_metadata(),
+            standardized_continuous_feature_names=standardized,
+            unscaled_binary_feature_names=unscaled,
+        )
 
 
 def test_preprocessing_metadata_serializes_without_patient_identifiers() -> None:
@@ -80,8 +215,8 @@ def test_preprocessing_metadata_serializes_without_patient_identifiers() -> None
     assert "patient_id" not in str(decoded)
 
 
-def test_canonical_report_requires_all_three_task_metadata_contracts() -> None:
-    """Dropping a task from the R4 gate would permit incomplete preprocessing readiness."""
+def test_canonical_report_requires_all_four_task_metadata_contracts() -> None:
+    """Dropping a task from the R4D gate would permit incomplete preprocessing readiness."""
     common = dict(
         source_dataset="METABRIC",
         source_version="Version 1",
@@ -132,6 +267,40 @@ def test_canonical_report_requires_all_three_task_metadata_contracts() -> None:
             split_counts=(SplitEligibilityCount("train", 1, 0),),
             **common,
         ),
+        PreprocessingMetadata(
+            task=PreprocessingTask.CLINICAL_MUTATION_SURVIVAL,
+            track=PreprocessingTrack.TRACK_D,
+            source_dataset="METABRIC",
+            source_version="Version 1",
+            fitted_on_split="train",
+            eligible_row_count=1,
+            excluded_row_count=0,
+            exclusion_counts=(),
+            raw_feature_count=3,
+            transformed_feature_count=3,
+            clinical_feature_names=("age_at_diagnosis",),
+            mrna_feature_names=(),
+            final_feature_names=(
+                "age_at_diagnosis",
+                "gene_a_mut_present",
+                "mutation_burden_log1p",
+            ),
+            imputation_strategy="training-only clinical imputation",
+            missing_indicator_strategy="original-value indicators",
+            categorical_encoding_strategy="schema categories",
+            scaling_strategy="continuous only",
+            mutation_policy="fit-local binary selector and all-gene burden",
+            nc_policy="allowed",
+            zero_duration_policy="excluded",
+            forbidden_feature_guard_passed=True,
+            split_counts=(SplitEligibilityCount("train", 1, 0),),
+            mutation_metadata=_mutation_metadata(),
+            standardized_continuous_feature_names=(
+                "age_at_diagnosis",
+                "mutation_burden_log1p",
+            ),
+            unscaled_binary_feature_names=("gene_a_mut_present",),
+        ),
     )
 
     report = CanonicalPreprocessingReport(
@@ -150,6 +319,7 @@ def test_canonical_report_requires_all_three_task_metadata_contracts() -> None:
         "clinical_survival",
         "clinical_mrna_survival",
         "subtype_classification",
+        "clinical_mutation_survival",
     ]
 
 

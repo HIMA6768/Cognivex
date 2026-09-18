@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections import Counter
 from dataclasses import dataclass, field
 from enum import StrEnum
+import math
 
 from .analysis import SerializableContract
 
@@ -15,6 +16,7 @@ class PreprocessingTask(StrEnum):
     CLINICAL_SURVIVAL = "clinical_survival"
     CLINICAL_MRNA_SURVIVAL = "clinical_mrna_survival"
     SUBTYPE_CLASSIFICATION = "subtype_classification"
+    CLINICAL_MUTATION_SURVIVAL = "clinical_mutation_survival"
 
 
 class PreprocessingTrack(StrEnum):
@@ -23,6 +25,7 @@ class PreprocessingTrack(StrEnum):
     TRACK_A = "Track A"
     TRACK_B = "Track B"
     TRACK_C = "Track C"
+    TRACK_D = "Track D"
 
 
 class EligibilityReasonCode(StrEnum):
@@ -38,6 +41,8 @@ class EligibilityReasonCode(StrEnum):
     MISSING_MRNA_VALUE = "MISSING_MRNA_VALUE"
     NON_NUMERIC_MRNA_VALUE = "NON_NUMERIC_MRNA_VALUE"
     NON_FINITE_MRNA_VALUE = "NON_FINITE_MRNA_VALUE"
+    MISSING_MUTATION_VALUE = "MISSING_MUTATION_VALUE"
+    INVALID_MUTATION_VALUE = "INVALID_MUTATION_VALUE"
     MISSING_SUBTYPE = "MISSING_SUBTYPE"
     NC_SUBTYPE = "NC_SUBTYPE"
     UNSUPPORTED_SUBTYPE = "UNSUPPORTED_SUBTYPE"
@@ -122,6 +127,111 @@ class SplitEligibilityCount(SerializableContract):
 
 
 @dataclass(frozen=True, slots=True)
+class MutationFeatureSelection(SerializableContract):
+    """One fitted mutation-frequency decision without patient-level values."""
+
+    raw_column: str
+    gene: str
+    derived_feature_name: str
+    prevalence: float
+    retained: bool
+
+    def __post_init__(self) -> None:
+        for value, field_name in (
+            (self.raw_column, "raw_column"),
+            (self.gene, "gene"),
+            (self.derived_feature_name, "derived_feature_name"),
+        ):
+            _require_text(value, field_name)
+        if not self.raw_column.endswith("_mut"):
+            raise ValueError("raw_column must end with _mut")
+        if self.gene != self.raw_column.removesuffix("_mut"):
+            raise ValueError("gene must match raw_column")
+        if self.derived_feature_name != f"{self.raw_column}_present":
+            raise ValueError("derived_feature_name must use the <raw_column>_present convention")
+        if (
+            not isinstance(self.prevalence, (int, float))
+            or isinstance(self.prevalence, bool)
+            or not math.isfinite(float(self.prevalence))
+            or not 0 <= float(self.prevalence) <= 1
+        ):
+            raise ValueError("prevalence must be a finite fraction from 0 through 1")
+        if not isinstance(self.retained, bool):
+            raise TypeError("retained must be a bool")
+
+
+@dataclass(frozen=True, slots=True)
+class MutationSelectionMetadata(SerializableContract):
+    """Aggregate fitted evidence for one fold-local mutation selector."""
+
+    threshold: float
+    comparison: str
+    fit_row_count: int
+    features: tuple[MutationFeatureSelection, ...]
+    retained_genes: tuple[str, ...] = field(init=False)
+    excluded_genes: tuple[str, ...] = field(init=False)
+    retained_feature_names: tuple[str, ...] = field(init=False)
+
+    def __post_init__(self) -> None:
+        if (
+            not isinstance(self.threshold, (int, float))
+            or isinstance(self.threshold, bool)
+            or not math.isfinite(float(self.threshold))
+            or not 0 <= float(self.threshold) <= 1
+        ):
+            raise ValueError("threshold must be a finite fraction from 0 through 1")
+        if self.comparison != "greater_than_or_equal":
+            raise ValueError("comparison must be greater_than_or_equal")
+        _require_non_negative_integer(self.fit_row_count, "fit_row_count")
+        if not isinstance(self.features, tuple) or not self.features or not all(
+            isinstance(item, MutationFeatureSelection) for item in self.features
+        ):
+            raise TypeError("features must be a non-empty ordered tuple of MutationFeatureSelection values")
+        raw_columns = tuple(item.raw_column for item in self.features)
+        if len(raw_columns) != len(set(raw_columns)):
+            raise ValueError("mutation selection raw columns must be unique")
+        retained = tuple(item for item in self.features if item.retained)
+        excluded = tuple(item for item in self.features if not item.retained)
+        object.__setattr__(self, "retained_genes", tuple(item.gene for item in retained))
+        object.__setattr__(self, "excluded_genes", tuple(item.gene for item in excluded))
+        object.__setattr__(
+            self,
+            "retained_feature_names",
+            tuple(item.derived_feature_name for item in retained),
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class MutationPreprocessingMetadata(SerializableContract):
+    """Typed Track D representation, selection, and burden policies."""
+
+    representation_policy: str
+    source_feature_names: tuple[str, ...]
+    selection: MutationSelectionMetadata
+    burden_source_feature_count: int
+    burden_feature_name: str
+    burden_transformation: str
+
+    def __post_init__(self) -> None:
+        _require_text(self.representation_policy, "representation_policy")
+        _require_text_tuple(self.source_feature_names, "source_feature_names")
+        if len(self.source_feature_names) != len(set(self.source_feature_names)) or not all(
+            name.endswith("_mut") for name in self.source_feature_names
+        ):
+            raise ValueError("source_feature_names must be unique raw _mut columns")
+        if not isinstance(self.selection, MutationSelectionMetadata):
+            raise TypeError("selection must be MutationSelectionMetadata")
+        if tuple(item.raw_column for item in self.selection.features) != self.source_feature_names:
+            raise ValueError("selection features must match source_feature_names in order")
+        _require_non_negative_integer(self.burden_source_feature_count, "burden_source_feature_count")
+        if self.burden_source_feature_count != len(self.source_feature_names):
+            raise ValueError("burden_source_feature_count must match source_feature_names")
+        if self.burden_feature_name != "mutation_burden_log1p":
+            raise ValueError("burden_feature_name must be mutation_burden_log1p")
+        _require_text(self.burden_transformation, "burden_transformation")
+
+
+@dataclass(frozen=True, slots=True)
 class PreprocessingMetadata(SerializableContract):
     """Aggregate, serializable explanation of one fitted preprocessing contract."""
 
@@ -147,6 +257,9 @@ class PreprocessingMetadata(SerializableContract):
     zero_duration_policy: str
     forbidden_feature_guard_passed: bool
     split_counts: tuple[SplitEligibilityCount, ...] = ()
+    mutation_metadata: MutationPreprocessingMetadata | None = None
+    standardized_continuous_feature_names: tuple[str, ...] = ()
+    unscaled_binary_feature_names: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
         if not isinstance(self.task, PreprocessingTask):
@@ -157,6 +270,7 @@ class PreprocessingMetadata(SerializableContract):
             PreprocessingTask.CLINICAL_SURVIVAL: PreprocessingTrack.TRACK_A,
             PreprocessingTask.CLINICAL_MRNA_SURVIVAL: PreprocessingTrack.TRACK_B,
             PreprocessingTask.SUBTYPE_CLASSIFICATION: PreprocessingTrack.TRACK_C,
+            PreprocessingTask.CLINICAL_MUTATION_SURVIVAL: PreprocessingTrack.TRACK_D,
         }[self.task]
         if self.track is not expected_track:
             raise ValueError("track must match task")
@@ -199,6 +313,28 @@ class PreprocessingMetadata(SerializableContract):
             isinstance(item, SplitEligibilityCount) for item in self.split_counts
         ):
             raise TypeError("split_counts must be an ordered tuple of SplitEligibilityCount values")
+        for value, field_name in (
+            (self.standardized_continuous_feature_names, "standardized_continuous_feature_names"),
+            (self.unscaled_binary_feature_names, "unscaled_binary_feature_names"),
+        ):
+            _require_text_tuple(value, field_name)
+        if self.task is PreprocessingTask.CLINICAL_MUTATION_SURVIVAL:
+            if not isinstance(self.mutation_metadata, MutationPreprocessingMetadata):
+                raise TypeError("Track D requires mutation_metadata")
+            if self.mrna_feature_names:
+                raise ValueError("Track D cannot include mRNA feature names")
+            standardized = self.standardized_continuous_feature_names
+            unscaled = self.unscaled_binary_feature_names
+            if set(standardized) & set(unscaled) or set(standardized + unscaled) != set(
+                self.final_feature_names
+            ) or len(standardized) + len(unscaled) != len(self.final_feature_names):
+                raise ValueError("Track D scaling groups must form an exact disjoint final feature partition")
+            if not set(self.mutation_metadata.selection.retained_feature_names).issubset(unscaled):
+                raise ValueError("retained mutation features must belong to the unscaled feature partition")
+            if self.mutation_metadata.burden_feature_name not in standardized:
+                raise ValueError("mutation burden must belong to the standardized feature partition")
+        elif self.mutation_metadata is not None:
+            raise ValueError("only Track D may carry mutation_metadata")
 
 
 @dataclass(frozen=True, slots=True)
@@ -221,7 +357,7 @@ class CanonicalPreprocessingReport(SerializableContract):
         ):
             raise TypeError("tasks must be an ordered tuple of PreprocessingMetadata values")
         if tuple(item.task for item in self.tasks) != tuple(PreprocessingTask):
-            raise ValueError("tasks must contain Track A, Track B, and Track C metadata in task order")
+            raise ValueError("tasks must contain Track A, Track B, Track C, and Track D metadata in task order")
         for value, field_name in (
             (self.tumor_size_missing_indicator_count, "tumor_size_missing_indicator_count"),
             (self.er_ihc_missing_indicator_count, "er_ihc_missing_indicator_count"),

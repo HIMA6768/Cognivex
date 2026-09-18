@@ -10,7 +10,7 @@ from streamlit.testing.v1 import AppTest
 
 
 ROOT = Path(__file__).resolve().parents[1]
-APP_TEST_TIMEOUT_SECONDS = 15
+APP_TEST_TIMEOUT_SECONDS = 30
 
 
 def _run_app() -> AppTest:
@@ -105,6 +105,42 @@ def test_data_cohort_page_shows_r3_quality_aggregates_without_patient_rows() -> 
     assert "Clinical missingness" in text
     assert "Survival endpoint" in text
     assert "Genomic data quality" in text
+    assert "patient_id" not in text.lower()
+
+
+def test_data_cohort_page_separates_r3_quality_warnings_from_r4_preprocessing_readiness() -> None:
+    """Conflating canonical limitations with R4 readiness would mislead research users."""
+    app = _run_app()
+    app.sidebar.radio[0].set_value("Data / Cohort")
+    app.run(timeout=APP_TEST_TIMEOUT_SECONDS)
+
+    text = _visible_text(app)
+    metrics = {metric.label: metric.value for metric in app.metric}
+    assert not app.exception
+    assert "DATA_QUALITY_READY_WITH_WARNINGS" in text
+    assert (metrics["Errors"], metrics["Warnings"], metrics["Information"]) == ("0", "3", "6")
+    assert "Preprocessing readiness" in text
+    assert "PREPROCESSING_READY" in text
+    assert {"Track A", "Track B", "Track C", "Track D"}.issubset(metrics)
+    assert (metrics["Track A"], metrics["Track B"], metrics["Track C"], metrics["Track D"]) == (
+        "1,903 eligible",
+        "1,903 eligible",
+        "1,898 eligible",
+        "1,903 eligible",
+    )
+    assert "489" in text
+    assert "27" in text
+    assert "Clinical + mutation survival preprocessing ready" in text
+    assert (
+        "The canonical record remains unchanged. R4/R4D exclude it from survival Tracks A/B/D using "
+        "NON_POSITIVE_SURVIVAL_DURATION; it remains independently eligible for Track C when Track C requirements pass."
+    ) in text
+    nc_policy = (
+        "Patients labeled as 'NC' (Not Classified) in the raw data are excluded during Track C classification "
+        "model training, but are retained for Tracks A, B, and D when their survival eligibility requirements pass."
+    )
+    assert "NC records: 6" in text
+    assert text.count(nc_policy) == 2
     assert "patient_id" not in text.lower()
 
 

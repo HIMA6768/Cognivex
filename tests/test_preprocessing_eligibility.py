@@ -11,6 +11,7 @@ import pytest
 from src.contracts import EligibilityReasonCode
 from src.data.metabric import MetabricPaths
 from src.preprocessing.eligibility import (
+    evaluate_clinical_mutation_survival_eligibility,
     evaluate_clinical_mrna_survival_eligibility,
     evaluate_clinical_survival_eligibility,
     evaluate_subtype_eligibility,
@@ -125,12 +126,64 @@ def test_nc_affects_only_subtype_eligibility(schema: PreprocessingSchema) -> Non
     assert subtype.reasons == ((EligibilityReasonCode.NC_SUBTYPE,),)
 
 
+def test_nc_does_not_affect_track_d_survival_eligibility(schema: PreprocessingSchema) -> None:
+    """Using subtype status in Track D would incorrectly shrink its survival population."""
+    prepared = _prepared(**{"pam50_+_claudin-low_subtype": "NC"})
+
+    result = evaluate_clinical_mutation_survival_eligibility(prepared, _manifest(), schema)
+
+    assert result.mask == (True,)
+    assert result.reasons == ((),)
+
+
 def test_supported_predictor_missingness_does_not_exclude_survival_rows(schema: PreprocessingSchema) -> None:
     """Eligibility must not duplicate the approved train-only imputation policy."""
     prepared = _prepared(tumor_size=np.nan, er_status_measured_by_ihc=np.nan)
 
     assert evaluate_clinical_survival_eligibility(prepared, _manifest()).mask == (True,)
     assert evaluate_clinical_mrna_survival_eligibility(prepared, _manifest(), schema).mask == (True,)
+    assert evaluate_clinical_mutation_survival_eligibility(prepared, _manifest(), schema).mask == (True,)
+
+
+def test_track_d_preserves_survival_reasons_and_ignores_mutation_prevalence(
+    schema: PreprocessingSchema,
+) -> None:
+    """Frequency selection belongs to fit, while row eligibility remains structural."""
+    zero_duration = _prepared(overall_survival_months=0, gene_a_mut="0")
+    reported_mutation = _prepared(gene_a_mut="H1047R")
+
+    zero_result = evaluate_clinical_mutation_survival_eligibility(
+        zero_duration, _manifest(), schema
+    )
+    reported_result = evaluate_clinical_mutation_survival_eligibility(
+        reported_mutation, _manifest(), schema
+    )
+
+    assert zero_result.reasons == ((EligibilityReasonCode.NON_POSITIVE_SURVIVAL_DURATION,),)
+    assert reported_result.mask == (True,)
+
+
+@pytest.mark.parametrize(
+    ("mutation_value", "expected_reason"),
+    [
+        (None, EligibilityReasonCode.MISSING_MUTATION_VALUE),
+        ("", EligibilityReasonCode.MISSING_MUTATION_VALUE),
+        (True, EligibilityReasonCode.INVALID_MUTATION_VALUE),
+        (float("inf"), EligibilityReasonCode.INVALID_MUTATION_VALUE),
+    ],
+)
+def test_track_d_rejects_structurally_invalid_mutation_values(
+    schema: PreprocessingSchema,
+    mutation_value: object,
+    expected_reason: EligibilityReasonCode,
+) -> None:
+    """Missing or malformed mutation annotations cannot silently become mutation absence."""
+    result = evaluate_clinical_mutation_survival_eligibility(
+        _prepared(gene_a_mut=mutation_value), _manifest(), schema
+    )
+
+    assert result.mask == (False,)
+    assert result.reasons == ((expected_reason,),)
 
 
 @pytest.mark.parametrize(

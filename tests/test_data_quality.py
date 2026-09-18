@@ -428,6 +428,36 @@ def test_nullable_clinical_missingness_produces_warning_only_report(tmp_path: Pa
     assert "CLINICAL_VALUE_MISSING" in {finding.code for finding in report.findings}
 
 
+def test_canonical_quality_findings_describe_completed_r4_handling() -> None:
+    """Stale R4 decision prompts would misstate the current downstream readiness."""
+    report = evaluate_metabric_quality()
+    findings = {(finding.code, finding.subject): finding for finding in report.findings}
+
+    assert report.status is DataQualityStatus.DATA_QUALITY_READY_WITH_WARNINGS
+    assert (report.error_count, report.warning_count, report.information_count) == (0, 3, 6)
+    assert (
+        findings[("CLINICAL_VALUE_MISSING", "tumor_size")].recommendation
+        == "R4 uses training-only median imputation while preserving original missingness with "
+        "tumor_size_was_missing. Validation and test rows are transform-only."
+    )
+    assert (
+        findings[("CLINICAL_VALUE_MISSING", "er_status_measured_by_ihc")].recommendation
+        == "R4 uses training-only most-frequent imputation while preserving original missingness "
+        "with er_status_measured_by_ihc_was_missing. Validation and test rows are transform-only, "
+        "with unknown-safe categorical encoding."
+    )
+    assert (
+        findings[("TUMOR_STAGE_UNKNOWN", "tumor_stage")].recommendation
+        == "R4 preserves Unknown as a valid categorical value without imputation or conversion to a numeric stage."
+    )
+    assert (
+        findings[("SURVIVAL_TIME_ZERO", "overall_survival_months")].recommendation
+        == "The canonical record remains unchanged. R4/R4D exclude it from survival Tracks A/B/D using "
+        "NON_POSITIVE_SURVIVAL_DURATION; it remains independently eligible for Track C when Track C requirements pass."
+    )
+    assert "decide" not in " ".join(finding.recommendation.lower() for finding in report.findings)
+
+
 def test_quality_scan_is_deterministic_and_exposes_no_record_payload(tmp_path: Path) -> None:
     """Caching and UI rendering require stable aggregate outputs, never source records."""
     paths = _synthetic_paths(tmp_path)

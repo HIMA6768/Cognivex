@@ -18,12 +18,14 @@ from src.data.metabric import MetabricPaths, load_metabric
 from src.data.metabric_quality import evaluate_metabric_quality
 
 from .eligibility import (
+    evaluate_clinical_mutation_survival_eligibility,
     evaluate_clinical_mrna_survival_eligibility,
     evaluate_clinical_survival_eligibility,
     evaluate_subtype_eligibility,
     normalize_subtype_target,
 )
 from .pipelines import (
+    build_clinical_mutation_survival_preprocessor,
     build_clinical_mrna_survival_preprocessor,
     build_clinical_survival_preprocessor,
     build_preprocessing_metadata,
@@ -97,11 +99,17 @@ def verify_canonical_preprocessing(paths: MetabricPaths | None = None) -> Canoni
             manifest,
             schema,
         ),
+        PreprocessingTask.CLINICAL_MUTATION_SURVIVAL: (
+            evaluate_clinical_mutation_survival_eligibility(prepared, manifest, schema)
+        ),
     }
     factories = {
         PreprocessingTask.CLINICAL_SURVIVAL: build_clinical_survival_preprocessor,
         PreprocessingTask.CLINICAL_MRNA_SURVIVAL: build_clinical_mrna_survival_preprocessor,
         PreprocessingTask.SUBTYPE_CLASSIFICATION: build_subtype_preprocessor,
+        PreprocessingTask.CLINICAL_MUTATION_SURVIVAL: (
+            build_clinical_mutation_survival_preprocessor
+        ),
     }
 
     subtype_target = normalize_subtype_target(prepared, schema)
@@ -125,7 +133,7 @@ def verify_canonical_preprocessing(paths: MetabricPaths | None = None) -> Canoni
             preprocessor.transform(features.loc[holdout_rows])
         state_unchanged = state_unchanged and state_before == pickle.dumps(preprocessor)
         final_names = get_transformed_feature_names(preprocessor)
-        mutation_feature_count += sum(name.endswith("_mut") for name in final_names)
+        mutation_feature_count += sum(name.endswith("_mut_present") for name in final_names)
         task_metadata.append(
             build_preprocessing_metadata(
                 task=task,

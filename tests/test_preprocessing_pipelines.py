@@ -9,13 +9,15 @@ from sklearn.base import clone
 
 from src.preprocessing.pipelines import (
     assert_safe_feature_names,
+    build_clinical_mutation_survival_preprocessor,
     build_clinical_mrna_survival_preprocessor,
     build_clinical_survival_preprocessor,
+    build_preprocessing_metadata,
     build_subtype_preprocessor,
     get_transformed_feature_names,
     select_task_features,
 )
-from src.contracts import PreprocessingTask
+from src.contracts import EligibilityResult, PreprocessingTask, SplitEligibilityCount
 from src.preprocessing.schema import PreprocessingSchema
 
 
@@ -241,6 +243,82 @@ def test_track_c_preserves_canonical_z_scores_without_target_or_scaler(
     assert not any("scaler" in name for name in pipeline.named_steps)
 
 
+def test_track_d_factory_scales_only_continuous_features_and_preserves_binary_outputs(
+    schema: PreprocessingSchema,
+    train_frame: pd.DataFrame,
+) -> None:
+    """Scaling binary indicators or leaving continuous Track D inputs unscaled breaks its Cox contract."""
+    frame = train_frame.assign(gene_a_mut=["0", "H1047R", "0"])
+    pipeline = build_clinical_mutation_survival_preprocessor(schema)
+    transformed = pipeline.fit_transform(frame)
+    names = get_transformed_feature_names(pipeline)
+
+    assert names[:16] == (
+        "age_at_diagnosis",
+        "tumor_size",
+        "lymph_nodes_examined_positive",
+        "tumor_stage_1",
+        "tumor_stage_2",
+        "tumor_stage_3",
+        "tumor_stage_4",
+        "tumor_stage_Unknown",
+        "er_status_measured_by_ihc_Positive",
+        "er_status_measured_by_ihc_Negative",
+        "pr_status_Positive",
+        "pr_status_Negative",
+        "her2_status_Positive",
+        "her2_status_Negative",
+        "tumor_size_was_missing",
+        "er_status_measured_by_ihc_was_missing",
+    )
+    assert names[-2:] == ("gene_a_mut_present", "mutation_burden_log1p")
+    for feature in (
+        "age_at_diagnosis",
+        "tumor_size",
+        "lymph_nodes_examined_positive",
+        "mutation_burden_log1p",
+    ):
+        assert transformed[:, names.index(feature)].mean() == pytest.approx(0.0, abs=1e-12)
+    for feature in names[3:16] + ("gene_a_mut_present",):
+        assert set(transformed[:, names.index(feature)]) <= {0.0, 1.0}
+
+
+def test_track_d_metadata_explicitly_partitions_standardized_and_unscaled_features(
+    schema: PreprocessingSchema,
+    train_frame: pd.DataFrame,
+) -> None:
+    """Implicit scaling knowledge would make fitted Track D outputs impossible to audit."""
+    frame = train_frame.assign(gene_a_mut=["0", "H1047R", "0"])
+    pipeline = build_clinical_mutation_survival_preprocessor(schema).fit(frame)
+    metadata = build_preprocessing_metadata(
+        task=PreprocessingTask.CLINICAL_MUTATION_SURVIVAL,
+        schema=schema,
+        eligibility=EligibilityResult(mask=(True, True, True), reasons=((), (), ())),
+        fitted_preprocessor=pipeline,
+        split_counts=(SplitEligibilityCount("train", 3, 0),),
+        source_dataset="METABRIC",
+        source_version="Version 1",
+    )
+
+    assert metadata.standardized_continuous_feature_names == (
+        "age_at_diagnosis",
+        "tumor_size",
+        "lymph_nodes_examined_positive",
+        "mutation_burden_log1p",
+    )
+    assert set(metadata.standardized_continuous_feature_names).isdisjoint(
+        metadata.unscaled_binary_feature_names
+    )
+    assert set(metadata.standardized_continuous_feature_names + metadata.unscaled_binary_feature_names) == set(
+        metadata.final_feature_names
+    )
+    assert metadata.mutation_metadata is not None
+    assert metadata.mutation_metadata.source_feature_names == ("gene_a_mut",)
+    assert metadata.mutation_metadata.selection.fit_row_count == 3
+    assert metadata.mutation_metadata.selection.retained_feature_names == ("gene_a_mut_present",)
+    assert metadata.mutation_metadata.burden_source_feature_count == 1
+
+
 def test_task_feature_selection_excludes_targets_ids_splits_and_mutations(
     schema: PreprocessingSchema,
     train_frame: pd.DataFrame,
@@ -268,6 +346,9 @@ def test_task_feature_selection_excludes_targets_ids_splits_and_mutations(
     assert tuple(select_task_features(full, PreprocessingTask.SUBTYPE_CLASSIFICATION, schema).columns) == (
         schema.mrna_features
     )
+    assert tuple(
+        select_task_features(full, PreprocessingTask.CLINICAL_MUTATION_SURVIVAL, schema).columns
+    ) == (schema.clinical_features + schema.mutation_features)
 
 
 def test_genomic_factories_are_fresh_cloneable_and_deterministic(
@@ -279,8 +360,31 @@ def test_genomic_factories_are_fresh_cloneable_and_deterministic(
     for factory, frame in (
         (build_clinical_mrna_survival_preprocessor, track_b_frame),
         (build_subtype_preprocessor, track_b_frame.loc[:, ["gene_a", "gene_b"]]),
+        (
+            build_clinical_mutation_survival_preprocessor,
+            train_frame.assign(gene_a_mut=["0", "H1047R", "0"]),
+        ),
     ):
         first = factory(schema)
         second = clone(first)
         np.testing.assert_array_equal(first.fit_transform(frame), second.fit_transform(frame))
         assert get_transformed_feature_names(first) == get_transformed_feature_names(second)
+
+
+def test_track_b_remains_mutation_free_after_track_d_is_added(
+    schema: PreprocessingSchema,
+    train_frame: pd.DataFrame,
+) -> None:
+    """Sharing genomic branches could accidentally add Track D mutation features to Track B."""
+    full = train_frame.assign(
+        gene_a=[0.0, 1.0, 2.0],
+        gene_b=[2.0, 1.0, 0.0],
+        gene_a_mut=["0", "H1047R", "0"],
+    )
+    selected = select_task_features(full, PreprocessingTask.CLINICAL_MRNA_SURVIVAL, schema)
+    names = get_transformed_feature_names(
+        build_clinical_mrna_survival_preprocessor(schema).fit(selected)
+    )
+
+    assert "gene_a_mut" not in selected
+    assert not any(name.endswith("_mut_present") for name in names)

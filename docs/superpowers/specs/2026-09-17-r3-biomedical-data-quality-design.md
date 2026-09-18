@@ -56,4 +56,4 @@ The existing Data / Cohort page gains a cached R3 report keyed to the validated 
 
 ## R3/R4 Boundary
 
-R3 supplies R4 with missingness, type, variance, distribution, and structural findings. R4 must decide and implement training-split-only imputation, encoding, scaling, filtering, and preprocessing. R3 does not prescribe those transformations.
+R3 supplies R4 with missingness, type, variance, distribution, and structural findings. R4 now provides the applicable training-split-only preprocessing and eligibility policies; R3 continues to report canonical facts without prescribing or performing those transformations.

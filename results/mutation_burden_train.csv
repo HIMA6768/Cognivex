@@ -1,0 +1,11 @@
+metric,value
+patient_count,1332.0
+min_mutations,0.0
+p25_mutations,3.0
+median_mutations,5.0
+mean_mutations,5.228978978978979
+p75_mutations,7.0
+max_mutations,48.0
+patients_with_zero_mutations,32.0
+patients_with_any_mutation,1300.0
+std_mutations,3.5460464610693725

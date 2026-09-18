@@ -13,6 +13,9 @@ import pandas as pd
 
 from src.contracts import (
     EligibilityResult,
+    MutationFeatureSelection,
+    MutationPreprocessingMetadata,
+    MutationSelectionMetadata,
     PreprocessingMetadata,
     PreprocessingTask,
     PreprocessingTrack,
@@ -20,6 +23,7 @@ from src.contracts import (
 )
 
 from .clinical import FeatureFrameGuard, OriginalMissingIndicator
+from .mutations import MutationBurdenTransformer, MutationFrequencySelector
 from .schema import PreprocessingSchema
 
 
@@ -47,18 +51,32 @@ def _one_hot(categories: tuple[str, ...]) -> OneHotEncoder:
     )
 
 
-def build_clinical_survival_preprocessor(schema: PreprocessingSchema) -> Pipeline:
-    """Return a fresh, unfitted, unscaled Track A clinical transformer."""
+def _build_clinical_preprocessor(
+    schema: PreprocessingSchema, *, standardize_continuous: bool
+) -> Pipeline:
     category_map = schema.category_map
+    age_transformer: object = StandardScaler() if standardize_continuous else "passthrough"
+    positive_nodes_transformer: object = (
+        StandardScaler() if standardize_continuous else "passthrough"
+    )
+    tumor_size_steps: list[tuple[str, object]] = [
+        ("imputer", SimpleImputer(strategy="median"))
+    ]
+    if standardize_continuous:
+        tumor_size_steps.append(("scaler", StandardScaler()))
     columns = ColumnTransformer(
         transformers=[
-            ("age", "passthrough", ["age_at_diagnosis"]),
+            ("age", age_transformer, ["age_at_diagnosis"]),
             (
                 "tumor_size",
-                Pipeline([("imputer", SimpleImputer(strategy="median"))]),
+                Pipeline(tumor_size_steps),
                 ["tumor_size"],
             ),
-            ("positive_nodes", "passthrough", ["lymph_nodes_examined_positive"]),
+            (
+                "positive_nodes",
+                positive_nodes_transformer,
+                ["lymph_nodes_examined_positive"],
+            ),
             ("tumor_stage", _one_hot(category_map["tumor_stage"]), ["tumor_stage"]),
             (
                 "er_status",
@@ -104,6 +122,11 @@ def build_clinical_survival_preprocessor(schema: PreprocessingSchema) -> Pipelin
     )
 
 
+def build_clinical_survival_preprocessor(schema: PreprocessingSchema) -> Pipeline:
+    """Return a fresh, unfitted, unscaled Track A clinical transformer."""
+    return _build_clinical_preprocessor(schema, standardize_continuous=False)
+
+
 def build_clinical_mrna_survival_preprocessor(schema: PreprocessingSchema) -> Pipeline:
     """Return a fresh Track B transformer with train-fitted mRNA scaling."""
     expected = schema.clinical_features + schema.mrna_features
@@ -146,6 +169,48 @@ def build_subtype_preprocessor(schema: PreprocessingSchema) -> Pipeline:
     )
 
 
+def build_clinical_mutation_survival_preprocessor(schema: PreprocessingSchema) -> Pipeline:
+    """Return a fresh Track D transformer with fit-local mutation selection."""
+    expected = schema.clinical_features + schema.mutation_features
+    columns = ColumnTransformer(
+        transformers=[
+            (
+                "clinical",
+                _build_clinical_preprocessor(schema, standardize_continuous=True),
+                list(schema.clinical_features),
+            ),
+            (
+                "mutations",
+                MutationFrequencySelector(schema.mutation_features, min_prevalence=0.05),
+                list(schema.mutation_features),
+            ),
+            (
+                "burden",
+                Pipeline(
+                    [
+                        ("log1p", MutationBurdenTransformer(schema.mutation_features)),
+                        ("scaler", StandardScaler()),
+                    ]
+                ),
+                list(schema.mutation_features),
+            ),
+        ],
+        remainder="drop",
+        sparse_threshold=0,
+        verbose_feature_names_out=False,
+    )
+    return Pipeline(
+        [
+            (
+                "guard",
+                FeatureFrameGuard(
+                    expected_columns=expected,
+                    nullable_columns=("tumor_size", "er_status_measured_by_ihc"),
+                ),
+            ),
+            ("columns", columns),
+        ]
+    )
 def select_task_features(
     prepared: pd.DataFrame,
     task: PreprocessingTask,
@@ -158,11 +223,17 @@ def select_task_features(
         PreprocessingTask.CLINICAL_SURVIVAL: schema.clinical_features,
         PreprocessingTask.CLINICAL_MRNA_SURVIVAL: schema.clinical_features + schema.mrna_features,
         PreprocessingTask.SUBTYPE_CLASSIFICATION: schema.mrna_features,
+        PreprocessingTask.CLINICAL_MUTATION_SURVIVAL: (
+            schema.clinical_features + schema.mutation_features
+        ),
     }[task]
     missing = tuple(name for name in feature_names if name not in prepared.columns)
     if missing:
         raise ValueError(f"prepared data is missing task features: {', '.join(missing)}")
-    assert_safe_feature_names(feature_names)
+    assert_safe_feature_names(
+        feature_names,
+        allow_raw_mutation_annotations=task is PreprocessingTask.CLINICAL_MUTATION_SURVIVAL,
+    )
     return prepared.loc[:, list(feature_names)].copy()
 
 
@@ -181,9 +252,17 @@ def build_preprocessing_metadata(
         PreprocessingTask.CLINICAL_SURVIVAL: PreprocessingTrack.TRACK_A,
         PreprocessingTask.CLINICAL_MRNA_SURVIVAL: PreprocessingTrack.TRACK_B,
         PreprocessingTask.SUBTYPE_CLASSIFICATION: PreprocessingTrack.TRACK_C,
+        PreprocessingTask.CLINICAL_MUTATION_SURVIVAL: PreprocessingTrack.TRACK_D,
     }[task]
     clinical_names = schema.clinical_features if task is not PreprocessingTask.SUBTYPE_CLASSIFICATION else ()
-    mrna_names = schema.mrna_features if task is not PreprocessingTask.CLINICAL_SURVIVAL else ()
+    mrna_names = (
+        schema.mrna_features
+        if task in {
+            PreprocessingTask.CLINICAL_MRNA_SURVIVAL,
+            PreprocessingTask.SUBTYPE_CLASSIFICATION,
+        }
+        else ()
+    )
     final_names = get_transformed_feature_names(fitted_preprocessor)
     policies = {
         PreprocessingTask.CLINICAL_SURVIVAL: (
@@ -207,8 +286,61 @@ def build_preprocessing_metadata(
             "NC excluded from supervised subtype classification",
             "survival duration does not affect subtype eligibility",
         ),
+        PreprocessingTask.CLINICAL_MUTATION_SURVIVAL: (
+            "training-only tumor-size median and ER-IHC most-frequent imputation",
+            "schema categories with unknown values ignored",
+            "training-only StandardScaler for continuous clinical values and log1p mutation burden",
+            "NC does not affect Track D survival eligibility",
+            "non-positive duration excluded from survival modeling",
+        ),
     }[task]
     imputation, encoding, scaling, nc_policy, zero_policy = policies
+    mutation_metadata = None
+    standardized_continuous_feature_names: tuple[str, ...] = ()
+    unscaled_binary_feature_names: tuple[str, ...] = ()
+    mutation_policy = "all mutation annotation fields excluded"
+    mutation_source_names: tuple[str, ...] = ()
+    if task is PreprocessingTask.CLINICAL_MUTATION_SURVIVAL:
+        selector = fitted_preprocessor.named_steps["columns"].named_transformers_["mutations"]
+        prevalence = dict(selector.prevalence_by_column_)
+        retained = set(selector.retained_columns_)
+        selection = MutationSelectionMetadata(
+            threshold=float(selector.min_prevalence),
+            comparison="greater_than_or_equal",
+            fit_row_count=selector.fit_row_count_,
+            features=tuple(
+                MutationFeatureSelection(
+                    raw_column=column,
+                    gene=column.removesuffix("_mut"),
+                    derived_feature_name=f"{column}_present",
+                    prevalence=prevalence[column],
+                    retained=column in retained,
+                )
+                for column in schema.mutation_features
+            ),
+        )
+        mutation_metadata = MutationPreprocessingMetadata(
+            representation_policy=(
+                "trimmed or numeric zero is absent; finite nonzero or annotation string is present; "
+                "missing and malformed values are rejected"
+            ),
+            source_feature_names=schema.mutation_features,
+            selection=selection,
+            burden_source_feature_count=len(schema.mutation_features),
+            burden_feature_name="mutation_burden_log1p",
+            burden_transformation="log1p of binary mutation presence count across all source genes",
+        )
+        standardized_continuous_feature_names = (
+            "age_at_diagnosis",
+            "tumor_size",
+            "lymph_nodes_examined_positive",
+            "mutation_burden_log1p",
+        )
+        unscaled_binary_feature_names = tuple(
+            name for name in final_names if name not in standardized_continuous_feature_names
+        )
+        mutation_policy = "fit-local >=0.05 binary selector plus all-source-gene log1p burden"
+        mutation_source_names = schema.mutation_features
     return PreprocessingMetadata(
         task=task,
         track=track,
@@ -218,7 +350,7 @@ def build_preprocessing_metadata(
         eligible_row_count=eligibility.eligible_count,
         excluded_row_count=eligibility.excluded_count,
         exclusion_counts=eligibility.exclusion_counts,
-        raw_feature_count=len(clinical_names) + len(mrna_names),
+        raw_feature_count=len(clinical_names) + len(mrna_names) + len(mutation_source_names),
         transformed_feature_count=len(final_names),
         clinical_feature_names=clinical_names,
         mrna_feature_names=mrna_names,
@@ -231,20 +363,25 @@ def build_preprocessing_metadata(
         ),
         categorical_encoding_strategy=encoding,
         scaling_strategy=scaling,
-        mutation_policy="all mutation annotation fields excluded; Track D deferred",
+        mutation_policy=mutation_policy,
         nc_policy=nc_policy,
         zero_duration_policy=zero_policy,
         forbidden_feature_guard_passed=True,
         split_counts=split_counts,
+        mutation_metadata=mutation_metadata,
+        standardized_continuous_feature_names=standardized_continuous_feature_names,
+        unscaled_binary_feature_names=unscaled_binary_feature_names,
     )
-def assert_safe_feature_names(feature_names: Iterable[str]) -> None:
+def assert_safe_feature_names(
+    feature_names: Iterable[str], *, allow_raw_mutation_annotations: bool = False
+) -> None:
     """Fail before model consumption when a target, ID, mutation, or audit field leaks."""
     unsafe: list[str] = []
     for feature_name in feature_names:
         normalized = str(feature_name).split("__")[-1].lower()
         if (
             normalized in _FORBIDDEN_EXACT
-            or normalized.endswith("_mut")
+            or normalized.endswith("_mut") and not allow_raw_mutation_annotations
             or "eligibility" in normalized
             or normalized.endswith("_eligible")
         ):

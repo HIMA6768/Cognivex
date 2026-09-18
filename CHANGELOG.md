@@ -1,5 +1,24 @@
 # Changelog
 
+## 2026-09-18 — R4D Track D mutation preprocessing
+
+- Added the fresh `clinical_mutation_survival` Track D preprocessor with shared binary annotation semantics, an inclusive fit-local `>= 0.05` mutation selector, and all-173-gene `mutation_burden_log1p`.
+- Added Track-D-specific train-fitted scaling for continuous clinical variables and burden while leaving clinical one-hot/missing indicators and mutation-presence indicators unscaled; typed metadata explicitly partitions those final groups.
+- Added survival-based Track D eligibility, canonical verification, aggregate readiness UI, and regression coverage proving Track B remains mutation-free and Tracks A–C remain unchanged.
+- The current locked full-training fit retains 27 genes and emits 44 features as canonical evidence only. No gene list/count is hardcoded, and no model, C-index, tuning, or patient prediction was introduced.
+
+## 2026-09-18 — R4D-P0 locked-training mutation profiling
+
+- Added deterministic, aggregate-only train-split profiling for the 173 canonical mutation annotation fields, including per-gene prevalence, candidate 1/2/5/10% flags, and mutation-burden evidence artifacts.
+- Added patient-ID manifest joining, canonical annotation checks, train-only isolation, reconciliation, deterministic-output, immutable-artifact, and Track B zero-mutation regression coverage.
+- No mutation threshold was selected; no Track D preprocessor, production burden feature, model, metric, or clinical behavior was introduced.
+
+## 2026-09-18 — R4 post-integration Data / Cohort status cleanup
+
+- Preserved `DATA_QUALITY_READY_WITH_WARNINGS` and its canonical 0-error, 3-warning, 6-information result while updating stale R4 decision prompts to describe implemented handling policies.
+- Added a separately derived `PREPROCESSING_READY` Data / Cohort section backed by R4 canonical verification, with aggregate Track A/B/C readiness and no patient-level data.
+- No canonical data, checksum behavior, R3 severity, locked manifest, eligibility rule, model, or clinical-decision behavior changed.
+
 ## 2026-09-18 — R4 Leak-safe preprocessing
 
 - Added separate fresh sklearn-compatible preprocessors for Track A clinical survival, Track B clinical-plus-489-mRNA survival, and Track C mRNA-only subtype classification.

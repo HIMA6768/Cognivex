@@ -1,0 +1,24 @@
+{
+  "genes_ge_10pct": 8,
+  "genes_ge_1pct": 116,
+  "genes_ge_2pct": 73,
+  "genes_ge_5pct": 27,
+  "genes_with_any_mutation": 173,
+  "genes_with_missing_values": 0,
+  "genes_with_zero_mutations": 0,
+  "mutation_burden_summary": {
+    "max": 48,
+    "mean": 5.228978978978979,
+    "median": 5.0,
+    "min": 0,
+    "p25": 3.0,
+    "p75": 7.0,
+    "patient_count": 1332,
+    "patients_with_any_mutation": 1300,
+    "patients_with_zero_mutations": 32,
+    "std": 3.5460464610693725
+  },
+  "raw_mutation_features": 173,
+  "total_missing_annotation_cells": 0,
+  "training_patients": 1332
+}

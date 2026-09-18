@@ -4,14 +4,16 @@ from __future__ import annotations
 
 from collections.abc import MutableMapping
 
-from src.contracts import DataQualityReport, MetabricIngestionResult
+from src.contracts import CanonicalPreprocessingReport, DataQualityReport, MetabricIngestionResult
 from src.data.metabric import load_metabric
 from src.data.metabric_quality import evaluate_metabric_quality
+from src.preprocessing.metabric import verify_canonical_preprocessing
 
 
 METABRIC_INGESTION_STATE_KEY = "metabric_ingestion_result"
 METABRIC_QUALITY_STATE_KEY = "metabric_quality_report"
 METABRIC_QUALITY_SOURCE_STATE_KEY = "metabric_quality_source"
+METABRIC_PREPROCESSING_STATE_KEY = "metabric_preprocessing_report"
 
 
 def get_metabric_ingestion_state(
@@ -38,4 +40,15 @@ def get_metabric_quality_state(
         existing = evaluate_metabric_quality(ingestion=ingestion)
         session_state[METABRIC_QUALITY_STATE_KEY] = existing
         session_state[METABRIC_QUALITY_SOURCE_STATE_KEY] = ingestion
+    return existing
+
+
+def get_metabric_preprocessing_state(
+    session_state: MutableMapping[str, object], *, refresh: bool = False
+) -> CanonicalPreprocessingReport:
+    """Reuse aggregate R4 readiness evidence until a user explicitly refreshes it."""
+    existing = session_state.get(METABRIC_PREPROCESSING_STATE_KEY)
+    if refresh or not isinstance(existing, CanonicalPreprocessingReport):
+        existing = verify_canonical_preprocessing()
+        session_state[METABRIC_PREPROCESSING_STATE_KEY] = existing
     return existing

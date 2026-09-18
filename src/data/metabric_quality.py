@@ -490,6 +490,17 @@ def evaluate_metabric_quality(
             FieldQualitySummary(field_name, len(prepared_rows), missing_count, invalid_count)
         )
         if missing_count:
+            missing_recommendations = {
+                "tumor_size": (
+                    "R4 uses training-only median imputation while preserving original missingness with "
+                    "tumor_size_was_missing. Validation and test rows are transform-only."
+                ),
+                "er_status_measured_by_ihc": (
+                    "R4 uses training-only most-frequent imputation while preserving original missingness "
+                    "with er_status_measured_by_ihc_was_missing. Validation and test rows are transform-only, "
+                    "with unknown-safe categorical encoding."
+                ),
+            }
             findings.append(
                 _finding(
                     "CLINICAL_VALUE_MISSING",
@@ -499,7 +510,11 @@ def evaluate_metabric_quality(
                     missing_count,
                     len(prepared_rows),
                     field_name,
-                    "Decide and document a training-split-only handling policy in R4.",
+                    missing_recommendations.get(
+                        field_name,
+                        "R4 evaluates task-specific eligibility without mutating canonical records; "
+                        "no R3 imputation occurs.",
+                    ),
                 )
             )
         if invalid_count:
@@ -525,7 +540,7 @@ def evaluate_metabric_quality(
                 unknown_tumor_stage_count,
                 len(prepared_rows),
                 "tumor_stage",
-                "Preserve this category; decide any training-only handling policy in R4.",
+                "R4 preserves Unknown as a valid categorical value without imputation or conversion to a numeric stage.",
             )
         )
 
@@ -601,7 +616,8 @@ def evaluate_metabric_quality(
                 time_counts["zero"],
                 len(prepared_rows),
                 time_column,
-                "Review source timing conventions before later preprocessing; R3 does not modify records.",
+                "The canonical record remains unchanged. R4/R4D exclude it from survival Tracks A/B/D using "
+                "NON_POSITIVE_SURVIVAL_DURATION; it remains independently eligible for Track C when Track C requirements pass.",
             )
         )
     if time_counts["suspicious"]:
@@ -809,7 +825,7 @@ def evaluate_metabric_quality(
                     missing_values,
                     total_values,
                     f"{group_name} features",
-                    "Decide and document training-split-only handling in R4; R3 does not impute values.",
+                    "R4 evaluates task-specific eligibility without mutating canonical records; R3 does not impute values.",
                 )
             )
         if non_numeric_values:

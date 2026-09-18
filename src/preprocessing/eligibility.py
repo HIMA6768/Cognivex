@@ -8,6 +8,7 @@ import pandas as pd
 
 from src.contracts import EligibilityReasonCode, EligibilityResult
 
+from .mutations import MutationAnnotationKind, classify_mutation_annotation
 from .schema import PreprocessingSchema
 
 
@@ -87,6 +88,24 @@ def _mrna_reasons(row: pd.Series, features: tuple[str, ...]) -> tuple[Eligibilit
     return tuple(reasons)
 
 
+def _mutation_reasons(row: pd.Series, features: tuple[str, ...]) -> tuple[EligibilityReasonCode, ...]:
+    missing = False
+    invalid = False
+    for feature in features:
+        try:
+            kind, _ = classify_mutation_annotation(row[feature])
+        except ValueError:
+            invalid = True
+        else:
+            missing = missing or kind is MutationAnnotationKind.MISSING
+    reasons: list[EligibilityReasonCode] = []
+    if missing:
+        reasons.append(EligibilityReasonCode.MISSING_MUTATION_VALUE)
+    if invalid:
+        reasons.append(EligibilityReasonCode.INVALID_MUTATION_VALUE)
+    return tuple(reasons)
+
+
 def evaluate_clinical_survival_eligibility(
     prepared: pd.DataFrame,
     manifest: pd.DataFrame,
@@ -119,6 +138,26 @@ def evaluate_clinical_mrna_survival_eligibility(
     )
     reasons = tuple(
         row_reasons + _mrna_reasons(row, schema.mrna_features)
+        for row_reasons, (_, row) in zip(survival.reasons, prepared.iterrows(), strict=True)
+    )
+    return EligibilityResult(mask=tuple(not row_reasons for row_reasons in reasons), reasons=reasons)
+
+
+def evaluate_clinical_mutation_survival_eligibility(
+    prepared: pd.DataFrame,
+    manifest: pd.DataFrame,
+    schema: PreprocessingSchema,
+) -> EligibilityResult:
+    """Return Track D eligibility from survival and mutation structural validity."""
+    _required_columns(prepared, schema.mutation_features, "prepared mutation data")
+    survival = evaluate_clinical_survival_eligibility(
+        prepared,
+        manifest,
+        time_column=schema.survival_time_column,
+        event_column=schema.survival_event_column,
+    )
+    reasons = tuple(
+        row_reasons + _mutation_reasons(row, schema.mutation_features)
         for row_reasons, (_, row) in zip(survival.reasons, prepared.iterrows(), strict=True)
     )
     return EligibilityResult(mask=tuple(not row_reasons for row_reasons in reasons), reasons=reasons)

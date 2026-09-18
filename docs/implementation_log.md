@@ -1,5 +1,17 @@
 # Implementation log
 
+## 2026-09-18 — R4D Track D mutation preprocessing
+
+Added the `clinical_mutation_survival` / Track D contract, shared mutation parser, cloneable fit-local inclusive 5% selector, all-173-gene log1p burden transformer, survival-based eligibility, and a fresh clinical-plus-mutation pipeline. Track D standardizes age, imputed tumor size, positive-node count, and log1p burden while leaving one-hot, missing-indicator, and selected mutation-presence outputs unscaled; fitted metadata records both groups explicitly. Canonical verification reports 1,903 eligible rows (1,332/285/286), 27 retained genes, and 44 outputs for the current locked full-training fit. The 27/44 values are evidence only, not constants. Aggregate UI readiness now covers Tracks A–D; no model or metric was created.
+
+## 2026-09-18 — R4D-P0 locked-training mutation profiling
+
+Added read-only, deterministic mutation evidence profiling against the manifest-confirmed training split. The profile covers the 173 canonical mutation annotation fields only, confirms canonical `"0"` as the no-mutation representation, and writes aggregate per-gene prevalence, candidate frequency flags, burden statistics, JSON, and Markdown evidence to `results/`. The raw/prepared hashes remain unchanged, Track B retains zero mutation predictors, and no threshold, production mutation-burden feature, Track D preprocessor, model, or metric was introduced.
+
+## 2026-09-18 — R4 post-integration Data / Cohort status cleanup
+
+Preserved the canonical R3 result of `DATA_QUALITY_READY_WITH_WARNINGS` (0 errors, 3 warnings, 6 information findings) and updated its stale R4 decision prompts to describe implemented policies. The Data / Cohort page now separately derives `PREPROCESSING_READY` from the read-only R4 canonical verification report, showing aggregate Track A/B/C readiness without exposing patient-level records. No canonical artifact, R2/R3 rule, eligibility rule, model, or analysis behavior changed.
+
 ## 2026-09-18 — R4 Leak-safe preprocessing
 
 Implemented framework-independent eligibility/metadata contracts and three fresh sklearn-compatible factories. Track A applies training-only tumor-size median and ER-IHC mode imputation, schema-ordered unknown-safe categorical encoding, exact original-value missing indicators, and no numeric scaling. Track B appends exactly 489 canonically ordered mRNA features with a training-fitted `StandardScaler`. Track C retains those canonical expression Z-scores unchanged; source subtype labels are normalized separately as y.

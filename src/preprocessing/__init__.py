@@ -1,14 +1,22 @@
 """Leak-safe, task-specific METABRIC preprocessing."""
 
 from .eligibility import (
+    evaluate_clinical_mutation_survival_eligibility,
     evaluate_clinical_mrna_survival_eligibility,
     evaluate_clinical_survival_eligibility,
     evaluate_subtype_eligibility,
     normalize_subtype_target,
 )
 from .schema import PreprocessingSchema, load_preprocessing_schema
+from .mutations import (
+    MutationAnnotationKind,
+    MutationBurdenTransformer,
+    MutationFrequencySelector,
+    classify_mutation_annotation,
+)
 from .pipelines import (
     assert_safe_feature_names,
+    build_clinical_mutation_survival_preprocessor,
     build_clinical_mrna_survival_preprocessor,
     build_clinical_survival_preprocessor,
     build_preprocessing_metadata,
@@ -20,12 +28,18 @@ from .metabric import verify_canonical_preprocessing
 
 __all__ = [
     "PreprocessingSchema",
+    "MutationAnnotationKind",
+    "MutationBurdenTransformer",
+    "MutationFrequencySelector",
     "assert_safe_feature_names",
     "build_clinical_mrna_survival_preprocessor",
+    "build_clinical_mutation_survival_preprocessor",
     "build_clinical_survival_preprocessor",
     "build_preprocessing_metadata",
     "build_subtype_preprocessor",
+    "classify_mutation_annotation",
     "evaluate_clinical_mrna_survival_eligibility",
+    "evaluate_clinical_mutation_survival_eligibility",
     "evaluate_clinical_survival_eligibility",
     "evaluate_subtype_eligibility",
     "load_preprocessing_schema",

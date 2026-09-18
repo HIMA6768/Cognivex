@@ -10,6 +10,8 @@ R3 begins only after that R2 result is `DATA_READY`. It reads the prepared data 
 
 R4 reads the same prepared dataset and locked manifest after the R2/R3 gates. It computes separate Track A/B/C eligibility, selects predictors by explicit metadata allowlists, and fits preprocessing only on eligible locked-training rows. It does not write transformed matrices or modify source artifacts. See [preprocessing.md](preprocessing.md).
 
+R4D adds Track D eligibility and read-only mutation preprocessing from the same canonical prepared dataset. All 173 mutation annotation fields remain immutable. Binary presence, fit-local frequency selection, and log1p burden exist only in memory inside the preprocessing pipeline; no derived patient-level dataset is written. See [mutation_preprocessing.md](mutation_preprocessing.md).
+
 The original `dataset_provenance.json` and `SHA256SUMS.txt` are preserved as received. The direct verified Kaggle provenance is recorded separately in [data_provenance_resolution.md](data_provenance_resolution.md). The R2 preparation script reproduces dataset semantics, not cross-version byte-identical serialization.
 
 Use de-identified public research data only unless explicitly authorized otherwise. Do not upload, log, or render personally identifiable health information.
