@@ -1,6 +1,12 @@
 """Versioned local model-artifact persistence."""
 
 from .survival import load_trusted_pickle, write_track_a_artifacts
+from .prognostic_features import (
+    R6_BUNDLE_RELATIVE,
+    VerifiedTrackBSource,
+    verify_and_load_track_b_source,
+    verify_r6_checksums,
+)
 from .track_b import (
     TrackBReloadVerification,
     refresh_track_b_checksums,
@@ -25,6 +31,10 @@ __all__ = [
     "verify_track_b_reload",
     "write_track_a_artifacts",
     "write_track_b_artifacts",
+    "R6_BUNDLE_RELATIVE",
+    "VerifiedTrackBSource",
+    "verify_and_load_track_b_source",
+    "verify_r6_checksums",
     "TrackCBundleVerification",
     "TrackCReloadVerification",
     "render_track_c_report",
