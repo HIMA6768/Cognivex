@@ -63,6 +63,7 @@ from .track_b import (
     TrackBFeatureContract,
     TrackBHyperparameters,
 )
+from .track_c import TrackCExclusionSummary, TrackCFeatureContract
 
 __all__ = [
     "AnalysisResult",
@@ -120,4 +121,6 @@ __all__ = [
     "TrackBHyperparameters",
     "TrackBCandidateResult",
     "TrackBExperimentResult",
+    "TrackCFeatureContract",
+    "TrackCExclusionSummary",
 ]
