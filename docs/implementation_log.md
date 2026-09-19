@@ -1,5 +1,11 @@
 # Implementation log
 
+## 2026-09-19 — R7 Track C molecular subtype classification
+
+Added a genomic-only Track C path with 50 explicit expression features, 18 selected mutation annotations transformed through the existing R4D semantics, and zero clinical predictors. Canonical manifest ordering and Track-C-only target filtering produce 1,330/285/283 eligible train/validation/test rows; NC exclusions are 2/1/3.
+
+Validation Macro-F1 alone selected Random Forest (0.771384) over Logistic Regression (0.701404), Gradient Boosting (0.744275), and RBF SVM (0.741258). Only Random Forest received final test evaluation: Macro-F1 0.734176, weighted F1 0.748642, accuracy 0.749117, and balanced accuracy 0.719373. Added aggregate artifacts, a trusted-local ignored pipeline, read-only reload verification, and a 28-check audit. A one-ULP parallel Random Forest probability variation was isolated to byte-level digesting; digest inputs are now quantized to 12 decimal places without changing predictions, evaluation probabilities, model selection, or metrics. R8 was not started.
+
 ## 2026-09-19 — R6 Track B clinical + genomic survival model
 
 Added an explicit 75-field Track B input contract: the seven frozen R5 clinical fields, 50 selected expression fields, and 18 selected mutation annotation fields. The fitted preprocessor reuses R5 clinical behavior, scales expression on train only, and derives binary mutation presence through the existing R4D classifier without changing the source CSV. The encoded model order contains 80 features.

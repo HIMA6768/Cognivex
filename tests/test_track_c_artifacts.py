@@ -74,6 +74,16 @@ def test_metadata_contains_dataset_counts_exclusions_features_candidates_metrics
     assert metadata["selection"]["candidate_test_evaluation_count"] == 0
     assert metadata["selection"]["winner_test_evaluation_count"] == 1
     assert metadata["random_states"] == {"logistic_regression": 42}
+    assert metadata["feature_contract"]["expression_features"] == list(result.feature_contract.expression_features)
+    assert metadata["feature_contract"]["mutation_features"] == list(result.feature_contract.mutation_features)
+    assert metadata["feature_contract"]["raw_feature_order"] == list(result.feature_contract.raw_features)
+    assert metadata["metrics"]["validation"]["macro_f1"] == result.validation_metrics.macro_f1
+    assert metadata["metrics"]["test"]["macro_f1"] == result.test_metrics.macro_f1
+    assert metadata["runtime"]["python_version"]
+    assert metadata["runtime"]["pandas_version"]
+    assert metadata["runtime"]["numpy_version"]
+    assert metadata["runtime"]["sklearn_version"]
+    assert metadata["runtime"]["git_commit"]
     assert contract["expression_feature_count"] == 50
     assert contract["mutation_feature_count"] == 18
     assert contract["raw_feature_count"] == 68

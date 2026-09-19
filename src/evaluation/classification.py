@@ -129,8 +129,17 @@ def prediction_digest(predictions: Sequence[str]) -> str:
 
 
 def probability_digest(ordered_probabilities: np.ndarray) -> str:
-    """Digest canonical little-endian float64 probability bytes."""
-    values = np.asarray(ordered_probabilities, dtype="<f8")
+    """Digest canonical little-endian float64 probability bytes.
+
+    Values are quantized to 12 decimal places before byte encoding so harmless
+    one-ULP differences from parallel tree-probability reduction cannot change
+    the persisted reproducibility digest. This is far below reported metric
+    precision and does not alter predictions or stored evaluation metrics.
+    """
+    values = np.round(np.asarray(ordered_probabilities, dtype=float), decimals=12).astype(
+        "<f8",
+        copy=False,
+    )
     if values.ndim != 2 or not np.isfinite(values).all():
         raise ValueError("ordered probabilities must be a finite two-dimensional matrix")
     return hashlib.sha256(np.ascontiguousarray(values).tobytes(order="C")).hexdigest()

@@ -11,3 +11,12 @@ The imported engineer code and its reported metrics are reference evidence only.
 R6 selected Track B from one small predefined regularization grid using one locked validation split. Track B underperformed Track A on validation by 0.006152 and outperformed it on the one-time test comparison by 0.015932. This mixed result does not prove genomic benefit, and test performance must not be used for retrospective model changes. The 68 selected genomic fields are an explicit engineer handoff contract, not a causal or biologically validated signature.
 
 The application is a research and educational prototype. It is not validated for diagnosis, prognosis in patient care, treatment selection, or any clinical decision. It must not receive identifiable patient information.
+
+## R7 limitations
+
+- R7 reports internal locked-split performance only; it is not external validation, clinical validation, or evidence of diagnostic utility.
+- The six classes and 68 predictors are dataset/handoff contracts, not causal biological findings.
+- The Normal class has 24 eligible test examples and the lowest test F1 (0.523810); all per-class results require cautious interpretation.
+- Candidate families and hyperparameters were predefined and intentionally small. The test result was not used to expand or revise them.
+- NC exclusions apply only to Track C; no conclusion is made for those records.
+- The persisted pickle pipeline is trusted-local only. No patient-facing inference, Streamlit result integration, calibration, deployment, or R8 feature-importance analysis exists.

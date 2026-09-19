@@ -2,7 +2,15 @@
 
 Cognivex is a Python/Streamlit research prototype for **Breast Cancer Prognosis & Subtype Classification**. The central future comparison is clinical-only survival prognosis versus clinical-plus-genomic prognosis, with molecular subtype classification and gene-level model insight as separate analytical tasks.
 
-## R6 status
+## R7 status
+
+R7 adds a six-class molecular subtype classifier using exactly 50 selected expression features and 18 R4D-derived mutation-presence features, with zero clinical predictors. Track C eligibility is 1,330 train, 285 validation, and 283 test; NC exclusions are 2/1/3 and apply only to Track C.
+
+Four frozen candidates were selected by validation Macro-F1 only. Random Forest won at 0.771384 validation Macro-F1. Its one-time final test evaluation produced Macro-F1 0.734176, weighted F1 0.748642, accuracy 0.749117, and balanced accuracy 0.719373. These are locked internal-split research results, not clinical validation or biological evidence. The test set did not influence selection.
+
+The ignored trusted-local pipeline and committed aggregate evidence live under `artifacts/models/track_c/r7-track-c-v1/`; a read-only reload verifier and independent 28-check audit reproduce the frozen result.
+
+## R6 survival foundation
 
 R6 adds a penalized clinical-plus-genomic Cox proportional-hazards comparison on top of the frozen R5A clinical baseline and canonical R2–R4D METABRIC foundation. The repository includes:
 
@@ -49,4 +57,4 @@ python -m pytest -q
 
 This is a research and educational prototype. It is not a diagnostic medical device, treatment recommendation system, validated clinical prognosis system, or substitute for qualified oncology care. Do not use it for patient care.
 
-See the generated [R6 report](artifacts/models/track_b/r6-track-b-v1/report.md), [R6-P0 compatibility audit](docs/r6_p0_engineer_compatibility.md), [R5A survival baseline](docs/survival_baseline.md), [architecture](docs/architecture.md), [contracts](docs/api_contracts.md), [data handoff](docs/data.md), [data quality](docs/data_quality.md), [preprocessing](docs/preprocessing.md), [Track D mutation preprocessing](docs/mutation_preprocessing.md), [active provenance resolution](docs/data_provenance_resolution.md), [setup](docs/setup.md), [testing](docs/testing.md), [limitations](docs/limitations.md), and the [problem-statement migration note](docs/migration.md).
+See the generated [R7 report](artifacts/models/track_c/r7-track-c-v1/report.md), [R6 report](artifacts/models/track_b/r6-track-b-v1/report.md), [R6-P0 compatibility audit](docs/r6_p0_engineer_compatibility.md), [R5A survival baseline](docs/survival_baseline.md), [architecture](docs/architecture.md), [model training](docs/model_training.md), [model evaluation](docs/model_evaluation.md), [testing](docs/testing.md), and [limitations](docs/limitations.md).

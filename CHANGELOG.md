@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-09-19 — R7 Track C molecular subtype classification
+
+- Added the exact genomic-only Track C contract: 50 expression features, 18 R4D-derived binary mutation-presence features, 68 raw/model predictors, and zero clinical predictors.
+- Applied Track-C-only target eligibility in canonical manifest order: 1,330 train, 285 validation, and 283 test, with NC exclusions of 2/1/3.
+- Evaluated Logistic Regression, Random Forest, Gradient Boosting, and RBF SVM on validation only. Random Forest won by validation Macro-F1 (0.771384); only that frozen winner received test evaluation.
+- Recorded final test Macro-F1 0.734176, weighted F1 0.748642, accuracy 0.749117, and balanced accuracy 0.719373.
+- Added non-overwriting artifacts, trusted-local ignored pipeline persistence, deterministic prediction/probability digests, read-only reload verification, and an independent 28-check audit. No R8, biological interpretation, inference service, Streamlit integration, or deployment work was added.
+
 ## 2026-09-19 — R6 Track B clinical + genomic survival model
 
 - Added the exact Track B contract: seven frozen R5 clinical predictors, 50 explicit selected expression predictors, and 18 selected mutation-presence predictors, yielding 75 raw and 80 encoded model features.

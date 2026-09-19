@@ -10,9 +10,13 @@ import json
 import math
 from pathlib import Path
 import pickle
+import platform
+import subprocess
 from typing import Any, TYPE_CHECKING
 
 import numpy as np
+import pandas as pd
+import sklearn
 
 from src.data import TRACK_C_CLASS_ORDER, ordered_patient_fingerprint
 from src.evaluation.classification import (
@@ -67,6 +71,16 @@ def _sha256(path: Path) -> str:
 
 def _write_json(path: Path, payload: dict[str, Any]) -> None:
     path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+
+def _git_commit(root: Path) -> str:
+    return subprocess.run(
+        ["git", "rev-parse", "HEAD"],
+        cwd=root,
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout.strip()
 
 
 def _feature_payload(result: TrackCExperimentResult) -> dict[str, Any]:
@@ -267,6 +281,26 @@ def write_track_c_artifacts(
         "excluded_labels": ["NC", "missing", "unsupported"],
         "mutation_policy": "existing R4D parser: zero is absent; accepted non-zero annotation is present; invalid input fails",
         "candidate_definitions": [row.definition.to_dict() for row in result.leaderboard],
+        "feature_contract": {
+            "expression_features": list(result.feature_contract.expression_features),
+            "mutation_features": list(result.feature_contract.mutation_features),
+            "raw_feature_order": list(result.feature_contract.raw_features),
+            "model_feature_order": list(result.model_feature_names),
+        },
+        "metrics": {
+            "validation": {
+                "macro_f1": result.validation_metrics.macro_f1,
+                "weighted_f1": result.validation_metrics.weighted_f1,
+                "accuracy": result.validation_metrics.accuracy,
+                "balanced_accuracy": result.validation_metrics.balanced_accuracy,
+            },
+            "test": {
+                "macro_f1": result.test_metrics.macro_f1,
+                "weighted_f1": result.test_metrics.weighted_f1,
+                "accuracy": result.test_metrics.accuracy,
+                "balanced_accuracy": result.test_metrics.balanced_accuracy,
+            },
+        },
         "selection": {
             "primary_metric": "validation_macro_f1",
             "tie_tolerance": 1e-12,
@@ -279,6 +313,13 @@ def write_track_c_artifacts(
             row.definition.key: row.definition.parameters["random_state"]
             for row in result.leaderboard
             if "random_state" in row.definition.parameters
+        },
+        "runtime": {
+            "python_version": platform.python_version(),
+            "pandas_version": pd.__version__,
+            "numpy_version": np.__version__,
+            "sklearn_version": sklearn.__version__,
+            "git_commit": _git_commit(run.repository_root),
         },
     }
     _write_json(bundle / "metadata.json", metadata)

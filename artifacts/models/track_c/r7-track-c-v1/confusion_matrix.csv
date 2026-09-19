@@ -1,0 +1,7 @@
+actual\predicted,Basal,Her2,LumA,LumB,Normal,claudin-low
+Basal,24,4,1,1,0,1
+Her2,1,23,1,7,0,0
+LumA,0,3,76,14,7,0
+LumB,0,3,8,54,0,0
+Normal,0,3,8,1,11,1
+claudin-low,1,0,6,0,0,24

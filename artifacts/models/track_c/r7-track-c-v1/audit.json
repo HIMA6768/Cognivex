@@ -1,0 +1,174 @@
+{
+  "checks": [
+    {
+      "evidence": "rows=1904, columns=693, sha256_match=True",
+      "name": "Active canonical dataset unchanged",
+      "number": 1,
+      "passed": true
+    },
+    {
+      "evidence": "counts={'train': 1332, 'validation': 286, 'test': 286}, sha256_match=True",
+      "name": "Locked split unchanged",
+      "number": 2,
+      "passed": true
+    },
+    {
+      "evidence": "R5 dedicated source paths and local artifact checksums",
+      "name": "R5 unchanged",
+      "number": 3,
+      "passed": true
+    },
+    {
+      "evidence": "R6 dedicated source paths and local artifact checksums",
+      "name": "R6 unchanged",
+      "number": 4,
+      "passed": true
+    },
+    {
+      "evidence": "count=68",
+      "name": "Exactly 68 genomic predictors",
+      "number": 5,
+      "passed": true
+    },
+    {
+      "evidence": "count=50",
+      "name": "Exactly 50 expression predictors",
+      "number": 6,
+      "passed": true
+    },
+    {
+      "evidence": "count=18",
+      "name": "Exactly 18 mutation predictors",
+      "number": 7,
+      "passed": true
+    },
+    {
+      "evidence": "clinical_count=0",
+      "name": "No clinical predictors",
+      "number": 8,
+      "passed": true
+    },
+    {
+      "evidence": "pam50_+_claudin-low_subtype",
+      "name": "Correct subtype target",
+      "number": 9,
+      "passed": true
+    },
+    {
+      "evidence": "Track C eligibility only; canonical cohort retained",
+      "name": "NC excluded only from Track C",
+      "number": 10,
+      "passed": true
+    },
+    {
+      "evidence": "['Basal', 'Her2', 'LumA', 'LumB', 'Normal', 'claudin-low']",
+      "name": "Six intended classes present",
+      "number": 11,
+      "passed": true
+    },
+    {
+      "evidence": "transformer=src.preprocessing.track_b",
+      "name": "Existing R4D mutation semantics reused",
+      "number": 12,
+      "passed": true
+    },
+    {
+      "evidence": "e18275dac2b8b11d158093785816ae04d3b2466217d5af47a6290e5927146c29",
+      "name": "Source mutation annotations unchanged",
+      "number": 13,
+      "passed": true
+    },
+    {
+      "evidence": "all transformed selected mutation values are in {0,1}",
+      "name": "Final mutation inputs binary",
+      "number": 14,
+      "passed": true
+    },
+    {
+      "evidence": "selected_model=random_forest, train_rows=1330",
+      "name": "Train-only scaling and preprocessing",
+      "number": 15,
+      "passed": true
+    },
+    {
+      "evidence": "fitted preprocessing sample count remains train eligible count; holdouts transform only",
+      "name": "Validation and test are transform-only",
+      "number": 16,
+      "passed": true
+    },
+    {
+      "evidence": "['logistic_regression', 'random_forest', 'gradient_boosting', 'rbf_svm']",
+      "name": "Exactly four approved model families",
+      "number": 17,
+      "passed": true
+    },
+    {
+      "evidence": "winner=random_forest",
+      "name": "Winner selected by validation Macro-F1",
+      "number": 18,
+      "passed": true
+    },
+    {
+      "evidence": "candidate_test_evaluation_count=0",
+      "name": "Test cannot influence selection",
+      "number": 19,
+      "passed": true
+    },
+    {
+      "evidence": "winner_test_evaluation_count=1",
+      "name": "Only frozen winner evaluated on test",
+      "number": 20,
+      "passed": true
+    },
+    {
+      "evidence": "sklearn.ensemble._forest",
+      "name": "Historical engineer pickles unused",
+      "number": 21,
+      "passed": true
+    },
+    {
+      "evidence": "trusted local pipeline reload",
+      "name": "Final artifact reload succeeds",
+      "number": 22,
+      "passed": true
+    },
+    {
+      "evidence": "035a621a593daed26a7f75ebab2a28cd82125c813bc7e51912aab9f2ae9c3cac",
+      "name": "Predictions reproduce after reload",
+      "number": 23,
+      "passed": true
+    },
+    {
+      "evidence": "['Basal', 'Her2', 'LumA', 'LumB', 'Normal', 'claudin-low']",
+      "name": "Class order persisted",
+      "number": 24,
+      "passed": true
+    },
+    {
+      "evidence": "feature_count=68",
+      "name": "Feature order persisted",
+      "number": 25,
+      "passed": true
+    },
+    {
+      "evidence": "sum=283",
+      "name": "Confusion matrix sums correctly",
+      "number": 26,
+      "passed": true
+    },
+    {
+      "evidence": "rendered test metrics and persisted metrics agree",
+      "name": "Report and metrics agree",
+      "number": 27,
+      "passed": true
+    },
+    {
+      "evidence": "262 passed, 4 warnings in 153.05s (0:02:33)",
+      "name": "Full test suite green",
+      "number": 28,
+      "passed": true
+    }
+  ],
+  "full_test_suite_summary": "262 passed, 4 warnings in 153.05s (0:02:33)",
+  "status": "PASS"
+}

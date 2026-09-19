@@ -123,3 +123,17 @@ def test_ordered_prediction_probability_and_cohort_digests_are_stable() -> None:
     assert ordered_patient_fingerprint(("p1", "p2")) == ordered_patient_fingerprint(("p1", "p2"))
     assert prediction_digest(predictions) != prediction_digest(tuple(reversed(predictions)))
     assert probability_digest(probabilities) != probability_digest(probabilities[::-1])
+
+
+def test_probability_digest_ignores_parallel_reduction_ulp_jitter() -> None:
+    probabilities = np.asarray(
+        [[0.7, 0.1, 0.1, 0.05, 0.03, 0.02]],
+        dtype=float,
+    )
+    one_ulp = probabilities.copy()
+    one_ulp[0, 0] = np.nextafter(one_ulp[0, 0], 1.0)
+    meaningful_change = probabilities.copy()
+    meaningful_change[0, 0] += 1e-9
+
+    assert probability_digest(one_ulp) == probability_digest(probabilities)
+    assert probability_digest(meaningful_change) != probability_digest(probabilities)

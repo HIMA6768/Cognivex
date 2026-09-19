@@ -23,3 +23,9 @@ Run a new non-overwriting Track B experiment with:
 ```powershell
 .\.venv\Scripts\python.exe scripts/train_track_b.py --experiment-id <safe-id>
 ```
+
+## R7 Track C classification
+
+Track C uses exactly 50 selected expression predictors plus 18 selected mutation annotation fields and no clinical variables. The existing R4D parser maps accepted non-zero annotations to binary presence and zero to absence; source annotations remain unchanged. Logistic Regression and RBF SVM fit expression scaling on the 1,330-row eligible training split. Random Forest and Gradient Boosting retain the prepared expression values. Mutation indicators are never scaled.
+
+The frozen candidates are Logistic Regression, Random Forest, Gradient Boosting, and RBF SVM with the approved deterministic configurations. Validation Macro-F1 alone selected Random Forest (0.771384). Candidate selection had no test input. After freezing the winner, one evaluation was performed on the 283 eligible test rows. Historical engineer pickle models were not loaded.

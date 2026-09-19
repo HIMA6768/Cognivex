@@ -95,6 +95,7 @@ def test_audit_cli_help_runs_from_repository_root() -> None:
     )
     assert completed.returncode == 0, completed.stderr
     assert "--full-test-suite-summary-file" in completed.stdout
+    assert "--full-test-suite-passed" in completed.stdout
 
 
 def test_audit_cli_reads_literal_pytest_summary_from_evidence_file(tmp_path: Path) -> None:

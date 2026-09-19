@@ -23,6 +23,11 @@ def parser() -> argparse.ArgumentParser:
         default=ROOT / "artifacts/models/track_c/r7-track-c-v1",
     )
     command.add_argument("--full-test-suite-summary-file", type=Path, required=True)
+    command.add_argument(
+        "--full-test-suite-passed",
+        action="store_true",
+        help="Explicitly attest that the supplied full-suite run exited successfully",
+    )
     return command
 
 
@@ -32,7 +37,7 @@ def main() -> int:
     audit = audit_persisted_track_c(
         args.bundle,
         repository_root=ROOT,
-        full_test_suite_passed=passed,
+        full_test_suite_passed=passed and args.full_test_suite_passed,
         full_test_suite_summary=summary,
     )
     write_track_c_audit(args.bundle, audit)
