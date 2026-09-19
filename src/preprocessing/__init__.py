@@ -25,6 +25,12 @@ from .pipelines import (
     select_task_features,
 )
 from .metabric import verify_canonical_preprocessing
+from .track_b import (
+    SelectedMutationPresenceTransformer,
+    build_track_b_preprocessor,
+    load_track_b_feature_contract,
+    track_b_feature_names,
+)
 
 __all__ = [
     "PreprocessingSchema",
@@ -47,4 +53,8 @@ __all__ = [
     "select_task_features",
     "verify_canonical_preprocessing",
     "normalize_subtype_target",
+    "SelectedMutationPresenceTransformer",
+    "build_track_b_preprocessor",
+    "load_track_b_feature_contract",
+    "track_b_feature_names",
 ]
