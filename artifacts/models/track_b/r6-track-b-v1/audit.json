@@ -1,0 +1,156 @@
+{
+  "checks": [
+    {
+      "evidence": "rows=1904, columns=693, sha256_match=True",
+      "name": "Active canonical dataset",
+      "number": 1,
+      "passed": true
+    },
+    {
+      "evidence": "{'train': 1332, 'validation': 286, 'test': 286}",
+      "name": "Locked split",
+      "number": 2,
+      "passed": true
+    },
+    {
+      "evidence": "R5 source paths match commit and local bundle checksums",
+      "name": "Frozen R5 unchanged",
+      "number": 3,
+      "passed": true
+    },
+    {
+      "evidence": "['age_at_diagnosis', 'tumor_size', 'tumor_stage', 'lymph_nodes_examined_positive', 'er_status_measured_by_ihc', 'pr_status', 'her2_status']",
+      "name": "Exactly seven frozen clinical predictors",
+      "number": 4,
+      "passed": true
+    },
+    {
+      "evidence": "count=50",
+      "name": "Exactly 50 selected expression predictors",
+      "number": 5,
+      "passed": true
+    },
+    {
+      "evidence": "count=18",
+      "name": "Exactly 18 selected mutation predictors",
+      "number": 6,
+      "passed": true
+    },
+    {
+      "evidence": "raw_count=75",
+      "name": "No unapproved raw predictor",
+      "number": 7,
+      "passed": true
+    },
+    {
+      "evidence": "transformer=src.preprocessing.track_b.SelectedMutationPresenceTransformer; existing R4D classifier: trimmed/numeric zero is absent; valid non-zero annotation is present; missing/malformed values fail",
+      "name": "Existing R4D mutation semantics",
+      "number": 8,
+      "passed": true
+    },
+    {
+      "evidence": "prepared_sha256=e18275dac2b8b11d158093785816ae04d3b2466217d5af47a6290e5927146c29",
+      "name": "Source mutation annotations unchanged",
+      "number": 9,
+      "passed": true
+    },
+    {
+      "evidence": "mutation_columns=18",
+      "name": "Final mutation matrix binary",
+      "number": 10,
+      "passed": true
+    },
+    {
+      "evidence": "n_samples_seen=1332.0",
+      "name": "Expression scaler fit on train only",
+      "number": 11,
+      "passed": true
+    },
+    {
+      "evidence": "tumor_median=23.0, er_mode=Positive",
+      "name": "Clinical preprocessing fit on train only",
+      "number": 12,
+      "passed": true
+    },
+    {
+      "evidence": "train-fitted StandardScaler; validation/test transform only",
+      "name": "Validation and test are transform-only",
+      "number": 13,
+      "passed": true
+    },
+    {
+      "evidence": "{'censored_value': 0, 'duration_column': 'overall_survival_months', 'event_column': 'overall_survival', 'event_inverted': False, 'event_observed_value': 1}",
+      "name": "Survival event coding not inverted",
+      "number": 14,
+      "passed": true
+    },
+    {
+      "evidence": "validation and test fingerprints match",
+      "name": "Track A/B comparison cohorts identical",
+      "number": 15,
+      "passed": true
+    },
+    {
+      "evidence": "winner={'l1_ratio': 0.5, 'penalizer': 0.05}",
+      "name": "Hyperparameters selected from validation only",
+      "number": 16,
+      "passed": true
+    },
+    {
+      "evidence": "candidate_test_evaluation_count=0",
+      "name": "Test excluded from candidate selection",
+      "number": 17,
+      "passed": true
+    },
+    {
+      "evidence": "winner_test_evaluation_count=1",
+      "name": "Only frozen winner evaluated on test",
+      "number": 18,
+      "passed": true
+    },
+    {
+      "evidence": "current prepared hash and train count match",
+      "name": "New model uses current Cognivex train data",
+      "number": 19,
+      "passed": true
+    },
+    {
+      "evidence": "persisted_model=src.modeling.track_b.PenalizedCoxPHAdapter; no engineer artifact path in metadata",
+      "name": "Historical engineer pickles unused",
+      "number": 20,
+      "passed": true
+    },
+    {
+      "evidence": "risk_sha256=407d0b6a16af5b55e8119a26e52c67681da1f423026ee5f74f8e2fd3d7ee4e89",
+      "name": "Persisted artifact reload",
+      "number": 21,
+      "passed": true
+    },
+    {
+      "evidence": "feature_count=80",
+      "name": "Saved feature order matches training",
+      "number": 22,
+      "passed": true
+    },
+    {
+      "evidence": "all A/B metrics and deltas rendered",
+      "name": "Metrics file matches report",
+      "number": 23,
+      "passed": true
+    },
+    {
+      "evidence": "validation=-0.006151574803149651, test=0.01593186372745481",
+      "name": "A versus B deltas correct",
+      "number": 24,
+      "passed": true
+    },
+    {
+      "evidence": "199 passed, 2 warnings in 108.79s",
+      "name": "Full tests remain green",
+      "number": 25,
+      "passed": true
+    }
+  ],
+  "full_test_suite_summary": "199 passed, 2 warnings in 108.79s",
+  "status": "PASS"
+}

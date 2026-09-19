@@ -1,5 +1,11 @@
 # Implementation log
 
+## 2026-09-19 — R6 Track B clinical + genomic survival model
+
+Added an explicit 75-field Track B input contract: the seven frozen R5 clinical fields, 50 selected expression fields, and 18 selected mutation annotation fields. The fitted preprocessor reuses R5 clinical behavior, scales expression on train only, and derives binary mutation presence through the existing R4D classifier without changing the source CSV. The encoded model order contains 80 features.
+
+All six predefined penalized Cox candidates converged. Validation-only selection chose `penalizer=0.05`, `l1_ratio=0.5`. Track B C-index is 0.685775 train, 0.644544 validation, and 0.640915 test. Frozen Track A is 0.650696 validation and 0.624983 test, for B-A deltas of -0.006152 and +0.015932 respectively. Only the frozen winner received one test evaluation. Added non-overwriting aggregate artifacts, trusted-local ignored pickles, exact reload verification, and a separate 25-check audit; no patient-level output, causal claim, R7, or R8 work was added.
+
 ## 2026-09-19 — R6-P0 engineer import and compatibility audit
 
 Imported the 30-file `cognivex_ml/` tree from `origin/anay/prediction_pipelines` commit `f4af52c` without merging the branch. Its nine pickle artifacts remain ignored, untrusted, and disconnected. Added a read-only compatibility module, direct CLI, focused tests, and deterministic JSON/Markdown artifacts. Source inspection is AST-only and does not execute engineer entrypoints.

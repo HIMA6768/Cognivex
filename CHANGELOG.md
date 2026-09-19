@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-09-19 — R6 Track B clinical + genomic survival model
+
+- Added the exact Track B contract: seven frozen R5 clinical predictors, 50 explicit selected expression predictors, and 18 selected mutation-presence predictors, yielding 75 raw and 80 encoded model features.
+- Reused frozen R5 clinical preprocessing, train-fitted expression scaling, and existing R4D mutation parsing without rewriting canonical source annotations.
+- Evaluated six predefined penalized Cox candidates on validation only and selected `penalizer=0.05`, `l1_ratio=0.5`; only that frozen winner received one test evaluation.
+- Recorded Track B C-index values of 0.685775 train, 0.644544 validation, and 0.640915 test. Against frozen Track A, deltas were -0.006152 validation and +0.015932 test.
+- Added versioned aggregate artifacts, trusted-local pickle persistence, exact reload verification, and a separate 25-check audit. R7 and R8 remain unstarted.
+
 ## 2026-09-19 — R6-P0 engineer import and genomic compatibility audit
 
 - Imported `cognivex_ml/` from engineer commit `f4af52c` as disconnected reference material without merging its branch, split, data loaders, models, or metrics into the active runtime.

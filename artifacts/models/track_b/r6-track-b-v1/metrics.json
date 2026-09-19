@@ -1,0 +1,70 @@
+{
+  "comparison": {
+    "test_delta": 0.01593186372745481,
+    "validation_delta": -0.006151574803149651
+  },
+  "track_a": {
+    "test": {
+      "c_index": 0.6249832999331998,
+      "censored_count": 111,
+      "cohort_fingerprint": "bee0406e5e4b82b7512ba46909b8fe9fd96a62f33f09a1f3ff0e148b100a611c",
+      "event_count": 175,
+      "metric_name": "harrell_c_index",
+      "prediction_quantity": "log_partial_hazard",
+      "risk_negated_for_metric": true,
+      "row_count": 286,
+      "score_direction": "higher_risk_is_higher_hazard",
+      "split": "test"
+    },
+    "validation": {
+      "c_index": 0.6506960067491564,
+      "censored_count": 117,
+      "cohort_fingerprint": "13f184a690614a9d6ee66133bed19d9f2d4850d4c84ee06d388100af5c82c892",
+      "event_count": 168,
+      "metric_name": "harrell_c_index",
+      "prediction_quantity": "log_partial_hazard",
+      "risk_negated_for_metric": true,
+      "row_count": 285,
+      "score_direction": "higher_risk_is_higher_hazard",
+      "split": "validation"
+    }
+  },
+  "track_b": {
+    "test": {
+      "c_index": 0.6409151636606546,
+      "censored_count": 111,
+      "cohort_fingerprint": "bee0406e5e4b82b7512ba46909b8fe9fd96a62f33f09a1f3ff0e148b100a611c",
+      "event_count": 175,
+      "metric_name": "harrell_c_index",
+      "prediction_quantity": "log_partial_hazard",
+      "risk_negated_for_metric": true,
+      "row_count": 286,
+      "score_direction": "higher_risk_is_higher_hazard",
+      "split": "test"
+    },
+    "train": {
+      "c_index": 0.6857754779549392,
+      "censored_count": 572,
+      "cohort_fingerprint": "6c96e320688037f6c07ab2b6bff9352e09425d913bd391d930c8f735bf0794fc",
+      "event_count": 760,
+      "metric_name": "harrell_c_index",
+      "prediction_quantity": "log_partial_hazard",
+      "risk_negated_for_metric": true,
+      "row_count": 1332,
+      "score_direction": "higher_risk_is_higher_hazard",
+      "split": "train"
+    },
+    "validation": {
+      "c_index": 0.6445444319460067,
+      "censored_count": 117,
+      "cohort_fingerprint": "13f184a690614a9d6ee66133bed19d9f2d4850d4c84ee06d388100af5c82c892",
+      "event_count": 168,
+      "metric_name": "harrell_c_index",
+      "prediction_quantity": "log_partial_hazard",
+      "risk_negated_for_metric": true,
+      "row_count": 285,
+      "score_direction": "higher_risk_is_higher_hazard",
+      "split": "validation"
+    }
+  }
+}

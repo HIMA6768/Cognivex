@@ -1,0 +1,68 @@
+{
+  "candidate_test_evaluation_count": 0,
+  "clinical_preprocessing": "frozen R5 train-fitted preprocessing",
+  "cohorts": {
+    "test": {
+      "censored_count": 111,
+      "cohort_fingerprint": "bee0406e5e4b82b7512ba46909b8fe9fd96a62f33f09a1f3ff0e148b100a611c",
+      "event_count": 175,
+      "row_count": 286,
+      "split": "test"
+    },
+    "train": {
+      "censored_count": 572,
+      "cohort_fingerprint": "6c96e320688037f6c07ab2b6bff9352e09425d913bd391d930c8f735bf0794fc",
+      "event_count": 760,
+      "row_count": 1332,
+      "split": "train"
+    },
+    "validation": {
+      "censored_count": 117,
+      "cohort_fingerprint": "13f184a690614a9d6ee66133bed19d9f2d4850d4c84ee06d388100af5c82c892",
+      "event_count": 168,
+      "row_count": 285,
+      "split": "validation"
+    }
+  },
+  "dataset": {
+    "column_count": 693,
+    "manifest_path": "data/metabric/metadata/manifest.csv",
+    "manifest_sha256": "d4c884a92a988d935ca19664e1da3bb1bbcc02037dad96a31991779c4589cb9e",
+    "patient_count": 1904,
+    "prepared_path": "data/metabric/prepared/METABRIC_prepared.csv",
+    "prepared_sha256": "e18275dac2b8b11d158093785816ae04d3b2466217d5af47a6290e5927146c29"
+  },
+  "experiment_id": "r6-track-b-v1",
+  "expression_preprocessing": "train-fitted StandardScaler; validation/test transform only",
+  "generated_at_utc": "2026-09-19T10:28:56.934544+00:00",
+  "mutation_policy": "existing R4D classifier: trimmed/numeric zero is absent; valid non-zero annotation is present; missing/malformed values fail",
+  "random_seeds": {},
+  "runtime": {
+    "git_commit": "fde3ecd4646ee7f28fca5378335277d950e7d87d",
+    "lifelines_version": "0.30.3",
+    "manifest_sha256": "d4c884a92a988d935ca19664e1da3bb1bbcc02037dad96a31991779c4589cb9e",
+    "numpy_version": "2.5.3",
+    "pandas_version": "2.3.3",
+    "prepared_sha256": "e18275dac2b8b11d158093785816ae04d3b2466217d5af47a6290e5927146c29",
+    "python_version": "3.14.6",
+    "scipy_version": "1.18.1",
+    "sklearn_version": "1.9.1"
+  },
+  "schema_version": "1.0",
+  "selected_configuration": {
+    "l1_ratio": 0.5,
+    "penalizer": 0.05
+  },
+  "selection_policy": "maximum validation C-index only",
+  "survival_contract": {
+    "censored_value": 0,
+    "duration_column": "overall_survival_months",
+    "event_column": "overall_survival",
+    "event_inverted": false,
+    "event_observed_value": 1
+  },
+  "task": "clinical_genomic_survival",
+  "test_risk_sha256": "407d0b6a16af5b55e8119a26e52c67681da1f423026ee5f74f8e2fd3d7ee4e89",
+  "track": "B",
+  "winner_test_evaluation_count": 1
+}

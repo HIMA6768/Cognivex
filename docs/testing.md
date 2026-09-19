@@ -8,6 +8,8 @@ R5A tests cover fixed reference encoding, Track B/D isolation, framework-indepen
 
 R6-P0 tests cover deterministic selected-feature parsing, duplicate rejection, exact/missing/alias detection, numeric and annotation mutation representations, the approved R4D mapping metadata, expression quality, AST-only source inspection without entrypoint execution, read-only canonical/R5 hash preservation, deterministic report generation, direct CLI execution, and Git-ignore protection for imported engineer pickle artifacts.
 
+R6 tests cover the exact 7/50/18 raw contract, stable 80-feature output, frozen R5 clinical equivalence, train-only expression scaling, shared R4D mutation parsing, immutable source frames, canonical event semantics, identical A/B cohorts, validation-only candidate selection, winner-only test access, non-overwriting persistence, trusted reload reproduction, aggregate-only artifacts, and all 25 required audit checks.
+
 Obsolete tests for the superseded domain were removed with their production modules. Test count is not used as a success metric.
 
 Run:

@@ -100,11 +100,13 @@ def audit_persisted_track_b(
     canonical = pd.read_csv(root / metadata["dataset"]["prepared_path"], low_memory=False)
     manifest = pd.read_csv(root / metadata["dataset"]["manifest_path"])
     preprocessor = load_trusted_pickle(artifact_root / "preprocessor.pkl", trusted=True)
+    model = load_trusted_pickle(artifact_root / "cox_model.pkl", trusted=True)
     test_matrix = np.asarray(preprocessor.transform(prepared_run.test_predictors), dtype=float)
     model_names = track_b_feature_names(preprocessor)
     mutation_indices = [index for index, name in enumerate(model_names) if name.endswith("_mut_present")]
     columns = preprocessor.named_steps["columns"]
     expression_scaler = columns.named_transformers_["expression"]
+    mutation_transformer = columns.named_transformers_["mutation"]
     clinical = columns.named_transformers_["clinical"]
     clinical_columns = clinical.named_steps["columns"]
     train_expression = prepared_run.train_predictors.loc[:, contract["expression_features"]].to_numpy(float)
@@ -139,7 +141,7 @@ def audit_persisted_track_b(
         _check(5, "Exactly 50 selected expression predictors", contract["expression_feature_count"] == 50, "count=50"),
         _check(6, "Exactly 18 selected mutation predictors", contract["mutation_feature_count"] == 18, "count=18"),
         _check(7, "No unapproved raw predictor", contract["raw_feature_count"] == 75 and not forbidden and len(set(contract["raw_feature_names"])) == 75, f"raw_count={contract['raw_feature_count']}"),
-        _check(8, "Existing R4D mutation semantics", "existing R4D classifier" in metadata["mutation_policy"], metadata["mutation_policy"]),
+        _check(8, "Existing R4D mutation semantics", mutation_transformer.__class__.__module__ == "src.preprocessing.track_b" and "existing R4D classifier" in metadata["mutation_policy"], f"transformer={mutation_transformer.__class__.__module__}.{mutation_transformer.__class__.__name__}; {metadata['mutation_policy']}"),
         _check(9, "Source mutation annotations unchanged", source_hash_matches, f"prepared_sha256={metadata['dataset']['prepared_sha256']}"),
         _check(10, "Final mutation matrix binary", len(mutation_indices) == 18 and set(np.unique(test_matrix[:, mutation_indices])).issubset({0.0, 1.0}), f"mutation_columns={len(mutation_indices)}"),
         _check(11, "Expression scaler fit on train only", int(expression_scaler.n_samples_seen_) == len(prepared_run.train_predictors) and np.allclose(expression_scaler.mean_, train_expression.mean(axis=0)), f"n_samples_seen={expression_scaler.n_samples_seen_}"),
@@ -151,7 +153,7 @@ def audit_persisted_track_b(
         _check(17, "Test excluded from candidate selection", metadata["candidate_test_evaluation_count"] == 0, "candidate_test_evaluation_count=0"),
         _check(18, "Only frozen winner evaluated on test", metadata["winner_test_evaluation_count"] == 1, "winner_test_evaluation_count=1"),
         _check(19, "New model uses current Cognivex train data", metadata["runtime"]["prepared_sha256"] == prepared_run.prepared_sha256 and metadata["cohorts"]["train"]["row_count"] == 1332, "current prepared hash and train count match"),
-        _check(20, "Historical engineer pickles unused", "cognivex_ml" not in json.dumps(metadata).lower(), "active metadata contains no engineer artifact path"),
+        _check(20, "Historical engineer pickles unused", model.__class__.__module__ == "src.modeling.track_b" and "cognivex_ml" not in json.dumps(metadata).lower(), f"persisted_model={model.__class__.__module__}.{model.__class__.__name__}; no engineer artifact path in metadata"),
         _check(21, "Persisted artifact reload", reload.passed, f"risk_sha256={reload.risk_sha256}"),
         _check(22, "Saved feature order matches training", reload.feature_order_matches and list(model_names) == contract["model_feature_names"], f"feature_count={len(model_names)}"),
         _check(23, "Metrics file matches report", _report_contains_metrics(report, metrics), "all A/B metrics and deltas rendered"),
