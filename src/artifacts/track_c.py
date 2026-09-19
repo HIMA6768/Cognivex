@@ -214,8 +214,9 @@ def verify_track_c_checksums(bundle: Path) -> bool:
         if len(parts) != 2 or len(parts[0]) != 64 or parts[1] in declared:
             return False
         declared[parts[1]] = parts[0]
-    expected = REQUIRED_TRACK_C_FILES - {"checksums.sha256"}
-    return set(declared) == expected and all(
+    expected = {path.name for path in root.iterdir() if path.name != "checksums.sha256"}
+    required = REQUIRED_TRACK_C_FILES - {"checksums.sha256"}
+    return required.issubset(expected) and set(declared) == expected and all(
         (root / name).is_file() and _sha256(root / name) == digest
         for name, digest in declared.items()
     )
@@ -378,7 +379,7 @@ def verify_track_c_bundle(bundle: Path, test: PreparedTrackCTest) -> TrackCBundl
     reload = verify_track_c_reload(root, test)
     report = (root / "report.md").read_text(encoding="utf-8")
     checks = {
-        "required_files": {path.name for path in root.iterdir()} == REQUIRED_TRACK_C_FILES,
+        "required_files": REQUIRED_TRACK_C_FILES.issubset({path.name for path in root.iterdir()}),
         "checksums": verify_track_c_checksums(root),
         "validation_winner": winner["key"] == metadata["selection"]["selected_model"],
         "selected_model_identity": metadata["selection"]["selected_model"] in report,
