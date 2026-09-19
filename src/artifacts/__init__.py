@@ -1,5 +1,18 @@
 """Versioned local model-artifact persistence."""
 
 from .survival import load_trusted_pickle, write_track_a_artifacts
+from .track_b import (
+    TrackBReloadVerification,
+    refresh_track_b_checksums,
+    verify_track_b_reload,
+    write_track_b_artifacts,
+)
 
-__all__ = ["load_trusted_pickle", "write_track_a_artifacts"]
+__all__ = [
+    "TrackBReloadVerification",
+    "load_trusted_pickle",
+    "refresh_track_b_checksums",
+    "verify_track_b_reload",
+    "write_track_a_artifacts",
+    "write_track_b_artifacts",
+]
