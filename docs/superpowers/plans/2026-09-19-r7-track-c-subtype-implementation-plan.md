@@ -230,7 +230,7 @@ def reorder_and_validate_probabilities(
 ) -> ProbabilityOutput: ...
 ```
 
-Use explicit `labels=class_order` for every sklearn metric/report call. Digest UTF-8 newline-joined ordered predictions and canonical little-endian float64 ordered probabilities. Reject non-finite probabilities, class-set mismatch, and row sums outside `np.allclose(..., 1.0, atol=1e-8, rtol=0)`.
+Use explicit `labels=class_order` for sklearn functions that support fixed labels: `f1_score`, `precision_recall_fscore_support`, `confusion_matrix`, and `classification_report`. Calculate balanced accuracy with `balanced_accuracy_score(y_true, y_pred)` without a `labels` argument, preserving standard sklearn semantics; the direct-sklearn comparison in Step 1 must pin this behavior. Keep the frozen six-class order for per-class metrics, confusion matrices, reports, and probabilities. Digest UTF-8 newline-joined ordered predictions and canonical little-endian float64 ordered probabilities. Reject non-finite probabilities, class-set mismatch, and row sums outside `np.allclose(..., 1.0, atol=1e-8, rtol=0)`.
 
 - [ ] **Step 4: Run focused evaluation tests**
 
@@ -451,13 +451,14 @@ git commit -m "feat(r7): add winner-only subtype test evaluation"
 
 **Files:**
 - Create: `src/artifacts/track_c.py`
+- Create: `scripts/verify_track_c_artifacts.py`
 - Modify: `src/artifacts/__init__.py`
 - Modify: `.gitignore`
 - Test: `tests/test_track_c_artifacts.py`
 
 **Interfaces:**
 - Consumes: `SelectedTrackCModel`, `TrackCExperimentResult`, `PreparedTrackCTest`, and trusted-local pickle loader.
-- Produces: `TrackCReloadVerification`, `write_track_c_artifacts(selection, result, run, output_root) -> Path`, `verify_track_c_reload(bundle, test) -> TrackCReloadVerification`, `verify_track_c_checksums(bundle) -> bool`, and `refresh_track_c_checksums(bundle)`.
+- Produces: `TrackCReloadVerification`, `TrackCBundleVerification`, `write_track_c_artifacts(selection, result, run, output_root) -> Path`, `verify_track_c_reload(bundle, test) -> TrackCReloadVerification`, `verify_track_c_bundle(bundle, test) -> TrackCBundleVerification`, `verify_track_c_checksums(bundle) -> bool`, `refresh_track_c_checksums(bundle)`, and a read-only `scripts/verify_track_c_artifacts.py --bundle PATH` CLI.
 
 - [ ] **Step 1: Write failing bundle and reload tests**
 
@@ -472,6 +473,8 @@ def test_reload_retains_frozen_feature_and_class_orders(): ...
 def test_checksums_cover_every_bundle_file_except_checksums_itself(): ...
 def test_shuffled_input_is_canonically_reordered_before_reload_digests(): ...
 def test_bundle_contains_no_patient_ids_or_row_level_outputs(): ...
+def test_read_only_verifier_checks_complete_bundle_without_modifying_files(): ...
+def test_read_only_verifier_cli_help_runs_from_repository_root(): ...
 ```
 
 - [ ] **Step 2: Run the focused test and verify RED**
@@ -484,7 +487,7 @@ Expected: collection fails because `src.artifacts.track_c` does not exist.
 
 Write these bundle files: `pipeline.pkl`, `validation_leaderboard.csv`, `metrics.json`, `metadata.json`, `feature_contract.json`, `confusion_matrix.csv`, `classification_report.json`, `report.md`, and `checksums.sha256`. Add `artifacts/models/**/pipeline.pkl` to `.gitignore`.
 
-`verify_track_c_reload` must load only with `trusted=True`, restore canonical test order, reproduce predictions/probabilities, compare prediction and probability digests, recompute test metrics/confusion, and compare feature/class order. `checksums.sha256` must include the local pipeline hash even though the binary is ignored.
+`verify_track_c_reload` must load only with `trusted=True`, restore canonical test order, reproduce predictions/probabilities, compare prediction and probability digests, recompute test metrics/confusion, and compare feature/class order. `verify_track_c_bundle` must additionally recompute the validation winner from `validation_leaderboard.csv`, compare selected model identity, verify report/metrics agreement, verify probability normalization, and verify artifact checksums without writing any file. The read-only CLI calls only `verify_track_c_bundle`, prints `PASS` plus structured check results, and must not train, rewrite checksums, mutate artifacts/data, or access alternative-candidate test results. `checksums.sha256` must include the local pipeline hash even though the binary is ignored.
 
 - [ ] **Step 4: Run artifact and finalization tests**
 
@@ -495,7 +498,7 @@ Expected: all tests pass and the trusted pipeline is ignored at a repository art
 - [ ] **Step 5: Commit Task 7**
 
 ```powershell
-git add .gitignore src/artifacts/track_c.py src/artifacts/__init__.py tests/test_track_c_artifacts.py
+git add .gitignore src/artifacts/track_c.py src/artifacts/__init__.py scripts/verify_track_c_artifacts.py tests/test_track_c_artifacts.py
 git commit -m "feat(r7): persist and reload subtype artifacts"
 ```
 
@@ -668,9 +671,15 @@ Run: `.\.venv\Scripts\python.exe scripts\train_track_c.py --experiment-id r7-tra
 
 Expected: one non-overwriting bundle is created; all four candidates appear only in the validation leaderboard; one selected model has final test metrics; source dataset hashes are unchanged.
 
-- [ ] **Step 5: Inspect generated evidence manually before documentation**
+- [ ] **Step 5: Run the concrete read-only artifact verifier and inspect generated evidence**
 
-Verify `metadata.json`, `metrics.json`, `feature_contract.json`, `validation_leaderboard.csv`, `confusion_matrix.csv`, `classification_report.json`, `report.md`, and `checksums.sha256`. Recompute the validation winner, final metrics, confusion sum, class order, feature order, prediction digest, and probability digest with a read-only verification command. Confirm no patient IDs, row predictions, secrets, historical pickles, or source datasets entered the bundle.
+Run:
+
+```powershell
+.\.venv\Scripts\python.exe scripts\verify_track_c_artifacts.py --bundle artifacts/models/track_c/r7-track-c-v1
+```
+
+Expected: exit code 0 and `PASS`; the verifier recomputes the validation winner, selected identity, final metrics, 6×6 confusion dimensions/sum, frozen class and feature order, prediction digest, ordered probability digest, probability normalization, report/metrics agreement, and checksums without modifying any artifact. Then manually confirm no patient IDs, row predictions, secrets, historical pickles, or source datasets entered the bundle.
 
 - [ ] **Step 6: Update documentation from generated values only**
 
