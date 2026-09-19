@@ -4,8 +4,11 @@ from .survival import load_trusted_pickle, write_track_a_artifacts
 from .prognostic_features import (
     R6_BUNDLE_RELATIVE,
     VerifiedTrackBSource,
+    refresh_prognostic_feature_checksums,
+    render_prognostic_feature_report,
     verify_and_load_track_b_source,
     verify_r6_checksums,
+    write_prognostic_feature_bundle,
 )
 from .track_b import (
     TrackBReloadVerification,
@@ -33,8 +36,11 @@ __all__ = [
     "write_track_b_artifacts",
     "R6_BUNDLE_RELATIVE",
     "VerifiedTrackBSource",
+    "refresh_prognostic_feature_checksums",
+    "render_prognostic_feature_report",
     "verify_and_load_track_b_source",
     "verify_r6_checksums",
+    "write_prognostic_feature_bundle",
     "TrackCBundleVerification",
     "TrackCReloadVerification",
     "render_track_c_report",

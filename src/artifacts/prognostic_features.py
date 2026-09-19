@@ -2,8 +2,11 @@
 
 from __future__ import annotations
 
+import csv
 from dataclasses import dataclass
+from datetime import datetime, timezone
 import hashlib
+from importlib.metadata import version
 import json
 from pathlib import Path
 import subprocess
@@ -14,6 +17,11 @@ from sklearn.pipeline import Pipeline
 
 from src.modeling.track_b import PenalizedCoxPHAdapter
 from src.preprocessing.track_b import track_b_feature_names
+from src.contracts import (
+    COEF_EPS,
+    FEATURE_EFFECTS_CSV_COLUMNS,
+    PrognosticFeatureAnalysisResult,
+)
 
 from .survival import load_trusted_pickle
 
@@ -244,3 +252,240 @@ def verify_and_load_track_b_source(bundle: Path, repository_root: Path) -> Verif
         preprocessor=preprocessor,
         model=model,
     )
+
+
+def _utc_now() -> str:
+    return datetime.now(timezone.utc).isoformat()
+
+
+def _git_commit(repository_root: Path) -> str:
+    result = subprocess.run(
+        ["git", "rev-parse", "HEAD"],
+        cwd=Path(repository_root),
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    return result.stdout.strip()
+
+
+def _write_json(path: Path, payload: Mapping[str, object]) -> None:
+    path.write_text(
+        json.dumps(payload, indent=2, sort_keys=True, allow_nan=False) + "\n",
+        encoding="utf-8",
+        newline="\n",
+    )
+
+
+def _float_text(value: float) -> str:
+    return format(float(value), ".17g")
+
+
+def _effect_row(effect) -> dict[str, object]:
+    summary = effect.model_summary
+    return {
+        "rank": effect.rank,
+        "frozen_genomic_order": effect.frozen_genomic_order,
+        "raw_feature_name": effect.raw_feature_name,
+        "model_feature_name": effect.model_feature_name,
+        "feature_type": effect.feature_type.value,
+        "beta": _float_text(effect.beta),
+        "abs_beta": _float_text(effect.abs_beta),
+        "hazard_ratio": _float_text(effect.hazard_ratio),
+        "direction": effect.direction.value,
+        "direction_display": effect.direction_display,
+        "is_active": "true" if effect.is_active else "false",
+        "standard_error": _float_text(summary.standard_error),
+        "beta_ci_lower_95": _float_text(summary.beta_ci_lower_95),
+        "beta_ci_upper_95": _float_text(summary.beta_ci_upper_95),
+        "hazard_ratio_ci_lower_95": _float_text(summary.hazard_ratio_ci_lower_95),
+        "hazard_ratio_ci_upper_95": _float_text(summary.hazard_ratio_ci_upper_95),
+        "comparison_to": _float_text(summary.comparison_to),
+        "z_statistic": _float_text(summary.z_statistic),
+        "p_value": _float_text(summary.p_value),
+        "negative_log2_p_value": _float_text(summary.negative_log2_p_value),
+    }
+
+
+def _summarize(result: PrognosticFeatureAnalysisResult) -> dict[str, object]:
+    from src.analysis.prognostic_features import summarize_prognostic_feature_effects
+
+    return summarize_prognostic_feature_effects(result)
+
+
+def _metadata_payload(
+    result: PrognosticFeatureAnalysisResult,
+    source: VerifiedTrackBSource,
+) -> dict[str, object]:
+    dataset = source.metadata["dataset"]
+    source_runtime = source.metadata["runtime"]
+    selected = source.metadata["selected_configuration"]
+    genomic_mapping = [
+        {
+            "frozen_genomic_order": effect.frozen_genomic_order,
+            "raw_feature_name": effect.raw_feature_name,
+            "model_feature_name": effect.model_feature_name,
+            "feature_type": effect.feature_type.value,
+        }
+        for effect in sorted(result.effects, key=lambda item: item.frozen_genomic_order)
+    ]
+    return {
+        "schema_version": result.schema_version,
+        "analysis_id": result.analysis_id,
+        "generated_at_utc": _utc_now(),
+        "source": {
+            "track": "R6 Track B",
+            "experiment_id": source.metadata["experiment_id"],
+            "bundle_path": R6_BUNDLE_RELATIVE.as_posix(),
+            "frozen_implementation_commit": R6_FROZEN_COMMIT,
+            "artifact_generation_commit": source_runtime["git_commit"],
+            "hashes": {
+                "cox_model.pkl": source.verified_digests["cox_model.pkl"],
+                "preprocessor.pkl": source.verified_digests["preprocessor.pkl"],
+                "feature_contract.json": source.verified_digests["feature_contract.json"],
+                "metadata.json": source.verified_digests["metadata.json"],
+                "checksums.sha256": _sha256(source.bundle / "checksums.sha256"),
+            },
+            "prepared_path": dataset["prepared_path"],
+            "prepared_sha256": dataset["prepared_sha256"],
+            "manifest_path": dataset["manifest_path"],
+            "manifest_sha256": dataset["manifest_sha256"],
+        },
+        "model": {
+            "adapter_class": type(source.model).__name__,
+            "fitter_class": type(source.model.fitter).__name__,
+            "baseline_estimation_method": source.model.fitter.baseline_estimation_method,
+            "penalizer": selected["penalizer"],
+            "l1_ratio": selected["l1_ratio"],
+            "alpha": source.model.fitter.alpha,
+        },
+        "feature_contract": {
+            "encoded_r6_total": 80,
+            "excluded_clinical": 12,
+            "analyzed_total": 68,
+            "expression": 50,
+            "mutation_presence": 18,
+            "clinical": 0,
+            "genomic_mapping": genomic_mapping,
+        },
+        "coefficient_contract": {
+            "coef_eps": result.coef_eps,
+            "activity_rule": "abs(beta) > COEF_EPS",
+            "direction_rule": "higher if beta > COEF_EPS; lower if beta < -COEF_EPS; otherwise effectively zero",
+            "ranking_rule": "descending abs_beta, then frozen_genomic_order",
+            "inferential_fields": "model-reported descriptive values only; never used for selection, filtering, activity, direction, or ranking",
+        },
+        "serialization": {
+            "float": ".17g round-trip-safe text",
+            "json": "UTF-8, sorted keys, indent 2, finite only, LF, trailing newline",
+            "csv": "UTF-8, fixed 20-column order, LF, trailing newline",
+        },
+        "runtime": {
+            "generation_git_commit": _git_commit(source.repository_root),
+            "python": source_runtime["python_version"],
+            "lifelines": version("lifelines"),
+            "pandas": version("pandas"),
+            "numpy": version("numpy"),
+            "scikit_learn": version("scikit-learn"),
+        },
+    }
+
+
+def render_prognostic_feature_report(
+    result: PrognosticFeatureAnalysisResult,
+    metadata: Mapping[str, object],
+) -> str:
+    """Render the full aggregate coefficient table with explicit scientific limits."""
+    source = metadata.get("source", {})
+    experiment_id = source.get("experiment_id", "r6-track-b-v1") if isinstance(source, Mapping) else "r6-track-b-v1"
+    summary = _summarize(result)
+    rows = "\n".join(
+        f"| {effect.rank} | {effect.raw_feature_name} | {effect.feature_type.value} | "
+        f"{_float_text(effect.beta)} | {_float_text(effect.hazard_ratio)} | "
+        f"{effect.direction_display} | {'yes' if effect.is_active else 'no'} |"
+        for effect in result.effects
+    )
+    return f"""# R8 Prognostic Genomic Feature Analysis
+
+## Boundary and source
+
+This research-only analysis reports model-associated coefficients from the frozen R6 Track B experiment `{experiment_id}`. It does not fit, tune, select, or retrain a model and does not establish causality or clinical utility.
+
+## Method
+
+- All {summary['total']} genomic predictors are retained: 50 expression and 18 mutation-presence features.
+- Activity uses the numerical rule `abs(beta) > {result.coef_eps}`.
+- Rank uses descending absolute beta, followed by frozen genomic order for exact ties.
+- Model-reported intervals and p-values are descriptive only and do not control rank, activity, filtering, or emphasis.
+
+## Complete model-associated feature table
+
+| Rank | Raw feature | Type | Beta | Hazard ratio | Direction | Active |
+|---:|---|---|---:|---:|---|---|
+{rows}
+
+## Interpretation limitations
+
+An expression beta is the modeled association per one training-standardized expression unit, conditional on the other Track B predictors. A mutation beta is the modeled association for mutation presence versus absence; mutation inputs are unscaled binary indicators. Comparing absolute coefficients across these feature types is a model-scale association ranking, not biological unit equivalence.
+
+These outputs do not establish causality, disease mechanisms, biomarkers, or treatment effects. They are descriptive outputs from one penalized Cox model and require external validation.
+"""
+
+
+def refresh_prognostic_feature_checksums(bundle: Path) -> None:
+    """Write sorted SHA-256 values for every bundle file except the manifest itself."""
+    root = Path(bundle)
+    names = sorted(path.name for path in root.iterdir() if path.name != "checksums.sha256")
+    (root / "checksums.sha256").write_text(
+        "".join(f"{_sha256(root / name)}  {name}\n" for name in names),
+        encoding="utf-8",
+        newline="\n",
+    )
+
+
+def write_prognostic_feature_bundle(
+    result: PrognosticFeatureAnalysisResult,
+    source: VerifiedTrackBSource,
+    output_root: Path,
+) -> Path:
+    """Persist one non-overwriting, aggregate-only pre-audit R8 bundle."""
+    if not isinstance(result, PrognosticFeatureAnalysisResult):
+        raise TypeError("result must be PrognosticFeatureAnalysisResult")
+    bundle = Path(output_root) / result.analysis_id
+    if bundle.exists():
+        raise FileExistsError(f"analysis bundle already exists: {bundle}")
+    bundle.mkdir(parents=True)
+    metadata = _metadata_payload(result, source)
+    with (bundle / "feature_effects.csv").open("w", newline="", encoding="utf-8") as stream:
+        writer = csv.DictWriter(
+            stream,
+            fieldnames=list(FEATURE_EFFECTS_CSV_COLUMNS),
+            lineterminator="\n",
+        )
+        writer.writeheader()
+        writer.writerows(_effect_row(effect) for effect in result.effects)
+    summary = {
+        "schema_version": result.schema_version,
+        "analysis_id": result.analysis_id,
+        "status": "COMPLETE",
+        "coef_eps": result.coef_eps,
+        **_summarize(result),
+    }
+    _write_json(bundle / "metadata.json", metadata)
+    _write_json(bundle / "summary.json", summary)
+    (bundle / "report.md").write_text(
+        render_prognostic_feature_report(result, metadata),
+        encoding="utf-8",
+        newline="\n",
+    )
+    refresh_prognostic_feature_checksums(bundle)
+    expected = {
+        "feature_effects.csv",
+        "metadata.json",
+        "summary.json",
+        "report.md",
+        "checksums.sha256",
+    }
+    if {path.name for path in bundle.iterdir()} != expected:
+        raise RuntimeError("pre-audit R8 bundle has an unexpected file set")
+    return bundle
