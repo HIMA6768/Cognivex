@@ -43,6 +43,20 @@ from .preprocessing import (
     PreprocessingTrack,
     SplitEligibilityCount,
 )
+from .survival import (
+    ArtifactRecord,
+    CategoricalFeatureComparison,
+    CoefficientEstimate,
+    ConcordanceResult,
+    CoxModelConfiguration,
+    MatrixDiagnostic,
+    PHDiagnosticStatus,
+    PHDiagnostics,
+    PHFeatureDiagnostic,
+    RuntimeProvenance,
+    SurvivalCohortSummary,
+    TrackAExperimentResult,
+)
 
 __all__ = [
     "AnalysisResult",
@@ -84,4 +98,16 @@ __all__ = [
     "PreprocessingTask",
     "PreprocessingTrack",
     "SplitEligibilityCount",
+    "ArtifactRecord",
+    "CategoricalFeatureComparison",
+    "CoefficientEstimate",
+    "ConcordanceResult",
+    "CoxModelConfiguration",
+    "MatrixDiagnostic",
+    "PHDiagnosticStatus",
+    "PHDiagnostics",
+    "PHFeatureDiagnostic",
+    "RuntimeProvenance",
+    "SurvivalCohortSummary",
+    "TrackAExperimentResult",
 ]

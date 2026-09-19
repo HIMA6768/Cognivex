@@ -25,6 +25,12 @@
 - `MutationFeatureSelection`, `MutationSelectionMetadata`, and `MutationPreprocessingMetadata`: ordered raw/gene/derived mappings, fitted prevalence decisions, inclusive threshold semantics, all-gene burden policy, and aggregate-only selector evidence.
 - `PreprocessingMetadata`: ordered raw/transformed feature names and explicit fit, imputation, encoding, scaling, mutation, NC, zero-duration, and leakage-guard policies. Track D additionally exposes exact standardized-continuous and unscaled-binary/one-hot final feature groups.
 - `CanonicalPreprocessingReport`: aggregate R4 acceptance evidence, missing-indicator counts, artifact hashes, and transform-only fitted-state verification.
+- `CategoricalFeatureComparison`: one derived categorical feature together with its raw variable, represented category, and explicit reference category.
+- `CoxModelConfiguration`: frozen Track A estimator settings, ordered transformed features, target names, and category-versus-reference metadata.
+- `MatrixDiagnostic`: pre-fit row/feature counts, exact rank, 2-norm condition number, finite-state, zero-variance, duplicate-column, and linear-dependency evidence.
+- `SurvivalCohortSummary`, `ConcordanceResult`, `CoefficientEstimate`, `PHDiagnostics`, and `RuntimeProvenance`: aggregate R5A model evidence with no patient rows or identifiers.
+- `TrackAExperimentResult`: complete R5A training/validation result, including explicit false flags proving the test split was not transformed, predicted, or scored.
+- `ArtifactRecord`: checksummed artifact metadata with an explicit trusted-binary marker.
 - `ModelMetadata`: optional provenance fields pending model handoff.
 - `ExperimentMetadata`: optional experiment, task, dataset, and feature-set identifiers.
 - `SurvivalPredictionResult` and `SurvivalEvaluationResult`: pending-only prognosis boundaries.
@@ -32,4 +38,4 @@
 - `FeatureImportanceResult`: pending-only gene-insight boundary with no ranking or biological claim.
 - `AnalysisResult`: typed aggregate of all stages.
 
-All contracts are frozen, slot-backed dataclasses and expose JSON-compatible `to_dict()` output. Numeric prediction, evaluation, and importance fields will be introduced only by the increment that defines and validates their semantics.
+All contracts are frozen, slot-backed dataclasses and expose JSON-compatible `to_dict()` output. R5A introduces aggregate Track A training/evaluation evidence only; patient prediction, Track B/D evaluation, subtype metrics, and importance fields remain gated.

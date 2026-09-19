@@ -6,8 +6,8 @@ R4/R4D provide four separate, fresh, unfitted sklearn-compatible preprocessors. 
 
 | Track | Task | Predictors | R4 transformation |
 |---|---|---|---|
-| Track A | `clinical_survival` | Seven approved clinical fields | Train-only tumor-size median and ER-IHC mode imputation, schema-ordered one-hot encoding, no numeric scaling |
-| Track B | `clinical_mrna_survival` | Track A fields plus 489 ordered mRNA features | Track A clinical transform plus train-only `StandardScaler` on mRNA |
+| Track A | `clinical_survival` | Seven approved clinical fields | Train-only tumor-size median and ER-IHC mode imputation, fixed reference-category encoding for R5A, no numeric scaling |
+| Track B | `clinical_mrna_survival` | Seven clinical fields plus 489 ordered mRNA features | Full-category clinical encoding plus train-only `StandardScaler` on mRNA |
 | Track C | `subtype_classification` | 489 ordered mRNA features | Preserve canonical METABRIC expression Z-scores without additional R4 scaling |
 | Track D | `clinical_mutation_survival` | Seven clinical fields plus 173 mutation annotations | Scale continuous clinical/log1p burden; leave one-hot, missing indicators, and fit-selected binary mutation presence unscaled |
 
@@ -43,7 +43,7 @@ The canonical results are:
 
 ## Feature ordering and safeguards
 
-Track A emits 16 features: three numeric values, schema-ordered categorical expansions, and the two named missingness indicators. Track B appends all 489 mRNA features in `feature_groups.json` order for 505 transformed features. Track C emits the same 489 genes in that order.
+Track A emits 12 features: three numeric values; Stage 2, Stage 3, Stage 4, and `Unknown` compared with Stage 1; positive ER-IHC, PR, and HER2 compared with each Negative reference; and the two named missingness indicators. Track B deliberately retains full-category clinical encoding and appends all 489 mRNA features in `feature_groups.json` order for 505 transformed features. Track C emits the same 489 genes in that order. Track D also retains its prior full-category clinical branch and 44 current full-training outputs.
 
 The feature selector and fitted-name guard reject identifiers, split metadata, survival targets, subtype targets, eligibility metadata, and raw `*_mut` fields from final matrices. Mutation annotations remain untouched in the canonical dataset. Tracks A–C exclude mutations; Track D converts them to fit-selected `*_mut_present` indicators and all-gene log1p burden. See [mutation_preprocessing.md](mutation_preprocessing.md).
 
@@ -53,9 +53,9 @@ At the locked holdout level, only eligible training rows may call `fit()` or `fi
 
 Future cross-validation must receive a complete preprocessor-plus-model pipeline. Preprocessing—including Track D's frequency selector—must fit independently inside each training fold; it must not be fitted once on all 1,332 locked-training records before cross-validation.
 
-## Phase boundary
+## R5A consumption boundary
 
-R4 does not fit Cox PH, Coxnet, or a subtype classifier. R5 may consume Track A, R6 may consume Track B, and R7 may consume Track C. If R7 chooses a scale-sensitive classifier, scaling belongs inside that future classifier pipeline and must fit independently within training/CV folds.
+R5A consumes Track A in an unpenalized Cox PH development baseline. It fits on 1,332 locked training patients, evaluates 285 eligible validation patients, and leaves all 286 test patients untransformed and unscored. R6 may consume Track B, and R7 may consume Track C. If R7 chooses a scale-sensitive classifier, scaling belongs inside that future classifier pipeline and must fit independently within training/CV folds.
 
 ## Data / Cohort readiness presentation
 

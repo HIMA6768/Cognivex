@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-09-18 — R5A Track A reference-category Cox PH baseline
+
+- Replaced Track-A-only full dummy encoding with fixed references: Stage 1 and Negative ER-IHC, PR, and HER2. Tracks B, C, and D retain their prior preprocessing contracts.
+- Added full-rank and condition-number gates, serializable category-versus-reference metadata, the approved unpenalized lifelines Cox PH adapter, Harrell C-index evaluation, PH diagnostics, and trusted local artifact persistence.
+- The canonical 1,332-row training matrix changed from the historical 16-feature/rank-13 failure to 12 features at rank 12 with condition number 966.312676. The model converged without warnings.
+- Recorded development C-index 0.671466 on training and 0.650696 on validation. The 286-row test partition was not transformed, predicted, or scored.
+- Retained Stage 4 with finite but imprecise evidence (HR 1.661750; 95% CI 0.709586–3.891581). PH diagnostics flagged age, Stage 2, Stage 3, ER-positive, and PR-positive; no automatic remedy was applied.
+
 ## 2026-09-18 — R4D Track D mutation preprocessing
 
 - Added the fresh `clinical_mutation_survival` Track D preprocessor with shared binary annotation semantics, an inclusive fit-local `>= 0.05` mutation selector, and all-173-gene `mutation_burden_log1p`.

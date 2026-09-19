@@ -1,6 +1,6 @@
 # Architecture
 
-## Current R4D state
+## Current R5A state
 
 `app.py` configures Streamlit and delegates to `src/ui/shell.py`. The shell applies the package-owned theme, renders typed navigation, dispatches focused page renderers, and displays the research-only disclaimer after every page.
 
@@ -9,6 +9,8 @@
 `src/preprocessing/` provides immutable metadata loading, patient-aligned task eligibility, explicit predictor selection, four fresh sklearn-compatible factories, and canonical aggregate verification. R4D adds a shared mutation parser, fit-local binary frequency selector, and all-gene burden transformer. Contracts in `src/contracts/preprocessing.py` remain serializable without Streamlit or sklearn values. Final predictors never expose IDs, targets, split fields, raw mutation annotations, or eligibility metadata.
 
 `src/data/mutation_profile.py` remains the R4D-P0 evidence-only boundary. Its full-training 27-gene result verifies, but does not configure, the production selector. Track D fits selection independently on every training/fold-training input and may retain a different set in future CV.
+
+`src/training/track_a.py` owns the R5A train/validation orchestration. It consumes only Track A eligible rows, fits the Track-A-only reference-coded preprocessor on the locked training split, rejects non-finite or rank-deficient matrices before model construction, fits the approved unpenalized lifelines adapter, and evaluates training plus validation. It retains test only as an aggregate count. `src/evaluation/survival.py` owns Harrell C-index direction and matrix diagnostics; `src/artifacts/survival.py` writes checksummed experiment evidence and trusted local pickle files.
 
 ## Navigation
 
@@ -21,7 +23,7 @@ R2 validated data ingestion
   -> R3 data quality review and engineering-readiness findings
   -> R4 leak-safe preprocessing (complete)
   -> R4D Track D mutation preprocessing (complete)
-  -> R5 clinical-only survival baseline
+  -> R5/R5A clinical-only survival baseline (complete development gate)
   -> R6 clinical-plus-genomic prognosis
   -> R7 molecular subtype classification
   -> R8 gene importance and biological support
@@ -29,7 +31,7 @@ R2 validated data ingestion
   -> R10 results and visualization
 ```
 
-R4/R4D confirm preprocessing readiness only. Model artifacts, predictive fitting, evaluation values, predictions, gene ranking, and clinical interpretation remain pending later approved increments.
+R5A supplies one clinical-only development baseline and no patient-facing UI. Track B/D fitting, subtype modeling, held-out test evaluation, gene ranking, model comparison, clinical interpretation, and patient predictions remain pending later approved increments.
 
 ## Reused infrastructure
 

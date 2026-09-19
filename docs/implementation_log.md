@@ -1,5 +1,11 @@
 # Implementation log
 
+## 2026-09-18 — R5/R5A clinical-only Cox PH baseline
+
+Added framework-independent survival experiment contracts, deterministic matrix diagnostics, Harrell C-index evaluation, a strict lifelines 0.30.3 adapter, train/validation orchestration, checksummed artifact persistence, and a direct training CLI. The initial full-category 16-column Track A matrix had rank 13 and the unpenalized fit stopped on a singular matrix without a fallback.
+
+R5A changed only Track A categorical encoding to fixed references: Stage 1 and Negative ER-IHC/PR/HER2. Tracks B/C/D remained unchanged. The canonical 1,332-row training matrix now has 12 columns, rank 12, condition number 966.312676, and no zero-variance, duplicate, or exact-dependency finding. The approved unpenalized model converged without warnings. Training C-index is 0.671466 and validation C-index is 0.650696 on 285 rows. PH diagnostics flagged age, Stage 2, Stage 3, ER-positive, and PR-positive. Stage 4 remained finite with HR 1.661750 and 95% CI 0.709586–3.891581. The 286-row test split was not transformed, predicted, or scored.
+
 ## 2026-09-18 — R4D Track D mutation preprocessing
 
 Added the `clinical_mutation_survival` / Track D contract, shared mutation parser, cloneable fit-local inclusive 5% selector, all-173-gene log1p burden transformer, survival-based eligibility, and a fresh clinical-plus-mutation pipeline. Track D standardizes age, imputed tumor size, positive-node count, and log1p burden while leaving one-hot, missing-indicator, and selected mutation-presence outputs unscaled; fitted metadata records both groups explicitly. Canonical verification reports 1,903 eligible rows (1,332/285/286), 27 retained genes, and 44 outputs for the current locked full-training fit. The 27/44 values are evidence only, not constants. Aggregate UI readiness now covers Tracks A–D; no model or metric was created.

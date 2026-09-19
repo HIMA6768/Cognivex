@@ -1,0 +1,32 @@
+{
+  "held_out_test": {
+    "predicted": false,
+    "row_count": 286,
+    "scored": false,
+    "transformed": false
+  },
+  "train": {
+    "c_index": 0.6714658168217612,
+    "censored_count": 572,
+    "cohort_fingerprint": "6c96e320688037f6c07ab2b6bff9352e09425d913bd391d930c8f735bf0794fc",
+    "event_count": 760,
+    "metric_name": "harrell_c_index",
+    "prediction_quantity": "log_partial_hazard",
+    "risk_negated_for_metric": true,
+    "row_count": 1332,
+    "score_direction": "higher_risk_is_higher_hazard",
+    "split": "train"
+  },
+  "validation": {
+    "c_index": 0.6506960067491564,
+    "censored_count": 117,
+    "cohort_fingerprint": "13f184a690614a9d6ee66133bed19d9f2d4850d4c84ee06d388100af5c82c892",
+    "event_count": 168,
+    "metric_name": "harrell_c_index",
+    "prediction_quantity": "log_partial_hazard",
+    "risk_negated_for_metric": true,
+    "row_count": 285,
+    "score_direction": "higher_risk_is_higher_hazard",
+    "split": "validation"
+  }
+}

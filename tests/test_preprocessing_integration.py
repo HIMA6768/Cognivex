@@ -28,7 +28,7 @@ def test_canonical_preprocessing_report_is_leak_safe_and_read_only() -> None:
     assert tasks[PreprocessingTask.CLINICAL_MRNA_SURVIVAL].eligible_row_count == 1903
     assert tasks[PreprocessingTask.SUBTYPE_CLASSIFICATION].eligible_row_count == 1898
     assert tasks[PreprocessingTask.CLINICAL_MUTATION_SURVIVAL].eligible_row_count == 1903
-    assert tasks[PreprocessingTask.CLINICAL_SURVIVAL].transformed_feature_count == 16
+    assert tasks[PreprocessingTask.CLINICAL_SURVIVAL].transformed_feature_count == 12
     assert tasks[PreprocessingTask.CLINICAL_MRNA_SURVIVAL].transformed_feature_count == 505
     assert tasks[PreprocessingTask.SUBTYPE_CLASSIFICATION].transformed_feature_count == 489
     assert tasks[PreprocessingTask.CLINICAL_MUTATION_SURVIVAL].transformed_feature_count == 44
@@ -46,6 +46,16 @@ def test_canonical_preprocessing_report_is_leak_safe_and_read_only() -> None:
     assert report.er_ihc_missing_indicator_count == 30
     track_b_names = tasks[PreprocessingTask.CLINICAL_MRNA_SURVIVAL].final_feature_names
     track_d = tasks[PreprocessingTask.CLINICAL_MUTATION_SURVIVAL]
+    track_a_names = tasks[PreprocessingTask.CLINICAL_SURVIVAL].final_feature_names
+    reference_columns = {
+        "tumor_stage_1",
+        "er_status_measured_by_ihc_Negative",
+        "pr_status_Negative",
+        "her2_status_Negative",
+    }
+    assert reference_columns.isdisjoint(track_a_names)
+    assert reference_columns.issubset(track_b_names)
+    assert reference_columns.issubset(track_d.final_feature_names)
     assert not any(name.endswith("_mut_present") for name in track_b_names)
     assert report.mutation_feature_count == 27
     assert track_d.mutation_metadata is not None

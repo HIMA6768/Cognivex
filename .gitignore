@@ -12,6 +12,7 @@
 # Python artifacts and virtual environments
 __pycache__/
 *.py[cod]
+*.egg-info/
 .venv/
 venv/
 env/
@@ -20,3 +21,7 @@ env/
 .pytest_cache/
 .coverage
 htmlcov/
+
+# R5 trusted local model binaries (never commit or load from untrusted sources)
+artifacts/models/**/preprocessor.pkl
+artifacts/models/**/cox_model.pkl

@@ -41,10 +41,18 @@ _FORBIDDEN_EXACT = frozenset(
     }
 )
 
+TRACK_A_REFERENCE_CATEGORIES: tuple[tuple[str, str], ...] = (
+    ("tumor_stage", "1"),
+    ("er_status_measured_by_ihc", "Negative"),
+    ("pr_status", "Negative"),
+    ("her2_status", "Negative"),
+)
 
-def _one_hot(categories: tuple[str, ...]) -> OneHotEncoder:
+
+def _one_hot(categories: tuple[str, ...], *, reference: str | None = None) -> OneHotEncoder:
     return OneHotEncoder(
         categories=[list(categories)],
+        drop=[reference] if reference is not None else None,
         handle_unknown="ignore",
         sparse_output=False,
         dtype=float,
@@ -52,9 +60,25 @@ def _one_hot(categories: tuple[str, ...]) -> OneHotEncoder:
 
 
 def _build_clinical_preprocessor(
-    schema: PreprocessingSchema, *, standardize_continuous: bool
+    schema: PreprocessingSchema,
+    *,
+    standardize_continuous: bool,
+    reference_categories: tuple[tuple[str, str], ...] = (),
 ) -> Pipeline:
     category_map = schema.category_map
+    reference_map = dict(reference_categories)
+    for feature_name, reference in reference_categories:
+        if reference not in category_map.get(feature_name, ()):
+            raise ValueError(
+                f"reference category {reference!r} is not declared for {feature_name}"
+            )
+
+    def encoder(feature_name: str) -> OneHotEncoder:
+        return _one_hot(
+            category_map[feature_name],
+            reference=reference_map.get(feature_name),
+        )
+
     age_transformer: object = StandardScaler() if standardize_continuous else "passthrough"
     positive_nodes_transformer: object = (
         StandardScaler() if standardize_continuous else "passthrough"
@@ -77,19 +101,19 @@ def _build_clinical_preprocessor(
                 positive_nodes_transformer,
                 ["lymph_nodes_examined_positive"],
             ),
-            ("tumor_stage", _one_hot(category_map["tumor_stage"]), ["tumor_stage"]),
+            ("tumor_stage", encoder("tumor_stage"), ["tumor_stage"]),
             (
                 "er_status",
                 Pipeline(
                     [
                         ("imputer", SimpleImputer(strategy="most_frequent")),
-                        ("encoder", _one_hot(category_map["er_status_measured_by_ihc"])),
+                        ("encoder", encoder("er_status_measured_by_ihc")),
                     ]
                 ),
                 ["er_status_measured_by_ihc"],
             ),
-            ("pr_status", _one_hot(category_map["pr_status"]), ["pr_status"]),
-            ("her2_status", _one_hot(category_map["her2_status"]), ["her2_status"]),
+            ("pr_status", encoder("pr_status"), ["pr_status"]),
+            ("her2_status", encoder("her2_status"), ["her2_status"]),
             (
                 "tumor_size_missing",
                 OriginalMissingIndicator("tumor_size", "tumor_size_was_missing"),
@@ -123,8 +147,12 @@ def _build_clinical_preprocessor(
 
 
 def build_clinical_survival_preprocessor(schema: PreprocessingSchema) -> Pipeline:
-    """Return a fresh, unfitted, unscaled Track A clinical transformer."""
-    return _build_clinical_preprocessor(schema, standardize_continuous=False)
+    """Return Track A with fixed reference-category encoding and no numeric scaling."""
+    return _build_clinical_preprocessor(
+        schema,
+        standardize_continuous=False,
+        reference_categories=TRACK_A_REFERENCE_CATEGORIES,
+    )
 
 
 def build_clinical_mrna_survival_preprocessor(schema: PreprocessingSchema) -> Pipeline:
@@ -132,7 +160,11 @@ def build_clinical_mrna_survival_preprocessor(schema: PreprocessingSchema) -> Pi
     expected = schema.clinical_features + schema.mrna_features
     columns = ColumnTransformer(
         transformers=[
-            ("clinical", build_clinical_survival_preprocessor(schema), list(schema.clinical_features)),
+            (
+                "clinical",
+                _build_clinical_preprocessor(schema, standardize_continuous=False),
+                list(schema.clinical_features),
+            ),
             ("mrna", StandardScaler(), list(schema.mrna_features)),
         ],
         remainder="drop",
@@ -267,7 +299,7 @@ def build_preprocessing_metadata(
     policies = {
         PreprocessingTask.CLINICAL_SURVIVAL: (
             "training-only tumor-size median and ER-IHC most-frequent imputation",
-            "schema categories with unknown values ignored",
+            "fixed Track A references: stage 1 and Negative ER-IHC/PR/HER2; unknown values ignored",
             "no numeric scaling",
             "NC does not affect survival eligibility",
             "non-positive duration excluded from survival modeling",

@@ -135,20 +135,22 @@ def test_track_a_preserves_numeric_values_and_schema_feature_order(
         "age_at_diagnosis",
         "tumor_size",
         "lymph_nodes_examined_positive",
-        "tumor_stage_1",
         "tumor_stage_2",
         "tumor_stage_3",
         "tumor_stage_4",
         "tumor_stage_Unknown",
         "er_status_measured_by_ihc_Positive",
-        "er_status_measured_by_ihc_Negative",
         "pr_status_Positive",
-        "pr_status_Negative",
         "her2_status_Positive",
-        "her2_status_Negative",
         "tumor_size_was_missing",
         "er_status_measured_by_ihc_was_missing",
     )
+    assert not {
+        "tumor_stage_1",
+        "er_status_measured_by_ihc_Negative",
+        "pr_status_Negative",
+        "her2_status_Negative",
+    }.intersection(names)
     np.testing.assert_array_equal(transformed[0, :3], [40.0, 10.0, 0.0])
     assert transformed[1, names.index("tumor_stage_Unknown")] == 1.0
 
@@ -219,6 +221,12 @@ def test_track_b_scales_only_with_training_statistics_and_preserves_gene_order(
     np.testing.assert_array_equal(scaler.mean_, mean_before)
     assert names[-2:] == ("gene_a", "gene_b")
     assert len(names) == 18
+    assert {
+        "tumor_stage_1",
+        "er_status_measured_by_ihc_Negative",
+        "pr_status_Negative",
+        "her2_status_Negative",
+    }.issubset(names)
 
 
 def test_track_c_preserves_canonical_z_scores_without_target_or_scaler(
