@@ -57,7 +57,12 @@ from .survival import (
     SurvivalCohortSummary,
     TrackAExperimentResult,
 )
-from .track_b import TrackBFeatureContract
+from .track_b import (
+    TrackBCandidateResult,
+    TrackBExperimentResult,
+    TrackBFeatureContract,
+    TrackBHyperparameters,
+)
 
 __all__ = [
     "AnalysisResult",
@@ -112,4 +117,7 @@ __all__ = [
     "SurvivalCohortSummary",
     "TrackAExperimentResult",
     "TrackBFeatureContract",
+    "TrackBHyperparameters",
+    "TrackBCandidateResult",
+    "TrackBExperimentResult",
 ]
