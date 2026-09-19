@@ -9,6 +9,14 @@ from .track_c import (
     read_pytest_summary,
     write_track_c_audit,
 )
+from .prognostic_features import (
+    R8_AUDIT_CHECK_NAMES,
+    PrognosticFeatureAuditCheck,
+    PrognosticFeatureAuditReport,
+    audit_prognostic_feature_bundle,
+    finalize_prognostic_feature_audit,
+    write_prognostic_feature_audit,
+)
 
 __all__ = [
     "TrackBAuditCheck",
@@ -21,4 +29,10 @@ __all__ = [
     "audit_persisted_track_c",
     "read_pytest_summary",
     "write_track_c_audit",
+    "R8_AUDIT_CHECK_NAMES",
+    "PrognosticFeatureAuditCheck",
+    "PrognosticFeatureAuditReport",
+    "audit_prognostic_feature_bundle",
+    "finalize_prognostic_feature_audit",
+    "write_prognostic_feature_audit",
 ]
