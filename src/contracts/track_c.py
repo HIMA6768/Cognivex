@@ -143,3 +143,19 @@ class TrackCCandidateDefinition(SerializableContract):
             raise TypeError("scale_expression must be boolean")
         if not isinstance(self.parameters, dict) or not self.parameters:
             raise ValueError("candidate parameters must be a non-empty dictionary")
+
+
+@dataclass(frozen=True, slots=True)
+class TrackCCandidateResult(SerializableContract):
+    """Validation-only result for one frozen Track C candidate."""
+
+    definition: TrackCCandidateDefinition
+    validation_metrics: ClassificationMetrics
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.definition, TrackCCandidateDefinition):
+            raise TypeError("definition must be TrackCCandidateDefinition")
+        if not isinstance(self.validation_metrics, ClassificationMetrics):
+            raise TypeError("validation_metrics must be ClassificationMetrics")
+        if self.validation_metrics.split != "validation":
+            raise ValueError("candidate results must contain validation metrics only")

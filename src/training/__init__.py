@@ -16,6 +16,15 @@ from .track_b import (
     prepare_track_b_run,
     select_track_b_candidate,
 )
+from .track_c import (
+    PreparedTrackCRun,
+    PreparedTrackCSelection,
+    PreparedTrackCTest,
+    SelectedTrackCModel,
+    prepare_track_c_run,
+    select_track_c_candidate,
+    select_validation_winner,
+)
 
 __all__ = [
     "FittedTrackABundle",
@@ -30,4 +39,11 @@ __all__ = [
     "prepare_track_b_run",
     "select_track_b_candidate",
     "finalize_track_b",
+    "PreparedTrackCRun",
+    "PreparedTrackCSelection",
+    "PreparedTrackCTest",
+    "SelectedTrackCModel",
+    "prepare_track_c_run",
+    "select_track_c_candidate",
+    "select_validation_winner",
 ]
