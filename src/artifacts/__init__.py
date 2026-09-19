@@ -7,6 +7,15 @@ from .track_b import (
     verify_track_b_reload,
     write_track_b_artifacts,
 )
+from .track_c import (
+    TrackCBundleVerification,
+    TrackCReloadVerification,
+    refresh_track_c_checksums,
+    verify_track_c_bundle,
+    verify_track_c_checksums,
+    verify_track_c_reload,
+    write_track_c_artifacts,
+)
 
 __all__ = [
     "TrackBReloadVerification",
@@ -15,4 +24,11 @@ __all__ = [
     "verify_track_b_reload",
     "write_track_a_artifacts",
     "write_track_b_artifacts",
+    "TrackCBundleVerification",
+    "TrackCReloadVerification",
+    "refresh_track_c_checksums",
+    "verify_track_c_bundle",
+    "verify_track_c_checksums",
+    "verify_track_c_reload",
+    "write_track_c_artifacts",
 ]

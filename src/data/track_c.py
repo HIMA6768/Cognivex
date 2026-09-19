@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import hashlib
+import json
 from pathlib import Path
 
 import pandas as pd
@@ -11,7 +12,6 @@ import pandas as pd
 from src.contracts import TrackCExclusionSummary, TrackCFeatureContract
 from src.data.engineer_compatibility import parse_selected_features
 from src.data.metabric import MetabricPaths
-from src.preprocessing.schema import load_preprocessing_schema
 
 
 TRACK_C_TARGET_COLUMN = "pam50_+_claudin-low_subtype"
@@ -57,7 +57,12 @@ def load_track_c_feature_contract(
 ) -> TrackCFeatureContract:
     """Load the explicit 68-feature contract without dynamic feature discovery."""
     root = Path(repository_root).resolve()
-    schema = load_preprocessing_schema(MetabricPaths.from_repository_root(root))
+    paths = MetabricPaths.from_repository_root(root)
+    feature_groups = json.loads(
+        (paths.metadata_dir / "feature_groups.json").read_text(encoding="utf-8")
+    )
+    mrna_features = tuple(str(name) for name in feature_groups["mrna_features"])
+    mutation_features = tuple(str(name) for name in feature_groups["mutation_features"])
     selected = parse_selected_features(selected_features_path or root / DEFAULT_SELECTED_FEATURES)
     contract = TrackCFeatureContract(
         expression_features=selected.expression_features,
@@ -66,11 +71,11 @@ def load_track_c_feature_contract(
     missing = tuple(
         name
         for name in contract.expression_features
-        if name not in schema.mrna_features
+        if name not in mrna_features
     ) + tuple(
         name
         for name in contract.mutation_features
-        if name not in schema.mutation_features
+        if name not in mutation_features
     )
     if missing:
         raise ValueError(
