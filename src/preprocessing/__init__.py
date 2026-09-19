@@ -31,6 +31,7 @@ from .track_b import (
     load_track_b_feature_contract,
     track_b_feature_names,
 )
+from .track_c import build_track_c_preprocessor, track_c_feature_names
 
 __all__ = [
     "PreprocessingSchema",
@@ -57,4 +58,6 @@ __all__ = [
     "build_track_b_preprocessor",
     "load_track_b_feature_contract",
     "track_b_feature_names",
+    "build_track_c_preprocessor",
+    "track_c_feature_names",
 ]
