@@ -123,3 +123,23 @@ class ClassificationMetrics(SerializableContract):
             raise ValueError("confusion_matrix must sum to row_count")
         if not isinstance(self.cohort_fingerprint, str) or not self.cohort_fingerprint:
             raise ValueError("cohort_fingerprint must be non-empty")
+
+
+@dataclass(frozen=True, slots=True)
+class TrackCCandidateDefinition(SerializableContract):
+    """One frozen R7 classifier family and preprocessing choice."""
+
+    key: str
+    display_name: str
+    scale_expression: bool
+    parameters: dict[str, Any]
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.key, str) or not self.key:
+            raise ValueError("candidate key must be non-empty")
+        if not isinstance(self.display_name, str) or not self.display_name:
+            raise ValueError("candidate display_name must be non-empty")
+        if not isinstance(self.scale_expression, bool):
+            raise TypeError("scale_expression must be boolean")
+        if not isinstance(self.parameters, dict) or not self.parameters:
+            raise ValueError("candidate parameters must be a non-empty dictionary")
