@@ -3,10 +3,12 @@
 from .survival import load_trusted_pickle, write_track_a_artifacts
 from .prognostic_features import (
     R6_BUNDLE_RELATIVE,
+    PrognosticFeatureBundleVerification,
     VerifiedTrackBSource,
     refresh_prognostic_feature_checksums,
     render_prognostic_feature_report,
     verify_and_load_track_b_source,
+    verify_prognostic_feature_bundle,
     verify_r6_checksums,
     write_prognostic_feature_bundle,
 )
@@ -35,10 +37,12 @@ __all__ = [
     "write_track_a_artifacts",
     "write_track_b_artifacts",
     "R6_BUNDLE_RELATIVE",
+    "PrognosticFeatureBundleVerification",
     "VerifiedTrackBSource",
     "refresh_prognostic_feature_checksums",
     "render_prognostic_feature_report",
     "verify_and_load_track_b_source",
+    "verify_prognostic_feature_bundle",
     "verify_r6_checksums",
     "write_prognostic_feature_bundle",
     "TrackCBundleVerification",

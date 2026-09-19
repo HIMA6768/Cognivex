@@ -59,6 +59,14 @@ class VerifiedTrackBSource:
     model_feature_names: tuple[str, ...]
 
 
+@dataclass(frozen=True, slots=True)
+class PrognosticFeatureBundleVerification:
+    """Read-only aggregate verification result for one R8 bundle."""
+
+    passed: bool
+    checks: Mapping[str, bool]
+
+
 def _sha256(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
@@ -284,8 +292,8 @@ def _float_text(value: float) -> str:
 def _effect_row(effect) -> dict[str, object]:
     summary = effect.model_summary
     return {
-        "rank": effect.rank,
-        "frozen_genomic_order": effect.frozen_genomic_order,
+        "rank": str(effect.rank),
+        "frozen_genomic_order": str(effect.frozen_genomic_order),
         "raw_feature_name": effect.raw_feature_name,
         "model_feature_name": effect.model_feature_name,
         "feature_type": effect.feature_type.value,
@@ -489,3 +497,128 @@ def write_prognostic_feature_bundle(
     if {path.name for path in bundle.iterdir()} != expected:
         raise RuntimeError("pre-audit R8 bundle has an unexpected file set")
     return bundle
+
+
+def _hash_tree(path: Path) -> dict[str, str]:
+    return {
+        item.name: _sha256(item)
+        for item in sorted(Path(path).iterdir(), key=lambda value: value.name)
+        if item.is_file()
+    }
+
+
+def _verify_bundle_checksums(bundle: Path) -> bool:
+    root = Path(bundle)
+    manifest = root / "checksums.sha256"
+    if not manifest.is_file():
+        return False
+    try:
+        entries = {}
+        for line in manifest.read_text(encoding="utf-8").splitlines():
+            digest, name = line.split("  ", maxsplit=1)
+            if name in entries or len(digest) != 64:
+                return False
+            entries[name] = digest
+    except (OSError, ValueError):
+        return False
+    expected_names = {path.name for path in root.iterdir() if path.is_file() and path.name != "checksums.sha256"}
+    return set(entries) == expected_names and all(
+        (root / name).is_file() and _sha256(root / name) == digest
+        for name, digest in entries.items()
+    )
+
+
+def _without_volatile_metadata(payload: Mapping[str, object]) -> dict[str, object]:
+    clone = json.loads(json.dumps(payload))
+    clone.pop("generated_at_utc", None)
+    runtime = clone.get("runtime")
+    if isinstance(runtime, dict):
+        runtime.pop("generation_git_commit", None)
+    return clone
+
+
+def verify_prognostic_feature_bundle(
+    bundle: Path,
+    r6_bundle: Path,
+    repository_root: Path,
+) -> PrognosticFeatureBundleVerification:
+    """Recompute R8 evidence in memory and verify persistence without writing."""
+    from src.analysis.prognostic_features import (
+        build_genomic_feature_mapping,
+        extract_prognostic_feature_effects,
+        validate_genomic_mapping_authorities,
+    )
+
+    root = Path(bundle).resolve()
+    source_root = Path(r6_bundle).resolve()
+    before_r6 = _hash_tree(source_root)
+    before_r8 = _hash_tree(root)
+    checks: dict[str, bool] = {
+        "file_set": False,
+        "checksums": False,
+        "effects_match": False,
+        "summary_match": False,
+        "report_match": False,
+        "lineage_match": False,
+        "source_unchanged": False,
+        "bundle_unchanged": False,
+    }
+    try:
+        source = verify_and_load_track_b_source(source_root, repository_root)
+        mapping = build_genomic_feature_mapping(source.feature_contract, source.model_feature_names)
+        validate_genomic_mapping_authorities(mapping, source)
+        recomputed = extract_prognostic_feature_effects(source, mapping)
+        names = {path.name for path in root.iterdir() if path.is_file()}
+        pre_audit = {
+            "feature_effects.csv",
+            "metadata.json",
+            "summary.json",
+            "report.md",
+            "checksums.sha256",
+        }
+        final = pre_audit | {"audit.json"}
+        checks["file_set"] = names in (pre_audit, final)
+        checks["checksums"] = _verify_bundle_checksums(root)
+
+        with (root / "feature_effects.csv").open(newline="", encoding="utf-8") as stream:
+            reader = csv.DictReader(stream)
+            persisted_rows = list(reader)
+        checks["effects_match"] = (
+            tuple(reader.fieldnames or ()) == FEATURE_EFFECTS_CSV_COLUMNS
+            and persisted_rows == [_effect_row(effect) for effect in recomputed.effects]
+        )
+        persisted_summary = _read_json(root / "summary.json")
+        expected_summary = {
+            "schema_version": recomputed.schema_version,
+            "analysis_id": recomputed.analysis_id,
+            "status": "COMPLETE",
+            "coef_eps": recomputed.coef_eps,
+            **_summarize(recomputed),
+        }
+        checks["summary_match"] = persisted_summary == expected_summary
+
+        persisted_metadata = _read_json(root / "metadata.json")
+        timestamp = persisted_metadata.get("generated_at_utc")
+        runtime = persisted_metadata.get("runtime")
+        generation_commit = runtime.get("generation_git_commit") if isinstance(runtime, dict) else None
+        syntax_valid = isinstance(timestamp, str) and isinstance(generation_commit, str) and bool(generation_commit)
+        if syntax_valid:
+            try:
+                datetime.fromisoformat(timestamp)
+            except ValueError:
+                syntax_valid = False
+        expected_metadata = _metadata_payload(recomputed, source)
+        checks["lineage_match"] = syntax_valid and (
+            _without_volatile_metadata(persisted_metadata)
+            == _without_volatile_metadata(expected_metadata)
+        )
+        checks["report_match"] = (
+            (root / "report.md").read_text(encoding="utf-8")
+            == render_prognostic_feature_report(recomputed, persisted_metadata)
+        )
+    except (OSError, ValueError, TypeError, KeyError, json.JSONDecodeError, csv.Error):
+        pass
+    finally:
+        checks["source_unchanged"] = before_r6 == _hash_tree(source_root)
+        checks["bundle_unchanged"] = before_r8 == _hash_tree(root)
+    return PrognosticFeatureBundleVerification(passed=all(checks.values()), checks=checks)
