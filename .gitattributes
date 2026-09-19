@@ -2,3 +2,6 @@
 data/metabric/** binary
 docs/data_strategy.md -text
 scripts/prepare_data.py -text
+
+# Preserve imported engineer reference bytes, including upstream whitespace.
+cognivex_ml/** -whitespace

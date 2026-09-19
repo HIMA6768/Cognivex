@@ -1,0 +1,1416 @@
+{
+  "active_dataset": {
+    "column_count": 693,
+    "manifest_path": "data/metabric/metadata/manifest.csv",
+    "manifest_sha256": "D4C884A92A988D935CA19664E1DA3BB1BBCC02037DAD96A31991779C4589CB9E",
+    "path_selector": "src.data.metabric.MetabricPaths.prepared_csv",
+    "patient_count": 1904,
+    "prepared_path": "data/metabric/prepared/METABRIC_prepared.csv",
+    "prepared_sha256": "E18275DAC2B8B11D158093785816AE04D3B2466217D5AF47A6290E5927146C29"
+  },
+  "active_split": {
+    "test": 286,
+    "train": 1332,
+    "validation": 286
+  },
+  "blockers": [],
+  "confirmations": {
+    "ai_handoff_data_is_not_active": true,
+    "existing_r2_r5_lineage_preserved": true,
+    "new_model_trained": false,
+    "r6_track_b_started": false,
+    "r7_started": false,
+    "r8_started": false
+  },
+  "dependency_compatibility": {
+    "conflicting_versions": [],
+    "current_project_constraints": [
+      "lifelines==0.30.3",
+      "numpy>=2,<3",
+      "pandas==2.3.3",
+      "scikit-learn>=1.5,<2",
+      "streamlit>=1.39,<2"
+    ],
+    "engineer_requirements": [
+      "pandas",
+      "scikit-learn",
+      "lifelines",
+      "tabulate",
+      "numpy"
+    ],
+    "installed_versions": {
+      "lifelines": "0.30.3",
+      "numpy": "2.5.3",
+      "pandas": "2.3.3",
+      "scikit-learn": "1.9.1"
+    },
+    "missing_dependencies": [
+      "tabulate"
+    ],
+    "note": "Engineer requirements are unpinned. tabulate is needed indirectly by pandas DataFrame.to_markdown. No dependency installation was performed.",
+    "source_import_roots": [
+      "os",
+      "pandas",
+      "pickle",
+      "logging",
+      "numpy",
+      "lifelines",
+      "sklearn"
+    ],
+    "third_party_import_roots": [
+      "pandas",
+      "numpy",
+      "lifelines",
+      "sklearn"
+    ],
+    "undeclared_imports": [],
+    "unnecessary_engineer_only_dependencies": []
+  },
+  "engineer_code_import": {
+    "active_runtime_connected": false,
+    "directory": "cognivex_ml",
+    "file_count": 30,
+    "files": [
+      "cognivex_ml/.gitignore",
+      "cognivex_ml/README.md",
+      "cognivex_ml/data/clinical_schema.json",
+      "cognivex_ml/data/manifest.csv",
+      "cognivex_ml/data/patient_mapping.csv",
+      "cognivex_ml/data/selected_features.txt",
+      "cognivex_ml/docs/data_strategy.md",
+      "cognivex_ml/models/clinical_genomic_survival_model.pkl",
+      "cognivex_ml/models/clinical_imputer.pkl",
+      "cognivex_ml/models/clinical_survival_model.pkl",
+      "cognivex_ml/models/clinical_train_cols.pkl",
+      "cognivex_ml/models/genomic_scaler.pkl",
+      "cognivex_ml/models/subtype_classifier_logisticregression.pkl",
+      "cognivex_ml/models/track_c_clf_Logistic_Regression_C01.pkl",
+      "cognivex_ml/models/track_c_clf_Logistic_Regression_C1.pkl",
+      "cognivex_ml/models/track_c_cox_model.pkl",
+      "cognivex_ml/requirements-train.txt",
+      "cognivex_ml/results/track_a_report.md",
+      "cognivex_ml/results/track_b_report.md",
+      "cognivex_ml/results/track_c_report.md",
+      "cognivex_ml/results/track_d_report.md",
+      "cognivex_ml/scripts/evaluate_subtype.py",
+      "cognivex_ml/scripts/evaluate_survival.py",
+      "cognivex_ml/scripts/generate_feature_importance.py",
+      "cognivex_ml/scripts/prepare_data.py",
+      "cognivex_ml/scripts/train_clinical_survival.py",
+      "cognivex_ml/scripts/train_genomic_survival.py",
+      "cognivex_ml/scripts/train_subtype_classifier.py",
+      "cognivex_ml/scripts/train_track_c.py",
+      "cognivex_ml/scripts/validate_data.py"
+    ],
+    "saved_model_artifacts": [
+      {
+        "bytes": 202565,
+        "path": "cognivex_ml/models/clinical_genomic_survival_model.pkl",
+        "trusted_for_active_runtime": false
+      },
+      {
+        "bytes": 632,
+        "path": "cognivex_ml/models/clinical_imputer.pkl",
+        "trusted_for_active_runtime": false
+      },
+      {
+        "bytes": 148965,
+        "path": "cognivex_ml/models/clinical_survival_model.pkl",
+        "trusted_for_active_runtime": false
+      },
+      {
+        "bytes": 558,
+        "path": "cognivex_ml/models/clinical_train_cols.pkl",
+        "trusted_for_active_runtime": false
+      },
+      {
+        "bytes": 2788,
+        "path": "cognivex_ml/models/genomic_scaler.pkl",
+        "trusted_for_active_runtime": false
+      },
+      {
+        "bytes": 4734,
+        "path": "cognivex_ml/models/subtype_classifier_logisticregression.pkl",
+        "trusted_for_active_runtime": false
+      },
+      {
+        "bytes": 4734,
+        "path": "cognivex_ml/models/track_c_clf_Logistic_Regression_C01.pkl",
+        "trusted_for_active_runtime": false
+      },
+      {
+        "bytes": 4734,
+        "path": "cognivex_ml/models/track_c_clf_Logistic_Regression_C1.pkl",
+        "trusted_for_active_runtime": false
+      },
+      {
+        "bytes": 194559,
+        "path": "cognivex_ml/models/track_c_cox_model.pkl",
+        "trusted_for_active_runtime": false
+      }
+    ],
+    "source_commit": "f4af52c862575f47089f2d90e89676c54d240fe6",
+    "source_ref": "origin/anay/prediction_pipelines"
+  },
+  "engineer_script_reuse_matrix": [
+    {
+      "classification": "REFERENCE ONLY",
+      "fit_calls": [
+        {
+          "line": 92,
+          "method": "fit_transform"
+        },
+        {
+          "line": 122,
+          "method": "fit"
+        }
+      ],
+      "reason": "Cox tuning structure is informative, but it replaces frozen R5 predictors with an expanded clinical set, assumes engineer split CSVs, reinverts survival status, and scores test.",
+      "script": "train_clinical_survival.py"
+    },
+    {
+      "classification": "REUSE PARTIALLY / REFACTOR",
+      "fit_calls": [
+        {
+          "line": 62,
+          "method": "fit_transform"
+        },
+        {
+          "line": 78,
+          "method": "fit_transform"
+        },
+        {
+          "line": 98,
+          "method": "fit"
+        }
+      ],
+      "reason": "Train-fit imputation/scaling and penalized Cox search are useful, but all numeric columns are selected dynamically, mutation annotations are mishandled, active event status would be inverted, and test is evaluated during development.",
+      "script": "train_genomic_survival.py"
+    },
+    {
+      "classification": "REUSE PARTIALLY / REFACTOR",
+      "fit_calls": [
+        {
+          "line": 78,
+          "method": "fit"
+        }
+      ],
+      "reason": "Classifier candidates and validation metrics are useful for R7, but the script discovers all numeric genomic columns, uses engineer split CSVs, and does not preserve the current subtype contract.",
+      "script": "train_subtype_classifier.py"
+    },
+    {
+      "classification": "REUSE PARTIALLY / REFACTOR",
+      "fit_calls": [
+        {
+          "line": 66,
+          "method": "fit_transform"
+        },
+        {
+          "line": 86,
+          "method": "fit_transform"
+        },
+        {
+          "line": 126,
+          "method": "fit"
+        },
+        {
+          "line": 275,
+          "method": "fit"
+        }
+      ],
+      "reason": "Only its subtype-classification ideas are candidates for R7. Its survival section selects the best Cox model using test C-index, expands the clinical contract, and must not be retained.",
+      "script": "train_track_c.py"
+    },
+    {
+      "classification": "REFERENCE ONLY",
+      "fit_calls": [],
+      "reason": "Its split-overlap checks are valid ideas, but current R2/R3 validation is stronger, checksum-aware, and bound to the authoritative manifest.",
+      "script": "validate_data.py"
+    },
+    {
+      "classification": "REUSE PARTIALLY / REFACTOR",
+      "fit_calls": [],
+      "reason": "Accuracy, macro-F1, and confusion-matrix reporting are useful for R7, but feature discovery is dynamic, artifacts are untrusted pickles, and final test evaluation needs a later explicit gate.",
+      "script": "evaluate_subtype.py"
+    },
+    {
+      "classification": "DO NOT USE",
+      "fit_calls": [
+        {
+          "line": 265,
+          "method": "fit_transform"
+        }
+      ],
+      "reason": "It fits a new SimpleImputer on test data, reconstructs columns ad hoc, reinverts active survival status if pointed at Cognivex data, and includes placeholder/hard-coded performance values.",
+      "script": "evaluate_survival.py"
+    },
+    {
+      "classification": "REUSE PARTIALLY / REFACTOR",
+      "fit_calls": [],
+      "reason": "Coefficient extraction can inform R8, but genomic identification is prefix-based, exact-zero Lasso selection is brittle, pickles are loaded without a trust gate, and causal/biological claims are unsupported.",
+      "script": "generate_feature_importance.py"
+    },
+    {
+      "classification": "DO NOT USE",
+      "fit_calls": [],
+      "reason": "It targets the rejected 1332/191/381 split, regenerates manifest/mapping files, and creates an event column by inversion. Active R2 preparation and the locked manifest remain authoritative.",
+      "script": "prepare_data.py"
+    }
+  ],
+  "expression_compatibility": {
+    "compatible_count": 50,
+    "features": [
+      {
+        "compatible": true,
+        "constant": false,
+        "dtype": "float64",
+        "feature": "gata3",
+        "non_finite_count": 0,
+        "null_count": 0,
+        "numeric_dtype": true,
+        "unique_count": 1835
+      },
+      {
+        "compatible": true,
+        "constant": false,
+        "dtype": "float64",
+        "feature": "aurka",
+        "non_finite_count": 0,
+        "null_count": 0,
+        "numeric_dtype": true,
+        "unique_count": 1858
+      },
+      {
+        "compatible": true,
+        "constant": false,
+        "dtype": "float64",
+        "feature": "csf1r",
+        "non_finite_count": 0,
+        "null_count": 0,
+        "numeric_dtype": true,
+        "unique_count": 1591
+      },
+      {
+        "compatible": true,
+        "constant": false,
+        "dtype": "float64",
+        "feature": "hsd17b11",
+        "non_finite_count": 0,
+        "null_count": 0,
+        "numeric_dtype": true,
+        "unique_count": 1809
+      },
+      {
+        "compatible": true,
+        "constant": false,
+        "dtype": "float64",
+        "feature": "egfr",
+        "non_finite_count": 0,
+        "null_count": 0,
+        "numeric_dtype": true,
+        "unique_count": 1826
+      },
+      {
+        "compatible": true,
+        "constant": false,
+        "dtype": "float64",
+        "feature": "erbb2",
+        "non_finite_count": 0,
+        "null_count": 0,
+        "numeric_dtype": true,
+        "unique_count": 1816
+      },
+      {
+        "compatible": true,
+        "constant": false,
+        "dtype": "float64",
+        "feature": "cdk1",
+        "non_finite_count": 0,
+        "null_count": 0,
+        "numeric_dtype": true,
+        "unique_count": 1817
+      },
+      {
+        "compatible": true,
+        "constant": false,
+        "dtype": "float64",
+        "feature": "erbb3",
+        "non_finite_count": 0,
+        "null_count": 0,
+        "numeric_dtype": true,
+        "unique_count": 1640
+      },
+      {
+        "compatible": true,
+        "constant": false,
+        "dtype": "float64",
+        "feature": "gsk3b",
+        "non_finite_count": 0,
+        "null_count": 0,
+        "numeric_dtype": true,
+        "unique_count": 1728
+      },
+      {
+        "compatible": true,
+        "constant": false,
+        "dtype": "float64",
+        "feature": "igf1r",
+        "non_finite_count": 0,
+        "null_count": 0,
+        "numeric_dtype": true,
+        "unique_count": 1848
+      },
+      {
+        "compatible": true,
+        "constant": false,
+        "dtype": "float64",
+        "feature": "lamb3",
+        "non_finite_count": 0,
+        "null_count": 0,
+        "numeric_dtype": true,
+        "unique_count": 1806
+      },
+      {
+        "compatible": true,
+        "constant": false,
+        "dtype": "float64",
+        "feature": "map2",
+        "non_finite_count": 0,
+        "null_count": 0,
+        "numeric_dtype": true,
+        "unique_count": 1809
+      },
+      {
+        "compatible": true,
+        "constant": false,
+        "dtype": "float64",
+        "feature": "tgfbr2",
+        "non_finite_count": 0,
+        "null_count": 0,
+        "numeric_dtype": true,
+        "unique_count": 1731
+      },
+      {
+        "compatible": true,
+        "constant": false,
+        "dtype": "float64",
+        "feature": "mapt",
+        "non_finite_count": 0,
+        "null_count": 0,
+        "numeric_dtype": true,
+        "unique_count": 1864
+      },
+      {
+        "compatible": true,
+        "constant": false,
+        "dtype": "float64",
+        "feature": "bcl2",
+        "non_finite_count": 0,
+        "null_count": 0,
+        "numeric_dtype": true,
+        "unique_count": 1863
+      },
+      {
+        "compatible": true,
+        "constant": false,
+        "dtype": "float64",
+        "feature": "nr2f1",
+        "non_finite_count": 0,
+        "null_count": 0,
+        "numeric_dtype": true,
+        "unique_count": 1797
+      },
+      {
+        "compatible": true,
+        "constant": false,
+        "dtype": "float64",
+        "feature": "ccnd2",
+        "non_finite_count": 0,
+        "null_count": 0,
+        "numeric_dtype": true,
+        "unique_count": 1846
+      },
+      {
+        "compatible": true,
+        "constant": false,
+        "dtype": "float64",
+        "feature": "ccne1",
+        "non_finite_count": 0,
+        "null_count": 0,
+        "numeric_dtype": true,
+        "unique_count": 1845
+      },
+      {
+        "compatible": true,
+        "constant": false,
+        "dtype": "float64",
+        "feature": "chek2",
+        "non_finite_count": 0,
+        "null_count": 0,
+        "numeric_dtype": true,
+        "unique_count": 1774
+      },
+      {
+        "compatible": true,
+        "constant": false,
+        "dtype": "float64",
+        "feature": "hras",
+        "non_finite_count": 0,
+        "null_count": 0,
+        "numeric_dtype": true,
+        "unique_count": 1857
+      },
+      {
+        "compatible": true,
+        "constant": false,
+        "dtype": "float64",
+        "feature": "pten",
+        "non_finite_count": 0,
+        "null_count": 0,
+        "numeric_dtype": true,
+        "unique_count": 1851
+      },
+      {
+        "compatible": true,
+        "constant": false,
+        "dtype": "float64",
+        "feature": "sox9",
+        "non_finite_count": 0,
+        "null_count": 0,
+        "numeric_dtype": true,
+        "unique_count": 1795
+      },
+      {
+        "compatible": true,
+        "constant": false,
+        "dtype": "float64",
+        "feature": "cbfb",
+        "non_finite_count": 0,
+        "null_count": 0,
+        "numeric_dtype": true,
+        "unique_count": 1717
+      },
+      {
+        "compatible": true,
+        "constant": false,
+        "dtype": "float64",
+        "feature": "klrg1",
+        "non_finite_count": 0,
+        "null_count": 0,
+        "numeric_dtype": true,
+        "unique_count": 1797
+      },
+      {
+        "compatible": true,
+        "constant": false,
+        "dtype": "float64",
+        "feature": "mmp1",
+        "non_finite_count": 0,
+        "null_count": 0,
+        "numeric_dtype": true,
+        "unique_count": 1789
+      },
+      {
+        "compatible": true,
+        "constant": false,
+        "dtype": "float64",
+        "feature": "folr1",
+        "non_finite_count": 0,
+        "null_count": 0,
+        "numeric_dtype": true,
+        "unique_count": 1799
+      },
+      {
+        "compatible": true,
+        "constant": false,
+        "dtype": "float64",
+        "feature": "smad4",
+        "non_finite_count": 0,
+        "null_count": 0,
+        "numeric_dtype": true,
+        "unique_count": 1687
+      },
+      {
+        "compatible": true,
+        "constant": false,
+        "dtype": "float64",
+        "feature": "abcb1",
+        "non_finite_count": 0,
+        "null_count": 0,
+        "numeric_dtype": true,
+        "unique_count": 1812
+      },
+      {
+        "compatible": true,
+        "constant": false,
+        "dtype": "float64",
+        "feature": "mmp9",
+        "non_finite_count": 0,
+        "null_count": 0,
+        "numeric_dtype": true,
+        "unique_count": 1735
+      },
+      {
+        "compatible": true,
+        "constant": false,
+        "dtype": "float64",
+        "feature": "pdgfra",
+        "non_finite_count": 0,
+        "null_count": 0,
+        "numeric_dtype": true,
+        "unique_count": 1847
+      },
+      {
+        "compatible": true,
+        "constant": false,
+        "dtype": "float64",
+        "feature": "arrdc1",
+        "non_finite_count": 0,
+        "null_count": 0,
+        "numeric_dtype": true,
+        "unique_count": 1757
+      },
+      {
+        "compatible": true,
+        "constant": false,
+        "dtype": "float64",
+        "feature": "cdc25a",
+        "non_finite_count": 0,
+        "null_count": 0,
+        "numeric_dtype": true,
+        "unique_count": 1798
+      },
+      {
+        "compatible": true,
+        "constant": false,
+        "dtype": "float64",
+        "feature": "akr1c4",
+        "non_finite_count": 0,
+        "null_count": 0,
+        "numeric_dtype": true,
+        "unique_count": 1843
+      },
+      {
+        "compatible": true,
+        "constant": false,
+        "dtype": "float64",
+        "feature": "foxo1",
+        "non_finite_count": 0,
+        "null_count": 0,
+        "numeric_dtype": true,
+        "unique_count": 1768
+      },
+      {
+        "compatible": true,
+        "constant": false,
+        "dtype": "float64",
+        "feature": "prkcz",
+        "non_finite_count": 0,
+        "null_count": 0,
+        "numeric_dtype": true,
+        "unique_count": 1848
+      },
+      {
+        "compatible": true,
+        "constant": false,
+        "dtype": "float64",
+        "feature": "ctnna1",
+        "non_finite_count": 0,
+        "null_count": 0,
+        "numeric_dtype": true,
+        "unique_count": 1861
+      },
+      {
+        "compatible": true,
+        "constant": false,
+        "dtype": "float64",
+        "feature": "lama2",
+        "non_finite_count": 0,
+        "null_count": 0,
+        "numeric_dtype": true,
+        "unique_count": 1848
+      },
+      {
+        "compatible": true,
+        "constant": false,
+        "dtype": "float64",
+        "feature": "ttyh1",
+        "non_finite_count": 0,
+        "null_count": 0,
+        "numeric_dtype": true,
+        "unique_count": 1746
+      },
+      {
+        "compatible": true,
+        "constant": false,
+        "dtype": "float64",
+        "feature": "tsc2",
+        "non_finite_count": 0,
+        "null_count": 0,
+        "numeric_dtype": true,
+        "unique_count": 1855
+      },
+      {
+        "compatible": true,
+        "constant": false,
+        "dtype": "float64",
+        "feature": "hdac2",
+        "non_finite_count": 0,
+        "null_count": 0,
+        "numeric_dtype": true,
+        "unique_count": 1609
+      },
+      {
+        "compatible": true,
+        "constant": false,
+        "dtype": "float64",
+        "feature": "hla-g",
+        "non_finite_count": 0,
+        "null_count": 0,
+        "numeric_dtype": true,
+        "unique_count": 1776
+      },
+      {
+        "compatible": true,
+        "constant": false,
+        "dtype": "float64",
+        "feature": "chek1",
+        "non_finite_count": 0,
+        "null_count": 0,
+        "numeric_dtype": true,
+        "unique_count": 1795
+      },
+      {
+        "compatible": true,
+        "constant": false,
+        "dtype": "float64",
+        "feature": "mmp15",
+        "non_finite_count": 0,
+        "null_count": 0,
+        "numeric_dtype": true,
+        "unique_count": 1784
+      },
+      {
+        "compatible": true,
+        "constant": false,
+        "dtype": "float64",
+        "feature": "rad51",
+        "non_finite_count": 0,
+        "null_count": 0,
+        "numeric_dtype": true,
+        "unique_count": 1837
+      },
+      {
+        "compatible": true,
+        "constant": false,
+        "dtype": "float64",
+        "feature": "bmp6",
+        "non_finite_count": 0,
+        "null_count": 0,
+        "numeric_dtype": true,
+        "unique_count": 1797
+      },
+      {
+        "compatible": true,
+        "constant": false,
+        "dtype": "float64",
+        "feature": "tgfbr3",
+        "non_finite_count": 0,
+        "null_count": 0,
+        "numeric_dtype": true,
+        "unique_count": 1784
+      },
+      {
+        "compatible": true,
+        "constant": false,
+        "dtype": "float64",
+        "feature": "nr3c1",
+        "non_finite_count": 0,
+        "null_count": 0,
+        "numeric_dtype": true,
+        "unique_count": 1785
+      },
+      {
+        "compatible": true,
+        "constant": false,
+        "dtype": "float64",
+        "feature": "mlh1",
+        "non_finite_count": 0,
+        "null_count": 0,
+        "numeric_dtype": true,
+        "unique_count": 1845
+      },
+      {
+        "compatible": true,
+        "constant": false,
+        "dtype": "float64",
+        "feature": "psenen",
+        "non_finite_count": 0,
+        "null_count": 0,
+        "numeric_dtype": true,
+        "unique_count": 1732
+      },
+      {
+        "compatible": true,
+        "constant": false,
+        "dtype": "float64",
+        "feature": "prkd1",
+        "non_finite_count": 0,
+        "null_count": 0,
+        "numeric_dtype": true,
+        "unique_count": 1805
+      }
+    ],
+    "issue_features": []
+  },
+  "feature_compatibility": {
+    "alias_candidates_not_applied": [],
+    "duplicate_dataset_columns": [],
+    "expression_missing": [],
+    "expression_present": [
+      "gata3",
+      "aurka",
+      "csf1r",
+      "hsd17b11",
+      "egfr",
+      "erbb2",
+      "cdk1",
+      "erbb3",
+      "gsk3b",
+      "igf1r",
+      "lamb3",
+      "map2",
+      "tgfbr2",
+      "mapt",
+      "bcl2",
+      "nr2f1",
+      "ccnd2",
+      "ccne1",
+      "chek2",
+      "hras",
+      "pten",
+      "sox9",
+      "cbfb",
+      "klrg1",
+      "mmp1",
+      "folr1",
+      "smad4",
+      "abcb1",
+      "mmp9",
+      "pdgfra",
+      "arrdc1",
+      "cdc25a",
+      "akr1c4",
+      "foxo1",
+      "prkcz",
+      "ctnna1",
+      "lama2",
+      "ttyh1",
+      "tsc2",
+      "hdac2",
+      "hla-g",
+      "chek1",
+      "mmp15",
+      "rad51",
+      "bmp6",
+      "tgfbr3",
+      "nr3c1",
+      "mlh1",
+      "psenen",
+      "prkd1"
+    ],
+    "expression_present_count": 50,
+    "mutation_missing": [],
+    "mutation_present": [
+      "gata3_mut",
+      "egfr_mut",
+      "erbb2_mut",
+      "erbb3_mut",
+      "lamb3_mut",
+      "nr2f1_mut",
+      "chek2_mut",
+      "hras_mut",
+      "pten_mut",
+      "cbfb_mut",
+      "klrg1_mut",
+      "smad4_mut",
+      "foxo1_mut",
+      "prkcz_mut",
+      "ctnna1_mut",
+      "lama2_mut",
+      "ttyh1_mut",
+      "nr3c1_mut"
+    ],
+    "mutation_present_count": 18,
+    "suspicious_index_columns": [],
+    "total_present_count": 68
+  },
+  "mutation_encoding": {
+    "approved_track_b_policy": {
+      "absence_rule": "trimmed numeric zero -> 0",
+      "approved": true,
+      "fit_statistics_required": false,
+      "implementation_contract": "src.preprocessing.mutations.classify_mutation_annotation",
+      "malformed_rule": "fail clearly; do not coerce to mutation-present",
+      "missing_rule": "fail clearly; do not impute or coerce",
+      "presence_rule": "valid non-zero annotation -> 1",
+      "same_transform_for_train_validation_test": true,
+      "source_annotations_immutable": true
+    },
+    "direct_binary_count": 0,
+    "direct_binary_features": [],
+    "features": [
+      {
+        "directly_usable_as_binary": false,
+        "dtype": "object",
+        "feature": "gata3_mut",
+        "future_transformation": "map trimmed '0' to absence and nonzero mutation annotations to presence using an approved policy",
+        "null_count": 0,
+        "representation": "mutation_annotation_string",
+        "unique_count": 128,
+        "unique_values_preview": [
+          "*444Lfs*63",
+          "0",
+          "A318T",
+          "A332Dfs*20",
+          "A332Qfs*19",
+          "A395Rfs*120",
+          "A395Vfs*106",
+          "A441Rfs*66",
+          "C317Dfs*30",
+          "C85Y",
+          "D160E",
+          "D335Gfs*17"
+        ]
+      },
+      {
+        "directly_usable_as_binary": false,
+        "dtype": "object",
+        "feature": "egfr_mut",
+        "future_transformation": "map trimmed '0' to absence and nonzero mutation annotations to presence using an approved policy",
+        "null_count": 0,
+        "representation": "mutation_annotation_string",
+        "unique_count": 26,
+        "unique_values_preview": [
+          "0",
+          "A127T",
+          "A439V",
+          "A859V",
+          "D1014N",
+          "E257K",
+          "E513K",
+          "E519G",
+          "H145R",
+          "H773D",
+          "H988R",
+          "K713T"
+        ]
+      },
+      {
+        "directly_usable_as_binary": false,
+        "dtype": "object",
+        "feature": "erbb2_mut",
+        "future_transformation": "map trimmed '0' to absence and nonzero mutation annotations to presence using an approved policy",
+        "null_count": 0,
+        "representation": "mutation_annotation_string",
+        "unique_count": 37,
+        "unique_values_preview": [
+          "0",
+          "A1039T",
+          "D277H",
+          "D639E",
+          "D769Y",
+          "D808E",
+          "D873G",
+          "E770_A771insGIRD",
+          "G778_S779insLPS",
+          "I435L",
+          "I767M",
+          "L755S"
+        ]
+      },
+      {
+        "directly_usable_as_binary": false,
+        "dtype": "object",
+        "feature": "erbb3_mut",
+        "future_transformation": "map trimmed '0' to absence and nonzero mutation annotations to presence using an approved policy",
+        "null_count": 0,
+        "representation": "mutation_annotation_string",
+        "unique_count": 39,
+        "unique_values_preview": [
+          "0",
+          "A1030T",
+          "A1131T G113R",
+          "D297Y",
+          "D951H",
+          "E1291*",
+          "E1317K",
+          "E745K",
+          "E910A",
+          "E928G",
+          "G284R",
+          "G324R"
+        ]
+      },
+      {
+        "directly_usable_as_binary": false,
+        "dtype": "object",
+        "feature": "lamb3_mut",
+        "future_transformation": "map trimmed '0' to absence and nonzero mutation annotations to presence using an approved policy",
+        "null_count": 0,
+        "representation": "mutation_annotation_string",
+        "unique_count": 51,
+        "unique_values_preview": [
+          "0",
+          "A237T",
+          "A590V",
+          "A596V",
+          "A607T",
+          "A729S",
+          "C796Y",
+          "D547N",
+          "E403K",
+          "E883K",
+          "G254S",
+          "G525A"
+        ]
+      },
+      {
+        "directly_usable_as_binary": false,
+        "dtype": "object",
+        "feature": "nr2f1_mut",
+        "future_transformation": "map trimmed '0' to absence and nonzero mutation annotations to presence using an approved policy",
+        "null_count": 0,
+        "representation": "mutation_annotation_string",
+        "unique_count": 6,
+        "unique_values_preview": [
+          "0",
+          "D91E",
+          "L251Q",
+          "Q43del",
+          "R225C",
+          "T329M"
+        ]
+      },
+      {
+        "directly_usable_as_binary": false,
+        "dtype": "object",
+        "feature": "chek2_mut",
+        "future_transformation": "map trimmed '0' to absence and nonzero mutation annotations to presence using an approved policy",
+        "null_count": 0,
+        "representation": "mutation_annotation_string",
+        "unique_count": 13,
+        "unique_values_preview": [
+          "0",
+          "D77N",
+          "E239K",
+          "F310V",
+          "G259Wfs*13",
+          "I364T",
+          "K197E",
+          "N105K",
+          "R346H",
+          "T389A",
+          "W485*",
+          "W97*"
+        ]
+      },
+      {
+        "directly_usable_as_binary": false,
+        "dtype": "object",
+        "feature": "hras_mut",
+        "future_transformation": "map trimmed '0' to absence and nonzero mutation annotations to presence using an approved policy",
+        "null_count": 0,
+        "representation": "mutation_annotation_string",
+        "unique_count": 3,
+        "unique_values_preview": [
+          "0",
+          "N86T",
+          "Q61R"
+        ]
+      },
+      {
+        "directly_usable_as_binary": false,
+        "dtype": "object",
+        "feature": "pten_mut",
+        "future_transformation": "map trimmed '0' to absence and nonzero mutation annotations to presence using an approved policy",
+        "null_count": 0,
+        "representation": "mutation_annotation_string",
+        "unique_count": 73,
+        "unique_values_preview": [
+          "0",
+          "A126T",
+          "A126V",
+          "A79T",
+          "A86Gfs*6",
+          "C105R",
+          "C105Vfs*8",
+          "C136R",
+          "C136Y",
+          "C304Lfs*2 V317Yfs*4",
+          "C71F",
+          "D24N"
+        ]
+      },
+      {
+        "directly_usable_as_binary": false,
+        "dtype": "object",
+        "feature": "cbfb_mut",
+        "future_transformation": "map trimmed '0' to absence and nonzero mutation annotations to presence using an approved policy",
+        "null_count": 0,
+        "representation": "mutation_annotation_string",
+        "unique_count": 66,
+        "unique_values_preview": [
+          "0",
+          "A56V",
+          "A99Vfs*3",
+          "C107F",
+          "C107Y",
+          "D155Efs*11",
+          "D87H R83P",
+          "E126*",
+          "E130*",
+          "E135K",
+          "E135V",
+          "E152K"
+        ]
+      },
+      {
+        "directly_usable_as_binary": false,
+        "dtype": "object",
+        "feature": "klrg1_mut",
+        "future_transformation": "map trimmed '0' to absence and nonzero mutation annotations to presence using an approved policy",
+        "null_count": 0,
+        "representation": "mutation_annotation_string",
+        "unique_count": 6,
+        "unique_values_preview": [
+          "0",
+          "C176Y",
+          "C75F",
+          "N84K",
+          "S31P",
+          "X186_splice"
+        ]
+      },
+      {
+        "directly_usable_as_binary": false,
+        "dtype": "object",
+        "feature": "smad4_mut",
+        "future_transformation": "map trimmed '0' to absence and nonzero mutation annotations to presence using an approved policy",
+        "null_count": 0,
+        "representation": "mutation_annotation_string",
+        "unique_count": 22,
+        "unique_values_preview": [
+          "0",
+          "A319GS*VLVFHCLL*NGCSX",
+          "D351G",
+          "D493H",
+          "G386V",
+          "H405Y",
+          "H92Y",
+          "K340_S343del",
+          "L47P",
+          "M331Nfs*11",
+          "Q224* A406V",
+          "Q245*"
+        ]
+      },
+      {
+        "directly_usable_as_binary": false,
+        "dtype": "object",
+        "feature": "foxo1_mut",
+        "future_transformation": "map trimmed '0' to absence and nonzero mutation annotations to presence using an approved policy",
+        "null_count": 0,
+        "representation": "mutation_annotation_string",
+        "unique_count": 11,
+        "unique_values_preview": [
+          "0",
+          "A48T",
+          "A61V",
+          "D611E",
+          "H220N",
+          "P395S",
+          "S155F",
+          "S322G",
+          "T397A",
+          "T627S",
+          "V347M"
+        ]
+      },
+      {
+        "directly_usable_as_binary": false,
+        "dtype": "object",
+        "feature": "prkcz_mut",
+        "future_transformation": "map trimmed '0' to absence and nonzero mutation annotations to presence using an approved policy",
+        "null_count": 0,
+        "representation": "mutation_annotation_string",
+        "unique_count": 14,
+        "unique_values_preview": [
+          "0",
+          "A142V",
+          "D524N",
+          "E207K",
+          "E590K",
+          "G118E",
+          "G248V",
+          "G425R",
+          "L402P",
+          "R117Q",
+          "R137H",
+          "R137S"
+        ]
+      },
+      {
+        "directly_usable_as_binary": false,
+        "dtype": "object",
+        "feature": "ctnna1_mut",
+        "future_transformation": "map trimmed '0' to absence and nonzero mutation annotations to presence using an approved policy",
+        "null_count": 0,
+        "representation": "mutation_annotation_string",
+        "unique_count": 12,
+        "unique_values_preview": [
+          "0",
+          "A224T",
+          "A885V",
+          "D114H",
+          "D904A",
+          "K733*",
+          "P462L",
+          "Q887*",
+          "R126Q",
+          "R300C",
+          "R586C",
+          "X101_splice"
+        ]
+      },
+      {
+        "directly_usable_as_binary": false,
+        "dtype": "object",
+        "feature": "lama2_mut",
+        "future_transformation": "map trimmed '0' to absence and nonzero mutation annotations to presence using an approved policy",
+        "null_count": 0,
+        "representation": "mutation_annotation_string",
+        "unique_count": 87,
+        "unique_values_preview": [
+          "0",
+          "A2093T",
+          "A293S",
+          "A5T",
+          "A763V",
+          "C1548R",
+          "C309W",
+          "C416*",
+          "C951F",
+          "D1222G",
+          "D1446N",
+          "D173N"
+        ]
+      },
+      {
+        "directly_usable_as_binary": false,
+        "dtype": "object",
+        "feature": "ttyh1_mut",
+        "future_transformation": "map trimmed '0' to absence and nonzero mutation annotations to presence using an approved policy",
+        "null_count": 0,
+        "representation": "mutation_annotation_string",
+        "unique_count": 18,
+        "unique_values_preview": [
+          "0",
+          "A172T",
+          "A179S",
+          "A34V",
+          "C72G",
+          "E149K",
+          "G86R",
+          "I136T",
+          "I62F",
+          "L322V",
+          "M249I",
+          "P196S"
+        ]
+      },
+      {
+        "directly_usable_as_binary": false,
+        "dtype": "object",
+        "feature": "nr3c1_mut",
+        "future_transformation": "map trimmed '0' to absence and nonzero mutation annotations to presence using an approved policy",
+        "null_count": 0,
+        "representation": "mutation_annotation_string",
+        "unique_count": 10,
+        "unique_values_preview": [
+          "0",
+          "E362K",
+          "E730K",
+          "F29L",
+          "L78P",
+          "Q74R",
+          "S269R",
+          "T504S",
+          "Y30H",
+          "Y545C"
+        ]
+      }
+    ],
+    "requires_transformation_count": 18,
+    "requires_transformation_features": [
+      "gata3_mut",
+      "egfr_mut",
+      "erbb2_mut",
+      "erbb3_mut",
+      "lamb3_mut",
+      "nr2f1_mut",
+      "chek2_mut",
+      "hras_mut",
+      "pten_mut",
+      "cbfb_mut",
+      "klrg1_mut",
+      "smad4_mut",
+      "foxo1_mut",
+      "prkcz_mut",
+      "ctnna1_mut",
+      "lama2_mut",
+      "ttyh1_mut",
+      "nr3c1_mut"
+    ]
+  },
+  "phase": "R6-P0",
+  "r5_clinical_contract": {
+    "engineer_extra_clinical_fields_excluded": [
+      "mutation_count",
+      "nottingham_prognostic_index",
+      "cellularity",
+      "neoplasm_histologic_grade",
+      "inferred_menopausal_state",
+      "type_of_breast_surgery",
+      "chemotherapy",
+      "hormone_therapy",
+      "radio_therapy"
+    ],
+    "future_r6_rule": "frozen R5 raw clinical features + 50 expression + 18 mutation",
+    "raw_input_features": [
+      "age_at_diagnosis",
+      "tumor_size",
+      "tumor_stage",
+      "lymph_nodes_examined_positive",
+      "er_status_measured_by_ihc",
+      "pr_status",
+      "her2_status"
+    ]
+  },
+  "recommendation": "READY FOR R6 TRACK B",
+  "selected_feature_contract": {
+    "engineer_copy_matches_canonical": true,
+    "expression_count": 50,
+    "expression_features": [
+      "gata3",
+      "aurka",
+      "csf1r",
+      "hsd17b11",
+      "egfr",
+      "erbb2",
+      "cdk1",
+      "erbb3",
+      "gsk3b",
+      "igf1r",
+      "lamb3",
+      "map2",
+      "tgfbr2",
+      "mapt",
+      "bcl2",
+      "nr2f1",
+      "ccnd2",
+      "ccne1",
+      "chek2",
+      "hras",
+      "pten",
+      "sox9",
+      "cbfb",
+      "klrg1",
+      "mmp1",
+      "folr1",
+      "smad4",
+      "abcb1",
+      "mmp9",
+      "pdgfra",
+      "arrdc1",
+      "cdc25a",
+      "akr1c4",
+      "foxo1",
+      "prkcz",
+      "ctnna1",
+      "lama2",
+      "ttyh1",
+      "tsc2",
+      "hdac2",
+      "hla-g",
+      "chek1",
+      "mmp15",
+      "rad51",
+      "bmp6",
+      "tgfbr3",
+      "nr3c1",
+      "mlh1",
+      "psenen",
+      "prkd1"
+    ],
+    "mutation_count": 18,
+    "mutation_features": [
+      "gata3_mut",
+      "egfr_mut",
+      "erbb2_mut",
+      "erbb3_mut",
+      "lamb3_mut",
+      "nr2f1_mut",
+      "chek2_mut",
+      "hras_mut",
+      "pten_mut",
+      "cbfb_mut",
+      "klrg1_mut",
+      "smad4_mut",
+      "foxo1_mut",
+      "prkcz_mut",
+      "ctnna1_mut",
+      "lama2_mut",
+      "ttyh1_mut",
+      "nr3c1_mut"
+    ],
+    "source_path": "ai_handoff_data/v1/selected_features.txt",
+    "source_sha256": "DAEF507A61D71F63364D6322F6DB6307E903698533F6B29DBF7DEB5CD84CCE21",
+    "total_count": 68
+  },
+  "status": "PASS",
+  "subtype_compatibility": {
+    "classes_and_counts": {
+      "Basal": 199,
+      "Her2": 220,
+      "LumA": 679,
+      "LumB": 461,
+      "NC": 6,
+      "Normal": 140,
+      "claudin-low": 199
+    },
+    "missing_count": 0,
+    "nc_count": 6,
+    "required_classes_present": true,
+    "required_engineer_classes": [
+      "Basal",
+      "Her2",
+      "LumA",
+      "LumB",
+      "Normal",
+      "claudin-low"
+    ],
+    "target_column": "pam50_+_claudin-low_subtype"
+  },
+  "survival_contract": {
+    "active_prepared_0_meaning": "Living / Censored",
+    "active_prepared_1_meaning": "Deceased (Event)",
+    "active_prepared_column": "overall_survival",
+    "duration_column": "overall_survival_months",
+    "engineer_loader_difference": "Engineer loaders invert 1=living/0=deceased split files. Active prepared data is already 1=deceased event/0=living-censored and must not be inverted again.",
+    "model_event_observed_value": 1,
+    "raw_source_0_meaning": "Deceased",
+    "raw_source_1_meaning": "Living",
+    "raw_source_column": "overall_survival"
+  }
+}

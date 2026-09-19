@@ -6,4 +6,6 @@ The supplied clinical columns, genomic identifiers, survival endpoints, event de
 
 The R5A validation C-index of 0.650696 is development evidence on one locked internal validation split. PH diagnostics flagged five terms, including age and three categorical contrasts, and Stage 4 has a wide confidence interval. No automatic remedy was authorized. The condition number (966.312676) records scale/conditioning evidence but is not by itself proof of instability or validity. Local pickle artifacts are trusted-machine-only and unsafe to load from unverified sources.
 
+The imported engineer code and its reported metrics are reference evidence only. Its split, event loader, expanded clinical predictors, dynamic all-numeric feature discovery, test-driven survival selection, and saved pickle files are incompatible with direct adoption. The approved mutation-presence mapping resolves an input-contract decision only; it is not a trained feature effect, biological claim, or model-performance result.
+
 The application is a research and educational prototype. It is not validated for diagnosis, prognosis in patient care, treatment selection, or any clinical decision. It must not receive identifiable patient information.

@@ -6,6 +6,8 @@ R4D tests add controlled annotation parsing, malformed/missing rejection, inclus
 
 R5A tests cover fixed reference encoding, Track B/D isolation, framework-independent survival contracts, matrix rank/condition diagnostics, pre-fit rank stopping, C-index direction/ties/censoring, convergence-warning stops, PH diagnostics, trusted local artifact checksums, direct CLI execution, the canonical train/validation fit, and untouched-test flags.
 
+R6-P0 tests cover deterministic selected-feature parsing, duplicate rejection, exact/missing/alias detection, numeric and annotation mutation representations, the approved R4D mapping metadata, expression quality, AST-only source inspection without entrypoint execution, read-only canonical/R5 hash preservation, deterministic report generation, direct CLI execution, and Git-ignore protection for imported engineer pickle artifacts.
+
 Obsolete tests for the superseded domain were removed with their production modules. Test count is not used as a success metric.
 
 Run:

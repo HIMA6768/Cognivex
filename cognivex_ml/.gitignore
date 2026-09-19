@@ -1,0 +1,32 @@
+# .gitignore for breast cancer AI handoff project
+
+# ── Large model artifacts (too big for git) ──────────────────────────────────
+models/subtype_classifier_randomforest.pkl
+models/subtype_classifier_gradientboosting.pkl
+models/track_c_clf_Random_Forest.pkl
+models/track_c_clf_Gradient_Boosting.pkl
+models/track_c_clf_SVM_RBF.pkl
+
+# ── Raw data (large CSVs — share via external storage / DVC) ─────────────────
+data/train_dataset.csv
+data/validation_dataset.csv
+data/test_dataset.csv
+
+# ── Python cache ─────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+
+# ── Virtual environments ──────────────────────────────────────────────────────
+venv/
+.env/
+env/
+*.egg-info/
+
+# ── OS / editor artifacts ─────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp

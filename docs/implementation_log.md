@@ -1,5 +1,11 @@
 # Implementation log
 
+## 2026-09-19 — R6-P0 engineer import and compatibility audit
+
+Imported the 30-file `cognivex_ml/` tree from `origin/anay/prediction_pipelines` commit `f4af52c` without merging the branch. Its nine pickle artifacts remain ignored, untrusted, and disconnected. Added a read-only compatibility module, direct CLI, focused tests, and deterministic JSON/Markdown artifacts. Source inspection is AST-only and does not execute engineer entrypoints.
+
+The active Cognivex authority remains the 1,904-row, 693-column prepared METABRIC dataset and 1,332/286/286 locked manifest. The active prepared survival column is already 1=deceased/event and must not pass through the engineer loaders that invert 1=living source status. The engineer contract matches 50/50 expression and 18/18 mutation names exactly. Expression is fully consumable. For all 18 annotation-string mutation fields, review approved the existing R4D mutation contract: trimmed numeric zero maps to absence, valid non-zero annotations map to presence, and missing/malformed values fail clearly. The source CSV remains unchanged; no fitting, prediction, test evaluation, R7, or R8 work occurred.
+
 ## 2026-09-18 — R5/R5A clinical-only Cox PH baseline
 
 Added framework-independent survival experiment contracts, deterministic matrix diagnostics, Harrell C-index evaluation, a strict lifelines 0.30.3 adapter, train/validation orchestration, checksummed artifact persistence, and a direct training CLI. The initial full-category 16-column Track A matrix had rank 13 and the unpenalized fit stopped on a singular matrix without a fallback.

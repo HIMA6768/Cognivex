@@ -25,3 +25,6 @@ htmlcov/
 # R5 trusted local model binaries (never commit or load from untrusted sources)
 artifacts/models/**/preprocessor.pkl
 artifacts/models/**/cox_model.pkl
+
+# R6-P0 imported engineer model artifacts are reference-only and untrusted
+cognivex_ml/models/*.pkl

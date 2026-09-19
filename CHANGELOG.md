@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-09-19 — R6-P0 engineer import and genomic compatibility audit
+
+- Imported `cognivex_ml/` from engineer commit `f4af52c` as disconnected reference material without merging its branch, split, data loaders, models, or metrics into the active runtime.
+- Added a read-only, AST-based compatibility utility and deterministic JSON/Markdown audit artifacts. No engineer entrypoint is imported or executed.
+- Confirmed the authoritative dataset remains the 1,904-patient, 693-column prepared METABRIC file with locked 1,332/286/286 splits and active `overall_survival` event coding of 1=deceased/event.
+- Confirmed exact-name availability of 50/50 selected expression and 18/18 selected mutation features. All expression fields are numeric, finite, complete, and non-constant; all 18 mutation fields are annotation strings.
+- Recorded approval to derive binary mutation presence through the existing R4D annotation contract without rewriting the prepared CSV. No model was trained, and R7/R8 were not started.
+
 ## 2026-09-18 — R5A Track A reference-category Cox PH baseline
 
 - Replaced Track-A-only full dummy encoding with fixed references: Stage 1 and Negative ER-IHC, PR, and HER2. Tracks B, C, and D retain their prior preprocessing contracts.

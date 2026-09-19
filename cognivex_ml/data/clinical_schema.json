@@ -1,0 +1,20 @@
+{
+  "input_features": {
+    "age_at_diagnosis": {"type": "float", "unit": "years", "required": true},
+    "tumor_size": {"type": "float", "unit": "mm", "required": true},
+    "tumor_stage": {"type": "integer", "categories": [1, 2, 3, 4], "required": true},
+    "lymph_nodes_examined_positive": {"type": "integer", "unit": "count", "required": true},
+    "er_status_measured_by_ihc": {"type": "categorical", "categories": ["Positive", "Negative"], "required": true},
+    "pr_status": {"type": "categorical", "categories": ["Positive", "Negative"], "required": true},
+    "her2_status": {"type": "categorical", "categories": ["Positive", "Negative"], "required": true}
+  },
+  "survival_targets": {
+    "time_column": "overall_survival_months",
+    "time_unit": "months",
+    "event_column": "overall_survival",
+    "event_coding": {
+      "0": "Living / Censored",
+      "1": "Deceased (Event)"
+    }
+  }
+}
