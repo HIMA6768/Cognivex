@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import math
+from typing import Any
 
 from .analysis import SerializableContract
 
@@ -61,3 +63,63 @@ class TrackCExclusionSummary(SerializableContract):
             raise ValueError("Track C exclusion counts must be non-negative integers")
         if self.eligible_rows + self.nc + self.missing + self.unsupported != self.source_rows:
             raise ValueError("Track C exclusion counts must reconcile to source_rows")
+
+
+@dataclass(frozen=True, slots=True)
+class PerClassClassificationMetric(SerializableContract):
+    """One fixed-order subtype classification metric row."""
+
+    label: str
+    precision: float
+    recall: float
+    f1: float
+    support: int
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.label, str) or not self.label:
+            raise ValueError("label must be non-empty")
+        if any(
+            not math.isfinite(value) or not 0 <= value <= 1
+            for value in (self.precision, self.recall, self.f1)
+        ):
+            raise ValueError("classification rates must be finite values between zero and one")
+        if not isinstance(self.support, int) or isinstance(self.support, bool) or self.support < 0:
+            raise ValueError("support must be a non-negative integer")
+
+
+@dataclass(frozen=True, slots=True)
+class ClassificationMetrics(SerializableContract):
+    """Fixed-order aggregate and per-class metrics for one split."""
+
+    split: str
+    row_count: int
+    macro_f1: float
+    weighted_f1: float
+    accuracy: float
+    balanced_accuracy: float
+    per_class: tuple[PerClassClassificationMetric, ...]
+    confusion_matrix: tuple[tuple[int, ...], ...]
+    classification_report: dict[str, Any]
+    cohort_fingerprint: str
+
+    def __post_init__(self) -> None:
+        if self.split not in {"train", "validation", "test"}:
+            raise ValueError("split must be train, validation, or test")
+        if not isinstance(self.row_count, int) or isinstance(self.row_count, bool) or self.row_count <= 0:
+            raise ValueError("row_count must be a positive integer")
+        for value in (self.macro_f1, self.weighted_f1, self.accuracy, self.balanced_accuracy):
+            if not math.isfinite(value) or not 0 <= value <= 1:
+                raise ValueError("aggregate classification metrics must be between zero and one")
+        if not self.per_class or any(
+            not isinstance(item, PerClassClassificationMetric) for item in self.per_class
+        ):
+            raise TypeError("per_class must contain classification metric rows")
+        size = len(self.per_class)
+        if len(self.confusion_matrix) != size or any(
+            len(row) != size for row in self.confusion_matrix
+        ):
+            raise ValueError("confusion_matrix dimensions must match per_class")
+        if sum(sum(row) for row in self.confusion_matrix) != self.row_count:
+            raise ValueError("confusion_matrix must sum to row_count")
+        if not isinstance(self.cohort_fingerprint, str) or not self.cohort_fingerprint:
+            raise ValueError("cohort_fingerprint must be non-empty")
