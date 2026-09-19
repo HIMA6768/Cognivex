@@ -43,6 +43,17 @@ from .preprocessing import (
     PreprocessingTrack,
     SplitEligibilityCount,
 )
+from .prognostic_features import (
+    COEF_EPS,
+    DIRECTION_DISPLAY_TEXT,
+    FEATURE_EFFECTS_CSV_COLUMNS,
+    EffectDirection,
+    FeatureType,
+    GenomicFeatureMapping,
+    PenalizedCoxSummaryValues,
+    PrognosticFeatureAnalysisResult,
+    PrognosticFeatureEffect,
+)
 from .survival import (
     ArtifactRecord,
     CategoricalFeatureComparison,
@@ -136,4 +147,13 @@ __all__ = [
     "TrackCCandidateDefinition",
     "TrackCCandidateResult",
     "TrackCExperimentResult",
+    "COEF_EPS",
+    "DIRECTION_DISPLAY_TEXT",
+    "FEATURE_EFFECTS_CSV_COLUMNS",
+    "EffectDirection",
+    "FeatureType",
+    "GenomicFeatureMapping",
+    "PenalizedCoxSummaryValues",
+    "PrognosticFeatureEffect",
+    "PrognosticFeatureAnalysisResult",
 ]
