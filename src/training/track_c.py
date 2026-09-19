@@ -7,6 +7,7 @@ from dataclasses import dataclass
 import hashlib
 import math
 from pathlib import Path
+import re
 from typing import Any
 
 import pandas as pd
@@ -16,13 +17,19 @@ from src.contracts import (
     DataQualityStatus,
     TrackCCandidateDefinition,
     TrackCCandidateResult,
+    TrackCExperimentResult,
     TrackCFeatureContract,
 )
 from src.data import TRACK_C_CLASS_ORDER, OrderedTrackCSplit, TrackCOrderedCohorts
 from src.data.metabric import MetabricPaths, load_metabric
 from src.data.metabric_quality import evaluate_metabric_quality
 from src.data.track_c import load_ordered_track_c_cohorts, load_track_c_feature_contract
-from src.evaluation.classification import evaluate_classification
+from src.evaluation.classification import (
+    evaluate_classification,
+    prediction_digest,
+    probability_digest,
+    reorder_and_validate_probabilities,
+)
 from src.modeling.track_c import TRACK_C_CANDIDATES, build_track_c_candidate
 
 
@@ -158,4 +165,71 @@ def select_track_c_candidate(
         contract=selection.contract,
         leaderboard=leaderboard,
         validation_metrics=winner.validation_metrics,
+    )
+
+
+def _canonical_test_data(test: PreparedTrackCTest) -> tuple[pd.DataFrame, pd.Series]:
+    split = test.split
+    if split.split != "test":
+        raise ValueError("final Track C evaluation requires the test split")
+    expected_fingerprint = hashlib.sha256(
+        "\n".join(split.patient_ids).encode("utf-8")
+    ).hexdigest()
+    if split.fingerprint != expected_fingerprint:
+        raise ValueError("test cohort fingerprint is inconsistent with canonical patient order")
+    if set(split.predictors.index.astype(str)) != set(split.patient_ids):
+        raise ValueError("test predictor index does not match canonical patient IDs")
+    if set(split.targets.index.astype(str)) != set(split.patient_ids):
+        raise ValueError("test target index does not match canonical patient IDs")
+    ordered_index = list(split.patient_ids)
+    return split.predictors.loc[ordered_index], split.targets.loc[ordered_index]
+
+
+def finalize_track_c(
+    selection: SelectedTrackCModel,
+    test: PreparedTrackCTest,
+    *,
+    experiment_id: str,
+) -> TrackCExperimentResult:
+    """Evaluate only the frozen validation winner exactly once on canonical test."""
+    if not isinstance(experiment_id, str) or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]*", experiment_id):
+        raise ValueError("experiment_id must be a non-empty path-safe identifier")
+    if not isinstance(selection, SelectedTrackCModel):
+        raise TypeError("selection must be SelectedTrackCModel")
+    if not isinstance(test, PreparedTrackCTest):
+        raise TypeError("test must be PreparedTrackCTest")
+    predictors, targets = _canonical_test_data(test)
+    predictions = tuple(str(value) for value in selection.pipeline.predict(predictors))
+    raw_probabilities = selection.pipeline.predict_proba(predictors)
+    probability_output = reorder_and_validate_probabilities(
+        raw_probabilities,
+        selection.pipeline.classes_,
+        TRACK_C_CLASS_ORDER,
+    )
+    metrics = evaluate_classification(
+        targets,
+        predictions,
+        split="test",
+        class_order=TRACK_C_CLASS_ORDER,
+        cohort_fingerprint=test.split.fingerprint,
+    )
+    model_feature_names = selection.contract.expression_features + tuple(
+        f"{name}_present" for name in selection.contract.mutation_features
+    )
+    return TrackCExperimentResult(
+        schema_version="1.0",
+        experiment_id=experiment_id,
+        feature_contract=selection.contract,
+        model_feature_names=model_feature_names,
+        class_order=TRACK_C_CLASS_ORDER,
+        selected_definition=selection.definition,
+        leaderboard=selection.leaderboard,
+        validation_metrics=selection.validation_metrics,
+        test_metrics=metrics,
+        test_prediction_digest=prediction_digest(predictions),
+        test_probability_digest=probability_digest(probability_output.probabilities),
+        test_probability_row_count=len(probability_output.probabilities),
+        test_probability_normalized=True,
+        candidate_test_evaluation_count=selection.candidate_test_evaluation_count,
+        winner_test_evaluation_count=1,
     )

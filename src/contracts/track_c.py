@@ -159,3 +159,44 @@ class TrackCCandidateResult(SerializableContract):
             raise TypeError("validation_metrics must be ClassificationMetrics")
         if self.validation_metrics.split != "validation":
             raise ValueError("candidate results must contain validation metrics only")
+
+
+@dataclass(frozen=True, slots=True)
+class TrackCExperimentResult(SerializableContract):
+    """Aggregate R7 result after one frozen-winner test evaluation."""
+
+    schema_version: str
+    experiment_id: str
+    feature_contract: TrackCFeatureContract
+    model_feature_names: tuple[str, ...]
+    class_order: tuple[str, ...]
+    selected_definition: TrackCCandidateDefinition
+    leaderboard: tuple[TrackCCandidateResult, ...]
+    validation_metrics: ClassificationMetrics
+    test_metrics: ClassificationMetrics
+    test_prediction_digest: str
+    test_probability_digest: str
+    test_probability_row_count: int
+    test_probability_normalized: bool
+    candidate_test_evaluation_count: int
+    winner_test_evaluation_count: int
+
+    def __post_init__(self) -> None:
+        if not self.schema_version or not self.experiment_id:
+            raise ValueError("schema_version and experiment_id must be non-empty")
+        if len(self.model_feature_names) != 68 or len(set(self.model_feature_names)) != 68:
+            raise ValueError("Track C must persist exactly 68 unique model features")
+        if len(self.class_order) != 6 or len(set(self.class_order)) != 6:
+            raise ValueError("Track C must persist exactly six unique classes")
+        if self.validation_metrics.split != "validation" or self.test_metrics.split != "test":
+            raise ValueError("Track C result metrics must preserve validation and test split identity")
+        if not self.test_prediction_digest or not self.test_probability_digest:
+            raise ValueError("Track C result digests must be non-empty")
+        if self.test_probability_row_count != self.test_metrics.row_count:
+            raise ValueError("probability row count must match test metrics")
+        if self.test_probability_normalized is not True:
+            raise ValueError("test probabilities must be normalized")
+        if self.candidate_test_evaluation_count != 0:
+            raise ValueError("alternative candidates must never be evaluated on test")
+        if self.winner_test_evaluation_count != 1:
+            raise ValueError("the frozen winner must receive exactly one test evaluation")

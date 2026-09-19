@@ -68,6 +68,7 @@ from .track_c import (
     PerClassClassificationMetric,
     TrackCCandidateDefinition,
     TrackCCandidateResult,
+    TrackCExperimentResult,
     TrackCExclusionSummary,
     TrackCFeatureContract,
 )
@@ -134,4 +135,5 @@ __all__ = [
     "ClassificationMetrics",
     "TrackCCandidateDefinition",
     "TrackCCandidateResult",
+    "TrackCExperimentResult",
 ]
