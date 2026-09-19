@@ -40,3 +40,5 @@ The final matrix contains only 16 transformed clinical variables, fit-selected m
 ## Future modeling boundary
 
 A later approved Track D increment may place this preprocessor before a penalized Cox estimator and compare Tracks A, B, and D on the same eligible evaluation population. Model fitting, tuning, evaluation, and selection-frequency analysis are outside R4D.
+
+R8 does not fit Track D. Its mutation analysis is limited to the 18 already-fitted R6 Track B `*_mut_present` coefficients. Those inputs retain the existing R4D presence/absence semantics, but R8 neither reparses source annotations nor changes the prepared dataset. Track D model fitting remains deferred and unapproved.

@@ -1,0 +1,20 @@
+{
+  "activity_counts": {
+    "active": 24,
+    "effectively_zero": 44
+  },
+  "analysis_id": "r8-prognostic-features-v1",
+  "coef_eps": 1e-06,
+  "direction_counts": {
+    "associated_with_higher_modeled_hazard": 12,
+    "associated_with_lower_modeled_hazard": 12,
+    "effectively_zero_under_r8_threshold": 44
+  },
+  "feature_type_counts": {
+    "expression": 50,
+    "mutation_presence": 18
+  },
+  "schema_version": "1.0",
+  "status": "COMPLETE",
+  "total": 68
+}

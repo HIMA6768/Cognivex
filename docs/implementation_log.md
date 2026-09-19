@@ -1,5 +1,9 @@
 # Implementation log
 
+## 2026-09-19 — R8 frozen-model prognostic genomic feature analysis
+
+Added a checksum-gated read-only analysis of the frozen R6 Track B Cox model. The analysis excludes 12 encoded clinical outputs and preserves all 50 expression plus 18 mutation-presence coefficients. It applies `COEF_EPS=1e-6`, ranks only by descending absolute beta and frozen genomic order, and derives current evidence of 24 active and 44 effectively-zero coefficients. Added deterministic aggregate artifacts, a no-write verifier, provenance regression tests, and an independent 30-check audit. No model was fit or refit, no patient-level data was persisted, and R9 was not started.
+
 ## 2026-09-19 — R7 Track C molecular subtype classification
 
 Added a genomic-only Track C path with 50 explicit expression features, 18 selected mutation annotations transformed through the existing R4D semantics, and zero clinical predictors. Canonical manifest ordering and Track-C-only target filtering produce 1,330/285/283 eligible train/validation/test rows; NC exclusions are 2/1/3.

@@ -2,6 +2,14 @@
 
 Cognivex is a Python/Streamlit research prototype for **Breast Cancer Prognosis & Subtype Classification**. The central future comparison is clinical-only survival prognosis versus clinical-plus-genomic prognosis, with molecular subtype classification and gene-level model insight as separate analytical tasks.
 
+## R8 status
+
+R8 adds a read-only prognostic genomic feature analysis of the frozen R6 Track B penalized Cox model. It excludes all 12 encoded clinical outputs and retains the complete ordered set of 50 expression plus 18 mutation-presence coefficients. Activity uses the frozen numerical rule `abs(beta) > 1e-6`; ranking uses descending absolute beta followed by frozen genomic order.
+
+The current frozen evidence has 24 active and 44 effectively-zero coefficients. All 68 remain in the canonical table. These are model-associated coefficients from one internally evaluated penalized model—not causal effects, validated biomarkers, or clinical recommendations. R8 performs no fitting and persists no patient-level data.
+
+The aggregate bundle is under `artifacts/analysis/r8-prognostic-features-v1/`, with a read-only verifier and independent 30-check audit. See [R8 analysis details](docs/prognostic_feature_analysis.md).
+
 ## R7 status
 
 R7 adds a six-class molecular subtype classifier using exactly 50 selected expression features and 18 R4D-derived mutation-presence features, with zero clinical predictors. Track C eligibility is 1,330 train, 285 validation, and 283 test; NC exclusions are 2/1/3 and apply only to Track C.
@@ -57,4 +65,4 @@ python -m pytest -q
 
 This is a research and educational prototype. It is not a diagnostic medical device, treatment recommendation system, validated clinical prognosis system, or substitute for qualified oncology care. Do not use it for patient care.
 
-See the generated [R7 report](artifacts/models/track_c/r7-track-c-v1/report.md), [R6 report](artifacts/models/track_b/r6-track-b-v1/report.md), [R6-P0 compatibility audit](docs/r6_p0_engineer_compatibility.md), [R5A survival baseline](docs/survival_baseline.md), [architecture](docs/architecture.md), [model training](docs/model_training.md), [model evaluation](docs/model_evaluation.md), [testing](docs/testing.md), and [limitations](docs/limitations.md).
+See the generated [R8 report](artifacts/analysis/r8-prognostic-features-v1/report.md), [R7 report](artifacts/models/track_c/r7-track-c-v1/report.md), [R6 report](artifacts/models/track_b/r6-track-b-v1/report.md), [R6-P0 compatibility audit](docs/r6_p0_engineer_compatibility.md), [R5A survival baseline](docs/survival_baseline.md), [architecture](docs/architecture.md), [model training](docs/model_training.md), [model evaluation](docs/model_evaluation.md), [testing](docs/testing.md), and [limitations](docs/limitations.md).

@@ -1,0 +1,469 @@
+{
+  "analysis_id": "r8-prognostic-features-v1",
+  "coefficient_contract": {
+    "activity_rule": "abs(beta) > COEF_EPS",
+    "coef_eps": 1e-06,
+    "direction_rule": "higher if beta > COEF_EPS; lower if beta < -COEF_EPS; otherwise effectively zero",
+    "inferential_fields": "model-reported descriptive values only; never used for selection, filtering, activity, direction, or ranking",
+    "ranking_rule": "descending abs_beta, then frozen_genomic_order"
+  },
+  "feature_contract": {
+    "analyzed_total": 68,
+    "clinical": 0,
+    "encoded_r6_total": 80,
+    "excluded_clinical": 12,
+    "expression": 50,
+    "genomic_mapping": [
+      {
+        "feature_type": "expression",
+        "frozen_genomic_order": 1,
+        "model_feature_name": "gata3",
+        "raw_feature_name": "gata3"
+      },
+      {
+        "feature_type": "expression",
+        "frozen_genomic_order": 2,
+        "model_feature_name": "aurka",
+        "raw_feature_name": "aurka"
+      },
+      {
+        "feature_type": "expression",
+        "frozen_genomic_order": 3,
+        "model_feature_name": "csf1r",
+        "raw_feature_name": "csf1r"
+      },
+      {
+        "feature_type": "expression",
+        "frozen_genomic_order": 4,
+        "model_feature_name": "hsd17b11",
+        "raw_feature_name": "hsd17b11"
+      },
+      {
+        "feature_type": "expression",
+        "frozen_genomic_order": 5,
+        "model_feature_name": "egfr",
+        "raw_feature_name": "egfr"
+      },
+      {
+        "feature_type": "expression",
+        "frozen_genomic_order": 6,
+        "model_feature_name": "erbb2",
+        "raw_feature_name": "erbb2"
+      },
+      {
+        "feature_type": "expression",
+        "frozen_genomic_order": 7,
+        "model_feature_name": "cdk1",
+        "raw_feature_name": "cdk1"
+      },
+      {
+        "feature_type": "expression",
+        "frozen_genomic_order": 8,
+        "model_feature_name": "erbb3",
+        "raw_feature_name": "erbb3"
+      },
+      {
+        "feature_type": "expression",
+        "frozen_genomic_order": 9,
+        "model_feature_name": "gsk3b",
+        "raw_feature_name": "gsk3b"
+      },
+      {
+        "feature_type": "expression",
+        "frozen_genomic_order": 10,
+        "model_feature_name": "igf1r",
+        "raw_feature_name": "igf1r"
+      },
+      {
+        "feature_type": "expression",
+        "frozen_genomic_order": 11,
+        "model_feature_name": "lamb3",
+        "raw_feature_name": "lamb3"
+      },
+      {
+        "feature_type": "expression",
+        "frozen_genomic_order": 12,
+        "model_feature_name": "map2",
+        "raw_feature_name": "map2"
+      },
+      {
+        "feature_type": "expression",
+        "frozen_genomic_order": 13,
+        "model_feature_name": "tgfbr2",
+        "raw_feature_name": "tgfbr2"
+      },
+      {
+        "feature_type": "expression",
+        "frozen_genomic_order": 14,
+        "model_feature_name": "mapt",
+        "raw_feature_name": "mapt"
+      },
+      {
+        "feature_type": "expression",
+        "frozen_genomic_order": 15,
+        "model_feature_name": "bcl2",
+        "raw_feature_name": "bcl2"
+      },
+      {
+        "feature_type": "expression",
+        "frozen_genomic_order": 16,
+        "model_feature_name": "nr2f1",
+        "raw_feature_name": "nr2f1"
+      },
+      {
+        "feature_type": "expression",
+        "frozen_genomic_order": 17,
+        "model_feature_name": "ccnd2",
+        "raw_feature_name": "ccnd2"
+      },
+      {
+        "feature_type": "expression",
+        "frozen_genomic_order": 18,
+        "model_feature_name": "ccne1",
+        "raw_feature_name": "ccne1"
+      },
+      {
+        "feature_type": "expression",
+        "frozen_genomic_order": 19,
+        "model_feature_name": "chek2",
+        "raw_feature_name": "chek2"
+      },
+      {
+        "feature_type": "expression",
+        "frozen_genomic_order": 20,
+        "model_feature_name": "hras",
+        "raw_feature_name": "hras"
+      },
+      {
+        "feature_type": "expression",
+        "frozen_genomic_order": 21,
+        "model_feature_name": "pten",
+        "raw_feature_name": "pten"
+      },
+      {
+        "feature_type": "expression",
+        "frozen_genomic_order": 22,
+        "model_feature_name": "sox9",
+        "raw_feature_name": "sox9"
+      },
+      {
+        "feature_type": "expression",
+        "frozen_genomic_order": 23,
+        "model_feature_name": "cbfb",
+        "raw_feature_name": "cbfb"
+      },
+      {
+        "feature_type": "expression",
+        "frozen_genomic_order": 24,
+        "model_feature_name": "klrg1",
+        "raw_feature_name": "klrg1"
+      },
+      {
+        "feature_type": "expression",
+        "frozen_genomic_order": 25,
+        "model_feature_name": "mmp1",
+        "raw_feature_name": "mmp1"
+      },
+      {
+        "feature_type": "expression",
+        "frozen_genomic_order": 26,
+        "model_feature_name": "folr1",
+        "raw_feature_name": "folr1"
+      },
+      {
+        "feature_type": "expression",
+        "frozen_genomic_order": 27,
+        "model_feature_name": "smad4",
+        "raw_feature_name": "smad4"
+      },
+      {
+        "feature_type": "expression",
+        "frozen_genomic_order": 28,
+        "model_feature_name": "abcb1",
+        "raw_feature_name": "abcb1"
+      },
+      {
+        "feature_type": "expression",
+        "frozen_genomic_order": 29,
+        "model_feature_name": "mmp9",
+        "raw_feature_name": "mmp9"
+      },
+      {
+        "feature_type": "expression",
+        "frozen_genomic_order": 30,
+        "model_feature_name": "pdgfra",
+        "raw_feature_name": "pdgfra"
+      },
+      {
+        "feature_type": "expression",
+        "frozen_genomic_order": 31,
+        "model_feature_name": "arrdc1",
+        "raw_feature_name": "arrdc1"
+      },
+      {
+        "feature_type": "expression",
+        "frozen_genomic_order": 32,
+        "model_feature_name": "cdc25a",
+        "raw_feature_name": "cdc25a"
+      },
+      {
+        "feature_type": "expression",
+        "frozen_genomic_order": 33,
+        "model_feature_name": "akr1c4",
+        "raw_feature_name": "akr1c4"
+      },
+      {
+        "feature_type": "expression",
+        "frozen_genomic_order": 34,
+        "model_feature_name": "foxo1",
+        "raw_feature_name": "foxo1"
+      },
+      {
+        "feature_type": "expression",
+        "frozen_genomic_order": 35,
+        "model_feature_name": "prkcz",
+        "raw_feature_name": "prkcz"
+      },
+      {
+        "feature_type": "expression",
+        "frozen_genomic_order": 36,
+        "model_feature_name": "ctnna1",
+        "raw_feature_name": "ctnna1"
+      },
+      {
+        "feature_type": "expression",
+        "frozen_genomic_order": 37,
+        "model_feature_name": "lama2",
+        "raw_feature_name": "lama2"
+      },
+      {
+        "feature_type": "expression",
+        "frozen_genomic_order": 38,
+        "model_feature_name": "ttyh1",
+        "raw_feature_name": "ttyh1"
+      },
+      {
+        "feature_type": "expression",
+        "frozen_genomic_order": 39,
+        "model_feature_name": "tsc2",
+        "raw_feature_name": "tsc2"
+      },
+      {
+        "feature_type": "expression",
+        "frozen_genomic_order": 40,
+        "model_feature_name": "hdac2",
+        "raw_feature_name": "hdac2"
+      },
+      {
+        "feature_type": "expression",
+        "frozen_genomic_order": 41,
+        "model_feature_name": "hla-g",
+        "raw_feature_name": "hla-g"
+      },
+      {
+        "feature_type": "expression",
+        "frozen_genomic_order": 42,
+        "model_feature_name": "chek1",
+        "raw_feature_name": "chek1"
+      },
+      {
+        "feature_type": "expression",
+        "frozen_genomic_order": 43,
+        "model_feature_name": "mmp15",
+        "raw_feature_name": "mmp15"
+      },
+      {
+        "feature_type": "expression",
+        "frozen_genomic_order": 44,
+        "model_feature_name": "rad51",
+        "raw_feature_name": "rad51"
+      },
+      {
+        "feature_type": "expression",
+        "frozen_genomic_order": 45,
+        "model_feature_name": "bmp6",
+        "raw_feature_name": "bmp6"
+      },
+      {
+        "feature_type": "expression",
+        "frozen_genomic_order": 46,
+        "model_feature_name": "tgfbr3",
+        "raw_feature_name": "tgfbr3"
+      },
+      {
+        "feature_type": "expression",
+        "frozen_genomic_order": 47,
+        "model_feature_name": "nr3c1",
+        "raw_feature_name": "nr3c1"
+      },
+      {
+        "feature_type": "expression",
+        "frozen_genomic_order": 48,
+        "model_feature_name": "mlh1",
+        "raw_feature_name": "mlh1"
+      },
+      {
+        "feature_type": "expression",
+        "frozen_genomic_order": 49,
+        "model_feature_name": "psenen",
+        "raw_feature_name": "psenen"
+      },
+      {
+        "feature_type": "expression",
+        "frozen_genomic_order": 50,
+        "model_feature_name": "prkd1",
+        "raw_feature_name": "prkd1"
+      },
+      {
+        "feature_type": "mutation_presence",
+        "frozen_genomic_order": 51,
+        "model_feature_name": "gata3_mut_present",
+        "raw_feature_name": "gata3_mut"
+      },
+      {
+        "feature_type": "mutation_presence",
+        "frozen_genomic_order": 52,
+        "model_feature_name": "egfr_mut_present",
+        "raw_feature_name": "egfr_mut"
+      },
+      {
+        "feature_type": "mutation_presence",
+        "frozen_genomic_order": 53,
+        "model_feature_name": "erbb2_mut_present",
+        "raw_feature_name": "erbb2_mut"
+      },
+      {
+        "feature_type": "mutation_presence",
+        "frozen_genomic_order": 54,
+        "model_feature_name": "erbb3_mut_present",
+        "raw_feature_name": "erbb3_mut"
+      },
+      {
+        "feature_type": "mutation_presence",
+        "frozen_genomic_order": 55,
+        "model_feature_name": "lamb3_mut_present",
+        "raw_feature_name": "lamb3_mut"
+      },
+      {
+        "feature_type": "mutation_presence",
+        "frozen_genomic_order": 56,
+        "model_feature_name": "nr2f1_mut_present",
+        "raw_feature_name": "nr2f1_mut"
+      },
+      {
+        "feature_type": "mutation_presence",
+        "frozen_genomic_order": 57,
+        "model_feature_name": "chek2_mut_present",
+        "raw_feature_name": "chek2_mut"
+      },
+      {
+        "feature_type": "mutation_presence",
+        "frozen_genomic_order": 58,
+        "model_feature_name": "hras_mut_present",
+        "raw_feature_name": "hras_mut"
+      },
+      {
+        "feature_type": "mutation_presence",
+        "frozen_genomic_order": 59,
+        "model_feature_name": "pten_mut_present",
+        "raw_feature_name": "pten_mut"
+      },
+      {
+        "feature_type": "mutation_presence",
+        "frozen_genomic_order": 60,
+        "model_feature_name": "cbfb_mut_present",
+        "raw_feature_name": "cbfb_mut"
+      },
+      {
+        "feature_type": "mutation_presence",
+        "frozen_genomic_order": 61,
+        "model_feature_name": "klrg1_mut_present",
+        "raw_feature_name": "klrg1_mut"
+      },
+      {
+        "feature_type": "mutation_presence",
+        "frozen_genomic_order": 62,
+        "model_feature_name": "smad4_mut_present",
+        "raw_feature_name": "smad4_mut"
+      },
+      {
+        "feature_type": "mutation_presence",
+        "frozen_genomic_order": 63,
+        "model_feature_name": "foxo1_mut_present",
+        "raw_feature_name": "foxo1_mut"
+      },
+      {
+        "feature_type": "mutation_presence",
+        "frozen_genomic_order": 64,
+        "model_feature_name": "prkcz_mut_present",
+        "raw_feature_name": "prkcz_mut"
+      },
+      {
+        "feature_type": "mutation_presence",
+        "frozen_genomic_order": 65,
+        "model_feature_name": "ctnna1_mut_present",
+        "raw_feature_name": "ctnna1_mut"
+      },
+      {
+        "feature_type": "mutation_presence",
+        "frozen_genomic_order": 66,
+        "model_feature_name": "lama2_mut_present",
+        "raw_feature_name": "lama2_mut"
+      },
+      {
+        "feature_type": "mutation_presence",
+        "frozen_genomic_order": 67,
+        "model_feature_name": "ttyh1_mut_present",
+        "raw_feature_name": "ttyh1_mut"
+      },
+      {
+        "feature_type": "mutation_presence",
+        "frozen_genomic_order": 68,
+        "model_feature_name": "nr3c1_mut_present",
+        "raw_feature_name": "nr3c1_mut"
+      }
+    ],
+    "mutation_presence": 18
+  },
+  "generated_at_utc": "2026-09-19T17:16:22.593179+00:00",
+  "model": {
+    "adapter_class": "PenalizedCoxPHAdapter",
+    "alpha": 0.05,
+    "baseline_estimation_method": "breslow",
+    "fitter_class": "CoxPHFitter",
+    "l1_ratio": 0.5,
+    "penalizer": 0.05
+  },
+  "runtime": {
+    "generation_git_commit": "da0c3148d48d970f2e5ca390d9cbfa00dbf4663e",
+    "lifelines": "0.30.3",
+    "numpy": "2.5.3",
+    "pandas": "2.3.3",
+    "python": "3.14.6",
+    "scikit_learn": "1.9.1"
+  },
+  "schema_version": "1.0",
+  "serialization": {
+    "csv": "UTF-8, fixed 20-column order, LF, trailing newline",
+    "float": ".17g round-trip-safe text",
+    "json": "UTF-8, sorted keys, indent 2, finite only, LF, trailing newline"
+  },
+  "source": {
+    "artifact_generation_commit": "fde3ecd4646ee7f28fca5378335277d950e7d87d",
+    "bundle_path": "artifacts/models/track_b/r6-track-b-v1",
+    "experiment_id": "r6-track-b-v1",
+    "frozen_implementation_commit": "49a8414c1aa828c07cfa9f9dd207a2bdf311b078",
+    "hashes": {
+      "checksums.sha256": "6c0cdefc2aa0fd222f7f8945234890fd3a36fe7f49d1fdc2b43a0528380f7666",
+      "cox_model.pkl": "5d312d905974772ad0967ba8dbd47bce7de81dc3cca5fdee54f8ad259a3d86f2",
+      "feature_contract.json": "97888b7cbb655d542a4a3cafc42bdfe1d65e267d95cc8e84f125d2a4003fff27",
+      "metadata.json": "3ea53c0a65286069d762602d88d14aed02f77e446f1d4302a08c6b4c2fcd4be7",
+      "preprocessor.pkl": "d23c26e85ef30b1d85c87055b2e824ecb0624af7c3ddedceacd75c5bfbe6acb5"
+    },
+    "manifest_path": "data/metabric/metadata/manifest.csv",
+    "manifest_sha256": "d4c884a92a988d935ca19664e1da3bb1bbcc02037dad96a31991779c4589cb9e",
+    "prepared_path": "data/metabric/prepared/METABRIC_prepared.csv",
+    "prepared_sha256": "e18275dac2b8b11d158093785816ae04d3b2466217d5af47a6290e5927146c29",
+    "track": "R6 Track B"
+  }
+}

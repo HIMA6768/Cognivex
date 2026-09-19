@@ -1,0 +1,186 @@
+{
+  "checks": [
+    {
+      "evidence": "D:\\Cognivex\\artifacts\\models\\track_b\\r6-track-b-v1",
+      "name": "Canonical R6 bundle identity is correct.",
+      "number": 1,
+      "passed": true
+    },
+    {
+      "evidence": "5d312d905974772ad0967ba8dbd47bce7de81dc3cca5fdee54f8ad259a3d86f2",
+      "name": "R6 model checksum and identity are unchanged.",
+      "number": 2,
+      "passed": true
+    },
+    {
+      "evidence": "frozen preprocessor and contract hashes",
+      "name": "R6 preprocessor and feature contract are unchanged.",
+      "number": 3,
+      "passed": true
+    },
+    {
+      "evidence": "R5 dedicated source paths and bundle checksums",
+      "name": "R5 source and artifacts are unchanged.",
+      "number": 4,
+      "passed": true
+    },
+    {
+      "evidence": "R7 dedicated source paths and bundle checksums",
+      "name": "R7 source and artifacts are unchanged.",
+      "number": 5,
+      "passed": true
+    },
+    {
+      "evidence": "AST contains no training imports or fit/fit_transform calls",
+      "name": "R8 performs no model or preprocessing fitting.",
+      "number": 6,
+      "passed": true
+    },
+    {
+      "evidence": "rows=68",
+      "name": "Exactly 68 genomic predictors are analyzed.",
+      "number": 7,
+      "passed": true
+    },
+    {
+      "evidence": "expression=50",
+      "name": "Exactly 50 expression predictors are analyzed.",
+      "number": 8,
+      "passed": true
+    },
+    {
+      "evidence": "mutation_presence=18",
+      "name": "Exactly 18 mutation-presence predictors are analyzed.",
+      "number": 9,
+      "passed": true
+    },
+    {
+      "evidence": "clinical=0",
+      "name": "Zero clinical predictors enter the genomic ranking.",
+      "number": 10,
+      "passed": true
+    },
+    {
+      "evidence": "persisted/preprocessor/adapter/params/summary orders agree",
+      "name": "Raw-to-model genomic mapping matches all frozen R6 orders.",
+      "number": 11,
+      "passed": true
+    },
+    {
+      "evidence": "unique=68",
+      "name": "Every genomic coefficient exists exactly once.",
+      "number": 12,
+      "passed": true
+    },
+    {
+      "evidence": "all beta values finite",
+      "name": "Every beta is finite.",
+      "number": 13,
+      "passed": true
+    },
+    {
+      "evidence": "abs_beta equals abs(beta)",
+      "name": "Every abs_beta equals abs(beta).",
+      "number": 14,
+      "passed": true
+    },
+    {
+      "evidence": "hazard ratios equal exp(beta)",
+      "name": "Every hazard ratio equals exp(beta) within the frozen tolerance.",
+      "number": 15,
+      "passed": true
+    },
+    {
+      "evidence": "all hazard ratios finite and positive",
+      "name": "Every hazard ratio is finite and positive.",
+      "number": 16,
+      "passed": true
+    },
+    {
+      "evidence": "coef_eps=1e-06",
+      "name": "COEF_EPS and is_active are applied exactly.",
+      "number": 17,
+      "passed": true
+    },
+    {
+      "evidence": "direction codes and display text recomputed",
+      "name": "Direction labels and display text match beta and tolerance.",
+      "number": 18,
+      "passed": true
+    },
+    {
+      "evidence": "ranked by descending abs_beta then frozen order",
+      "name": "Ranking is descending by absolute beta.",
+      "number": 19,
+      "passed": true
+    },
+    {
+      "evidence": "exact ties follow frozen genomic order",
+      "name": "Exact ties follow frozen genomic order.",
+      "number": 20,
+      "passed": true
+    },
+    {
+      "evidence": "effectively_zero=44",
+      "name": "Effectively-zero features remain present and are labeled consistently.",
+      "number": 21,
+      "passed": true
+    },
+    {
+      "evidence": "model-reported descriptive values only; never used for selection, filtering, activity, direction, or ranking",
+      "name": "Model-reported inferential values are not used for ranking, activity, or filtering.",
+      "number": 22,
+      "passed": true
+    },
+    {
+      "evidence": "src.modeling.track_b",
+      "name": "Historical engineer pickles were not loaded.",
+      "number": 23,
+      "passed": true
+    },
+    {
+      "evidence": "aggregate-only files and no pickle artifacts",
+      "name": "No patient-level data is persisted.",
+      "number": 24,
+      "passed": true
+    },
+    {
+      "evidence": "table, summary, and report agree",
+      "name": "Report, summary, and feature table agree.",
+      "number": 25,
+      "passed": true
+    },
+    {
+      "evidence": "metadata references exact frozen R6 hashes",
+      "name": "Metadata lineage points to the exact frozen R6 source.",
+      "number": 26,
+      "passed": true
+    },
+    {
+      "evidence": "bundle checksum manifest verifies",
+      "name": "Final bundle checksums verify.",
+      "number": 27,
+      "passed": true
+    },
+    {
+      "evidence": "read-only verifier preserved source and bundle bytes",
+      "name": "Artifact generation is reproducible and read-only relative to R6.",
+      "number": 28,
+      "passed": true
+    },
+    {
+      "evidence": "================= 374 passed, 4 warnings in 198.65s (0:03:18) =================",
+      "name": "The complete test suite passes.",
+      "number": 29,
+      "passed": true
+    },
+    {
+      "evidence": "no R9 inference module or entrypoint",
+      "name": "R9 was not started.",
+      "number": 30,
+      "passed": true
+    }
+  ],
+  "full_test_suite_summary": "================= 374 passed, 4 warnings in 198.65s (0:03:18) =================",
+  "status": "PASS"
+}

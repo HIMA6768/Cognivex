@@ -1,6 +1,6 @@
 # Limitations
 
-R5A and R6 are research-only development models, not validated biomedical analyses or clinical prognosis systems. They provide one clinical-only and one clinical-plus-selected-genomic Cox model with one internal held-out comparison, but no external validation, calibration, subtype classifier, gene importance, biological validation, patient-facing prediction, production service, or monitoring integration.
+R5A, R6, R7, and R8 are research-only development outputs, not validated biomedical analyses, diagnostic systems, or clinical prognosis systems. They provide internal locked-split models and a frozen-model coefficient analysis, but no external validation, calibration, biological validation, patient-facing prediction, production service, or monitoring integration.
 
 The supplied clinical columns, genomic identifiers, survival endpoints, event definition, subtype labels, and mutation annotations are handoff metadata, not validated scientific conclusions. R3's 1,200-month duration sentinel is an engineering review prompt, not a medical threshold. R4/R4D preprocessing policies are engineering contracts rather than evidence of model validity. The 5% mutation threshold is frozen engineering policy, while the observed 27 genes and 44 outputs are dataset-specific evidence and may differ inside future CV folds.
 
@@ -19,4 +19,12 @@ The application is a research and educational prototype. It is not validated for
 - The Normal class has 24 eligible test examples and the lowest test F1 (0.523810); all per-class results require cautious interpretation.
 - Candidate families and hyperparameters were predefined and intentionally small. The test result was not used to expand or revise them.
 - NC exclusions apply only to Track C; no conclusion is made for those records.
-- The persisted pickle pipeline is trusted-local only. No patient-facing inference, Streamlit result integration, calibration, deployment, or R8 feature-importance analysis exists.
+- The persisted pickle pipeline is trusted-local only. No patient-facing inference, Streamlit result integration, calibration, or deployment exists.
+
+## R8 limitations
+
+- R8 analyzes one frozen penalized Cox fit and does not measure stability across resampling, cohorts, model families, or hyperparameter choices.
+- Expression coefficients use training-standardized units; mutation coefficients use unscaled binary presence. Cross-type absolute-coefficient rank is model-scale only.
+- `COEF_EPS=1e-6` separates numerical activity from effectively-zero values; it is not a biological, clinical, or statistical-significance threshold.
+- Model-reported p-values and intervals are preserved descriptively but do not establish discoveries, biomarkers, drivers, causal effects, or treatment implications.
+- R8 reads no patient rows and provides no patient-level inference. External validation, biological interpretation, Track D model fitting, R9 inference, and deployment remain outside scope.

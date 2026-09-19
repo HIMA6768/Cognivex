@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-09-19 — R8 frozen-model prognostic genomic feature analysis
+
+- Added checksum-gated, read-only coefficient analysis of the frozen R6 Track B model with no fitting, tuning, model selection, patient-row access, or historical engineer pickle loading.
+- Mapped and retained exactly 50 expression plus 18 mutation-presence coefficients while excluding all 12 encoded clinical outputs.
+- Frozen `COEF_EPS=1e-6`, strict activity/direction rules, and descending absolute-beta ranking with frozen-order tie resolution. Current evidence is 24 active and 44 effectively-zero coefficients; all 68 remain in the table.
+- Added a deterministic aggregate-only artifact bundle, read-only semantic verifier, final-checksum coverage, and independent 30-check audit. No R9, inference, Streamlit, Track D model fitting, or deployment work was added.
+
 ## 2026-09-19 — R7 Track C molecular subtype classification
 
 - Added the exact genomic-only Track C contract: 50 expression features, 18 R4D-derived binary mutation-presence features, 68 raw/model predictors, and zero clinical predictors.
