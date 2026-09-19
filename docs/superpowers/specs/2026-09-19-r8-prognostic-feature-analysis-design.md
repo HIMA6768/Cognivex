@@ -34,7 +34,7 @@ The inspected R6 authorities are:
 - Preprocessor artifact SHA-256: `d23c26e85ef30b1d85c87055b2e824ecb0624af7c3ddedceacd75c5bfbe6acb5`.
 - Feature-contract SHA-256: `97888b7cbb655d542a4a3cafc42bdfe1d65e267d95cc8e84f125d2a4003fff27`.
 - Prepared-data SHA-256 inherited from R6: `e18275dac2b8b11d158093785816ae04d3b2466217d5af47a6290e5927146c29`.
-- Manifest SHA-256 inherited from R6: `d4c884a92a988d9352e1da3bb1bbcc02037dad96a31991779c4589cb9e`.
+- Manifest SHA-256 inherited from R6: `d4c884a92a988d935ca19664e1da3bb1bbcc02037dad96a31991779c4589cb9e`.
 - Frozen validation C-index: `0.6445444319460067`.
 - Frozen test C-index: `0.6409151636606546`.
 
