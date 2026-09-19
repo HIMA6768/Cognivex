@@ -210,3 +210,28 @@ def extract_prognostic_feature_effects(
         coef_eps=coef_eps,
         effects=ranked,
     )
+
+
+def summarize_prognostic_feature_effects(
+    result: PrognosticFeatureAnalysisResult,
+) -> dict[str, object]:
+    """Return aggregate counts only; never select, filter, or classify significance."""
+    if not isinstance(result, PrognosticFeatureAnalysisResult):
+        raise TypeError("result must be PrognosticFeatureAnalysisResult")
+    return {
+        "total": len(result.effects),
+        "feature_type_counts": {
+            feature_type.value: sum(
+                effect.feature_type is feature_type for effect in result.effects
+            )
+            for feature_type in FeatureType
+        },
+        "activity_counts": {
+            "active": sum(effect.is_active for effect in result.effects),
+            "effectively_zero": sum(not effect.is_active for effect in result.effects),
+        },
+        "direction_counts": {
+            direction.value: sum(effect.direction is direction for effect in result.effects)
+            for direction in EffectDirection
+        },
+    }
