@@ -772,6 +772,8 @@ Create these exact tests:
 - `test_audit_detects_fitting_imports_or_calls`
 - `test_audit_writer_adds_audit_before_final_checksum_manifest`
 - `test_final_checksum_manifest_covers_audit_and_excludes_itself`
+- `test_audit_rerun_replaces_bootstrap_summary_with_final_summary`
+- `test_audit_rerun_does_not_regenerate_feature_effects`
 - `test_audit_cli_help_and_blocked_exit_code`
 
 Freeze these exact names and order:
@@ -897,6 +899,7 @@ Create these exact tests:
 - `test_canonical_metadata_matches_frozen_r6_hashes_and_configuration`
 - `test_canonical_report_summary_and_feature_table_agree`
 - `test_canonical_audit_has_thirty_passing_checks`
+- `test_canonical_audit_records_final_no_lifecycle_skip_pytest_summary`
 - `test_canonical_checksums_verify_without_ignored_pickles`
 
 Read only aggregate R8 evidence and tracked R6 metadata/checksum manifests. Assert 24/44 only as current canonical evidence; do not expose either value to production selectors or constructors. The lifecycle file-set test requires the exact five-file pre-audit set when `audit.json` is absent and the exact six-file final set when it is present. The canonical audit test uses `pytest.skip("audit is generated after full-suite evidence")` only during the pre-audit lifecycle; once `audit.json` exists it requires exactly 30 passing checks. On the committed final repository state no canonical provenance test is skipped.
@@ -965,30 +968,30 @@ Expected: `PASS`; no R6 or R8 file hash changes. The verifier accepts the approv
 
 Document the exact R8 source/model boundary, 68-feature mapping, `COEF_EPS`, 24/44 current evidence, ranking rule, penalized-summary caveat, artifact paths, audit/verifier commands, and scientific limitations. Replace `R8 gene importance and biological support` in `docs/architecture.md` with frozen-R6 prognostic genomic feature analysis. State in `docs/model_integration.md` and `docs/mutation_preprocessing.md` that Track D model fitting remains deferred and unapproved. Do not modify imported engineer documentation or make biological-support claims.
 
-- [ ] **Step 8: Run the complete test suite once and capture literal successful evidence.**
+- [ ] **Step 8: Run the complete test suite once and capture bootstrap evidence.**
 
 Run:
 
 ```powershell
-$pytestEvidence = Join-Path $env:TEMP 'cognivex-r8-full-pytest.txt'
-.\.venv\Scripts\python.exe -m pytest 2>&1 | Tee-Object -FilePath $pytestEvidence
+$bootstrapPytestEvidence = Join-Path $env:TEMP 'cognivex-r8-bootstrap-pytest.txt'
+.\.venv\Scripts\python.exe -m pytest -ra 2>&1 | Tee-Object -FilePath $bootstrapPytestEvidence
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-Get-Content -LiteralPath $pytestEvidence | Select-Object -Last 1
+Get-Content -LiteralPath $bootstrapPytestEvidence | Select-Object -Last 1
 ```
 
-Expected: pytest exits 0 and the final line is a literal passed-suite summary accepted by the audit parser. The single canonical audit provenance assertion is deliberately skipped only because audit persistence consumes this full-suite evidence; Task 9 already exercises audit behavior independently.
+Expected: pytest exits 0 and the final line is a literal successful bootstrap summary accepted by the audit parser. The canonical audit provenance assertion may still carry the approved pre-audit lifecycle skip because `audit.json` does not exist yet. This run bootstraps audit persistence but is not final evidence for audit check 29.
 
-- [ ] **Step 9: Run and persist the independent audit, then finalize checksums.**
+- [ ] **Step 9: Persist the initial audit from bootstrap evidence and refresh checksums.**
 
 Run:
 
 ```powershell
-.\.venv\Scripts\python.exe scripts/audit_prognostic_features.py --bundle artifacts/analysis/r8-prognostic-features-v1 --source-bundle artifacts/models/track_b/r6-track-b-v1 --full-test-suite-summary-file $pytestEvidence --full-test-suite-passed
+.\.venv\Scripts\python.exe scripts/audit_prognostic_features.py --bundle artifacts/analysis/r8-prognostic-features-v1 --source-bundle artifacts/models/track_b/r6-track-b-v1 --full-test-suite-summary-file $bootstrapPytestEvidence --full-test-suite-passed
 ```
 
-Expected: audit exits 0 with `PASS`, writes `audit.json` before the final checksum refresh, and leaves exactly 30 passing checks. Final `checksums.sha256` covers `audit.json` plus the four other evidence files and excludes itself.
+Expected: audit exits 0, writes the first `audit.json`, and refreshes `checksums.sha256` to cover `audit.json` plus the four other evidence files while excluding itself. This initial audit is lifecycle bootstrap evidence and must not be committed as the final audit.
 
-- [ ] **Step 10: Run final read-only verification and canonical provenance tests.**
+- [ ] **Step 10: Run post-bootstrap read-only verification and canonical provenance tests.**
 
 Run:
 
@@ -997,9 +1000,48 @@ Run:
 .\.venv\Scripts\python.exe -m pytest tests/test_r8_canonical_provenance.py -q
 ```
 
-Expected: verifier reports `PASS`; canonical provenance tests confirm the final six-file set and 30/30 audit.
+Expected: verifier reports `PASS`; canonical provenance tests now execute the six-file/audit path rather than skipping because `audit.json` exists.
 
-- [ ] **Step 11: Prove frozen R6 bytes are unchanged.**
+- [ ] **Step 11: Run the complete repository suite again and capture the final no-lifecycle-skip evidence.**
+
+Run:
+
+```powershell
+$finalPytestEvidence = Join-Path $env:TEMP 'cognivex-r8-final-pytest.txt'
+.\.venv\Scripts\python.exe -m pytest -ra 2>&1 | Tee-Object -FilePath $finalPytestEvidence
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+$finalPytestText = Get-Content -Raw -LiteralPath $finalPytestEvidence
+if ($finalPytestText -match 'audit is generated after full-suite evidence') { throw 'Final full-suite evidence contains the R8 audit lifecycle skip' }
+Get-Content -LiteralPath $finalPytestEvidence | Select-Object -Last 1
+```
+
+Expected: the second complete suite exits 0, the canonical R8 audit provenance test is exercised, and no skip caused by missing R8 audit evidence appears. This second summary is the only final full-suite evidence permitted for audit check 29.
+
+- [ ] **Step 12: Finalize the audit from the second full-suite summary without regenerating canonical analysis.**
+
+Run:
+
+```powershell
+$featureEffectsBeforeFinalAudit = (Get-FileHash -Algorithm SHA256 -LiteralPath 'artifacts/analysis/r8-prognostic-features-v1/feature_effects.csv').Hash.ToLower()
+.\.venv\Scripts\python.exe scripts/audit_prognostic_features.py --bundle artifacts/analysis/r8-prognostic-features-v1 --source-bundle artifacts/models/track_b/r6-track-b-v1 --full-test-suite-summary-file $finalPytestEvidence --full-test-suite-passed
+$featureEffectsAfterFinalAudit = (Get-FileHash -Algorithm SHA256 -LiteralPath 'artifacts/analysis/r8-prognostic-features-v1/feature_effects.csv').Hash.ToLower()
+if ($featureEffectsBeforeFinalAudit -ne $featureEffectsAfterFinalAudit) { throw 'Audit rerun regenerated canonical analytical evidence' }
+```
+
+Expected: audit exits 0, records the second/final pytest summary, leaves all 30 checks `PASS`, refreshes final checksums including the exact final `audit.json`, and does not rerun the canonical analysis or change `feature_effects.csv`.
+
+- [ ] **Step 13: Run final read-only verification and canonical provenance tests against final bytes.**
+
+Run:
+
+```powershell
+.\.venv\Scripts\python.exe scripts/verify_prognostic_feature_artifacts.py --bundle artifacts/analysis/r8-prognostic-features-v1 --source-bundle artifacts/models/track_b/r6-track-b-v1
+.\.venv\Scripts\python.exe -m pytest tests/test_r8_canonical_provenance.py -q
+```
+
+Expected: verifier reports `PASS`; provenance tests verify the final audit/checksum bytes, the final no-lifecycle-skip pytest summary, and exactly 30 passing checks.
+
+- [ ] **Step 14: Prove frozen R6 bytes are unchanged.**
 
 Run:
 
@@ -1013,7 +1055,7 @@ if (($before | ConvertTo-Json -Compress) -ne ($after | ConvertTo-Json -Compress)
 
 Expected: no exception and byte-identical before/after hash maps.
 
-- [ ] **Step 12: Run compile, dependency, whitespace, and status verification.**
+- [ ] **Step 15: Run compile, dependency, whitespace, and status verification.**
 
 Run:
 
@@ -1026,21 +1068,37 @@ git status --short
 
 Expected: compileall exits 0, `pip check` reports no broken requirements, diff check is clean, and status contains only intended R8 files plus the known pre-existing untracked `ai_handoff_data/` material.
 
-- [ ] **Step 13: Review scope and commit Task 10 canonical evidence/documentation.**
+- [ ] **Step 16: Review branch-wide and working-tree frozen scope before the final evidence commit.**
 
 Run:
 
 ```powershell
-git diff --name-only 99438b53960aa015c6839d6cb4bc45a11aa387a6 --
+git diff --name-only 99438b53960aa015c6839d6cb4bc45a11aa387a6..HEAD -- data artifacts/models src/training src/modeling
 git diff --name-only -- data artifacts/models src/training src/modeling
+git diff --name-only 99438b53960aa015c6839d6cb4bc45a11aa387a6..HEAD
 ```
 
-Expected: no canonical data, R5/R6/R7 model artifact, training, or modeling file changed. Then commit:
+Expected: both scoped commands are empty: no committed or uncommitted canonical data, R5/R6/R7 model artifact, training, or modeling file changed. The broader branch-range command exposes the complete R8 footprint for review.
+
+- [ ] **Step 17: Commit Task 10 canonical evidence/documentation.**
+
+Run:
 
 ```powershell
 git add artifacts/analysis/r8-prognostic-features-v1 tests/test_r8_canonical_provenance.py docs/prognostic_feature_analysis.md README.md CHANGELOG.md docs/architecture.md docs/model_integration.md docs/mutation_preprocessing.md docs/limitations.md docs/implementation_log.md
 git commit -m "docs(r8): record canonical prognostic feature analysis"
 ```
+
+- [ ] **Step 18: Re-run branch-history frozen-scope and complete-footprint review after the final commit.**
+
+Run:
+
+```powershell
+git diff --name-only 99438b53960aa015c6839d6cb4bc45a11aa387a6..HEAD -- data artifacts/models src/training src/modeling
+git diff --name-only 99438b53960aa015c6839d6cb4bc45a11aa387a6..HEAD
+```
+
+Expected: the frozen-scope command is empty after every R8 commit, while the broader command lists only the approved R8 plan, implementation, aggregate analysis evidence, tests, and documentation footprint.
 
 ## Canonical Generation and Audit Order
 
@@ -1053,17 +1111,22 @@ focused R8 tests PASS
   -> inspect aggregate evidence
   -> pre-audit read-only verification
   -> update active documentation
-  -> complete pytest PASS and capture literal summary
-  -> write provisional audit.json
+  -> bootstrap complete pytest PASS and capture literal bootstrap summary
+  -> write initial audit.json from bootstrap evidence
   -> refresh checksums including audit.json
-  -> re-evaluate all 30 checks
-  -> write final audit.json
+  -> post-bootstrap read-only verification
+  -> canonical provenance tests exercise audit.json
+  -> FINAL complete pytest PASS with no R8 audit lifecycle skip
+  -> re-evaluate all 30 checks using the FINAL pytest summary
+  -> write final audit.json without regenerating canonical analysis
   -> refresh final checksums
   -> final read-only verification
-  -> canonical provenance tests
+  -> canonical provenance tests against final audit/checksum bytes
   -> prove R6 before/after hashes identical
   -> compileall / pip check / diff check / status
+  -> branch-range and working-tree frozen-scope checks
   -> final R8 evidence/documentation commit
+  -> post-commit branch-range frozen-scope check
 ```
 
 Test evidence must not influence coefficients, activity, direction, rank, or report content. Audit persistence is the only write after the canonical analysis bundle is created.
@@ -1079,6 +1142,8 @@ Test evidence must not influence coefficients, activity, direction, rank, or rep
 - **Ranking and statistics:** Ranking uses only descending absolute beta and frozen-order ties; model-reported p-values and intervals are descriptive and cannot filter or reorder.
 - **Artifacts:** The pre-audit bundle has five approved aggregate files; the final bundle adds only `audit.json`; no patient rows or duplicate pickles are persisted.
 - **Audit:** Task 9 freezes exactly 30 unique ordered checks, fail-closed status, required full-suite evidence, and final checksum coverage of `audit.json`.
+- **Final test evidence:** Task 10 uses the first complete suite only to bootstrap audit persistence, then runs the complete suite again after `audit.json` exists; check 29 records only the second successful summary, which has no R8 audit lifecycle skip.
 - **Reproducibility:** Tasks 6–7 define fixed-context byte reproduction, semantic comparison excluding only declared volatile provenance, and before/after source/output hash equality.
+- **Frozen-scope history:** Task 10 checks both committed branch history and the working tree against pre-R8 base `99438b53960aa015c6839d6cb4bc45a11aa387a6`, then repeats the branch-range check after the final evidence commit.
 - **Roadmap scope:** Track D fitting, R7 explanation, SHAP/permutation analysis, Streamlit, inference, deployment, enrichment, and R9 are absent.
 - **Execution method:** The later implementation uses native single-session execution with subagents off and `superpowers:executing-plans`.
