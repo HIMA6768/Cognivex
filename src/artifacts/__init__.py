@@ -10,6 +10,7 @@ from .track_b import (
 from .track_c import (
     TrackCBundleVerification,
     TrackCReloadVerification,
+    render_track_c_report,
     refresh_track_c_checksums,
     verify_track_c_bundle,
     verify_track_c_checksums,
@@ -26,6 +27,7 @@ __all__ = [
     "write_track_b_artifacts",
     "TrackCBundleVerification",
     "TrackCReloadVerification",
+    "render_track_c_report",
     "refresh_track_c_checksums",
     "verify_track_c_bundle",
     "verify_track_c_checksums",

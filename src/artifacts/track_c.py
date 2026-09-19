@@ -112,7 +112,11 @@ def _leaderboard_rows(result: TrackCExperimentResult) -> list[dict[str, Any]]:
     ]
 
 
-def _report(result: TrackCExperimentResult) -> str:
+def render_track_c_report(
+    result: TrackCExperimentResult,
+    metadata: dict[str, Any],
+) -> str:
+    """Render deterministic aggregate R7 evidence without timestamps or row data."""
     rows = _leaderboard_rows(result)
     leaderboard = "\n".join(
         f"| {row['candidate_order']} | {row['display_name']} | {row['macro_f1']:.6f} | "
@@ -124,11 +128,24 @@ def _report(result: TrackCExperimentResult) -> str:
         f"| {item.label} | {item.precision:.6f} | {item.recall:.6f} | {item.f1:.6f} | {item.support} |"
         for item in test.per_class
     )
+    confusion = "\n".join(
+        "| " + label + " | " + " | ".join(str(value) for value in row) + " |"
+        for label, row in zip(result.class_order, test.confusion_matrix, strict=True)
+    )
+    cohorts = metadata["cohorts"]
     return f"""# R7 Track C — Molecular Subtype Classification
 
 ## Objective
 
-Classify six dataset-confirmed molecular subtype labels from the frozen 68-feature genomic contract. The selected model is `{result.selected_definition.key}` because it achieved the highest validation Macro-F1 under the approved deterministic tie rule.
+Classify six dataset-confirmed molecular subtype labels from the frozen 68-feature genomic contract. The selected model is **{result.selected_definition.display_name}** (`{result.selected_definition.key}`) because it achieved the highest validation Macro-F1 under the approved deterministic tie rule.
+
+## Dataset and eligibility
+
+- Target: `pam50_+_claudin-low_subtype`
+- Train: {cohorts['train']['eligible_rows']} eligible; {cohorts['train']['exclusions']['nc']} NC excluded
+- Validation: {cohorts['validation']['eligible_rows']} eligible; {cohorts['validation']['exclusions']['nc']} NC excluded
+- Test: {cohorts['test']['eligible_rows']} eligible; {cohorts['test']['exclusions']['nc']} NC excluded
+- NC, missing targets, and unsupported targets are excluded only from Track C.
 
 ## Contract
 
@@ -151,9 +168,19 @@ Classify six dataset-confirmed molecular subtype labels from the frozen 68-featu
 - Accuracy: {test.accuracy:.6f}
 - Balanced accuracy: {test.balanced_accuracy:.6f}
 
+### Per-class test metrics
+
 | Class | Precision | Recall | F1 | Support |
 |---|---:|---:|---:|---:|
 {per_class}
+
+### Confusion matrix
+
+Rows are actual classes and columns are predicted classes in the frozen order.
+
+| Actual \\ Predicted | {' | '.join(result.class_order)} |
+|---|{'|'.join('---:' for _ in result.class_order)}|
+{confusion}
 
 The test set was not used for model selection. Only the frozen validation winner received final test evaluation.
 
@@ -267,7 +294,10 @@ def write_track_c_artifacts(
         writer.writerow(["actual\\predicted", *result.class_order])
         for label, row in zip(result.class_order, result.test_metrics.confusion_matrix, strict=True):
             writer.writerow([label, *row])
-    (bundle / "report.md").write_text(_report(result), encoding="utf-8")
+    (bundle / "report.md").write_text(
+        render_track_c_report(result, metadata),
+        encoding="utf-8",
+    )
     with (bundle / "pipeline.pkl").open("wb") as stream:
         pickle.dump(selection.pipeline, stream, protocol=pickle.HIGHEST_PROTOCOL)
     refresh_track_c_checksums(bundle)
