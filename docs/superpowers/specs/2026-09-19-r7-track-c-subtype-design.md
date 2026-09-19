@@ -46,8 +46,10 @@ The public transformed order is the same 50 expression names followed by 18 `<ra
 The existing R4D semantics are reused rather than reimplemented:
 
 - trimmed or numeric zero means absent and becomes `0`;
-- a valid finite non-zero annotation means present and becomes `1`;
-- missing, blank, boolean, non-finite, or malformed input fails clearly.
+- any valid non-zero mutation annotation accepted by `classify_mutation_annotation` means present and becomes `1`;
+- missing, blank, boolean, non-finite numeric, or malformed input fails clearly according to the existing R4D contract.
+
+Implementation must reuse `src.preprocessing.mutations.classify_mutation_annotation` through the established selected-mutation transformation abstraction. It must not create a new mutation parser.
 
 The canonical prepared CSV is read-only. The transformed mutation block must contain only `{0, 1}` for train, validation, and test.
 
@@ -65,6 +67,10 @@ The model target is the prepared source column `pam50_+_claudin-low_subtype`. R7
 `NC`, missing targets, and unsupported target values are ineligible for Track C. This exclusion does not mutate the canonical dataset and does not affect Track A, B, or D eligibility. The current canonical evidence is expected to be 1,330 eligible train rows, 285 validation rows, and 283 test rows, with NC exclusions of 2, 1, and 3 respectively; implementation must derive and verify these values rather than use them as selector constants.
 
 The source labels are retained as model labels because the R7 contract explicitly freezes them. Display-name mappings in `subtype_labels.json` remain available to UI code but do not change estimator class identities.
+
+### Deterministic cohort ordering
+
+Every eligible split is resolved into canonical manifest order before prediction generation, probability generation, cohort fingerprint generation, prediction digest generation, or probability digest generation. The manifest is the existing Cognivex patient-order authority and no second ordering rule is introduced. Therefore, the same eligible cohort supplied in a different incidental DataFrame order must resolve to the same ordered rows and produce identical fingerprints and digests.
 
 ## Preprocessing
 
