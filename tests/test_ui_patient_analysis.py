@@ -211,6 +211,12 @@ def test_build_patient_request_converts_ui_centimetres_to_frozen_mm_contract() -
     assert request.features == {"tumor_size": 24.0, "age_at_diagnosis": 55.0}
 
 
+def test_genomic_widget_generations_force_a_fresh_streamlit_control_identity() -> None:
+    from src.ui.components.patient_analysis import genomic_input_key
+
+    assert genomic_input_key("gata3", 0) != genomic_input_key("gata3", 1)
+
+
 def test_clearing_visible_demo_genomic_values_removes_them_from_review() -> None:
     app = _patient_analysis_app()
     _button(app, "Load full synthetic demo — clinical + genomic (not patient data)").click()
