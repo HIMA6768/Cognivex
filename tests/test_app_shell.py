@@ -149,9 +149,9 @@ def test_each_page_has_an_honest_pending_state_and_persistent_disclaimer() -> No
     expected_copy = {
         "Overview": "Canonical cohort quality is available",
         "Data / Cohort": "Validated cohort",
-        "Survival Analysis": "Survival analysis is pending validated cohort data and model handoff",
-        "Subtype Classification": "Subtype classification is pending gene-expression data and confirmed dataset labels",
-        "Gene Insights": "Gene-level insights are pending evaluated model outputs",
+        "Survival Analysis": "Track A clinical input",
+        "Subtype Classification": "Track C genomic input",
+        "Gene Insights": "Global R8 prognostic feature analysis",
         "Model Comparison": "Evaluation pending model handoff",
         "Methodology / About": "Clinical-only versus clinical-plus-genomic prognosis",
     }
@@ -166,15 +166,28 @@ def test_each_page_has_an_honest_pending_state_and_persistent_disclaimer() -> No
         assert DISCLAIMER in text
 
 
-def test_subtype_page_does_not_freeze_or_invent_a_taxonomy() -> None:
+def test_subtype_page_uses_the_frozen_r9_taxonomy() -> None:
     app = _run_app()
     app.sidebar.radio[0].set_value("Subtype Classification")
     app.run(timeout=APP_TEST_TIMEOUT_SECONDS)
 
     text = _visible_text(app)
-    assert "Exact subtype labels will be taken from the selected dataset after handoff." in text
-    for unverified_label in ("Luminal A", "Luminal B", "HER2-enriched", "Basal-like"):
-        assert unverified_label not in text
+    assert "frozen six-class R9 subtype classifier" in text
+    assert "Basal" not in text  # Classes appear only in R9 output after a request, not as invented UI results.
+
+
+def test_model_pages_expose_r9_functional_input_surfaces_without_an_exception() -> None:
+    app = _run_app()
+    expectations = {
+        "Survival Analysis": "Track A clinical input",
+        "Subtype Classification": "Track C genomic input",
+        "Gene Insights": "Global R8 prognostic feature analysis",
+    }
+    for destination, expected in expectations.items():
+        app.sidebar.radio[0].set_value(destination)
+        app.run(timeout=APP_TEST_TIMEOUT_SECONDS)
+        assert not app.exception
+        assert expected in _visible_text(app)
 
 
 def test_page_renderer_registry_covers_every_navigation_destination() -> None:
