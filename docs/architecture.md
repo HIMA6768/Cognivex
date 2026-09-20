@@ -1,8 +1,10 @@
 # Architecture
 
-## Current R10-A state
+## Current R10-B0 state
 
 The R10-A Streamlit layer is intentionally thin. `src.ui.analysis_service.get_analysis_service()` caches repository-relative construction of R9's `AnalysisService`; pages submit typed `AnalysisRequest` values through `submit_track_request()` and render only typed R9 outcomes. UI modules do not import model adapters, preprocessors, artifact loaders, or pickle handling. Gene Insights calls the separate R9 aggregate getter and renders all 68 global R8 effects without a patient-specific input or attribution path.
+
+R10-B0 keeps Cox survival estimation below that UI boundary. Track A/B reuse their existing transform-only one-row matrix, call the frozen fitted Lifelines `predict_survival_function` at 12, 36, and 60 months, and validate finite, bounded, non-increasing probabilities. Lifelines linearly interpolates its baseline cumulative hazard for off-index times. The estimates are internal research outputs and do not establish calibration or clinical validity.
 
 ## Current R9 state
 

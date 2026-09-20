@@ -2,9 +2,9 @@
 
 Cognivex is a Python/Streamlit research prototype for **Breast Cancer Prognosis & Subtype Classification**. The central future comparison is clinical-only survival prognosis versus clinical-plus-genomic prognosis, with molecular subtype classification and gene-level model insight as separate analytical tasks.
 
-## R10-A status
+## R10-B0 status
 
-R10-A connects the Streamlit research shell to the frozen R9 public service. The Survival Analysis page accepts partial exact-contract Track A or Track B input and renders typed readiness/errors or the model log relative hazard score with its required interpretation. The Subtype Classification page renders the frozen six-class Track C subtype/probability output. Gene Insights renders R8's aggregate 68-effect table only. Inputs and results are not persisted.
+R10-A connects the Streamlit research shell to the frozen R9 public service. R10-B0 extends ready Track A and Track B results with model-estimated 1-, 3-, and 5-year survival probabilities calculated by the frozen fitted Lifelines Cox models at 12, 36, and 60 months. The existing model log relative hazard score remains available. These survival estimates are internal research estimates, not validated clinical prognoses or treatment recommendations. The Subtype Classification page renders the frozen six-class Track C subtype/probability output. Gene Insights renders R8's aggregate 68-effect table only. Inputs and results are not persisted.
 
 ## R9 status
 

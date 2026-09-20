@@ -45,4 +45,5 @@ def test_response_exposes_outputs_but_never_echoes_input_values(tmp_path, monkey
     assert list(tmp_path.iterdir()) == []
     assert response.outcomes[0].result is not None
     assert response.outcomes[0].result.output_kind == "log_partial_hazard"
+    assert response.outcomes[0].result.survival_estimates is not None
     assert response.outcomes[2].result is None or response.outcomes[2].result.predicted_class in FROZEN_SUBTYPE_CLASS_ORDER

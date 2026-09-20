@@ -8,7 +8,7 @@ from src.artifacts.inference_registry import ArtifactEntry
 from src.contracts.inference import AnalysisTrack, ResultLineage, PrognosisResult
 from src.preprocessing.pipelines import get_transformed_feature_names
 
-from ._common import InferenceAdapterError, finite_scalar, ordered_frame, prognosis
+from ._common import cox_survival_estimates, InferenceAdapterError, finite_scalar, ordered_frame, prognosis
 
 
 class TrackAInferenceAdapter:
@@ -32,4 +32,8 @@ class TrackAInferenceAdapter:
         )
         if tuple(get_transformed_feature_names(self._preprocessor)) != self._model_feature_names:
             raise InferenceAdapterError("R5 transformed feature order verification failed")
-        return prognosis(self._lineage, finite_scalar(self._model.predict_risk(matrix), "R5"))
+        return prognosis(
+            self._lineage,
+            finite_scalar(self._model.predict_risk(matrix), "R5"),
+            cox_survival_estimates(self._model.fitter, matrix, self._model_feature_names, "R5"),
+        )

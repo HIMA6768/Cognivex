@@ -14,6 +14,7 @@ from src.contracts.inference import (
     RequestError,
     ResultLineage,
     SubtypeClassificationResult,
+    SurvivalProbabilityEstimates,
     TrackError,
     TrackOutcome,
     TrackReadinessState,
@@ -86,3 +87,18 @@ def test_prognosis_result_requires_finite_value() -> None:
             _lineage(), "log_partial_hazard", "Model log relative hazard score", math.inf,
             "Model-relative log partial hazard; not an absolute survival probability, mortality probability, risk category, treatment recommendation, or clinical prognosis.",
         )
+
+
+def test_survival_probability_estimates_require_bounded_monotonic_values() -> None:
+    estimates = SurvivalProbabilityEstimates(0.9, 0.8, 0.7)
+
+    assert estimates.survival_probability_1y == 0.9
+    assert estimates.survival_probability_3y == 0.8
+    assert estimates.survival_probability_5y == 0.7
+    assert "internal research estimate" in estimates.interpretation
+
+    with pytest.raises(ValueError, match="bounded"):
+        SurvivalProbabilityEstimates(1.1, 0.8, 0.7)
+
+    with pytest.raises(ValueError, match="non-increasing"):
+        SurvivalProbabilityEstimates(0.8, 0.9, 0.7)

@@ -15,6 +15,11 @@ PROGNOSIS_OUTPUT_KIND = "log_partial_hazard"
 PROGNOSIS_OUTPUT_LABEL = "Model log relative hazard score"
 PROGNOSIS_INTERPRETATION = ("Model-relative log partial hazard; not an absolute survival probability, "
     "mortality probability, risk category, treatment recommendation, or clinical prognosis.")
+SURVIVAL_ESTIMATE_INTERPRETATION = (
+    "Model-estimated survival probability from the frozen METABRIC Cox model. "
+    "This is an internal research estimate, not a validated clinical prognosis "
+    "or treatment recommendation."
+)
 FROZEN_SUBTYPE_CLASS_ORDER = ("Basal", "Her2", "LumA", "LumB", "Normal", "claudin-low")
 
 
@@ -71,12 +76,36 @@ class ResultLineage(SerializableContract):
 
 
 @dataclass(frozen=True, slots=True)
+class SurvivalProbabilityEstimates(SerializableContract):
+    """Three fixed-horizon estimates from a frozen Cox baseline survival curve."""
+
+    survival_probability_1y: float
+    survival_probability_3y: float
+    survival_probability_5y: float
+    interpretation: str = SURVIVAL_ESTIMATE_INTERPRETATION
+
+    def __post_init__(self) -> None:
+        values = (
+            self.survival_probability_1y,
+            self.survival_probability_3y,
+            self.survival_probability_5y,
+        )
+        if any(isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value) or not 0 <= value <= 1 for value in values):
+            raise ValueError("survival probabilities must be finite and bounded in [0, 1]")
+        if values[0] < values[1] or values[1] < values[2]:
+            raise ValueError("survival probabilities must be non-increasing by horizon")
+        if self.interpretation != SURVIVAL_ESTIMATE_INTERPRETATION:
+            raise ValueError("survival estimate interpretation is frozen")
+
+
+@dataclass(frozen=True, slots=True)
 class PrognosisResult(SerializableContract):
     lineage: ResultLineage
     output_kind: Literal["log_partial_hazard"]
     output_label: str
     value: float
     interpretation: str
+    survival_estimates: SurvivalProbabilityEstimates | None = None
 
     def __post_init__(self) -> None:
         if not isinstance(self.lineage, ResultLineage):
@@ -85,6 +114,8 @@ class PrognosisResult(SerializableContract):
             raise ValueError("prognosis output contract is frozen")
         if isinstance(self.value, bool) or not isinstance(self.value, (int, float)) or not math.isfinite(self.value):
             raise ValueError("value must be finite")
+        if self.survival_estimates is not None and not isinstance(self.survival_estimates, SurvivalProbabilityEstimates):
+            raise TypeError("survival_estimates must be SurvivalProbabilityEstimates or None")
 
 
 @dataclass(frozen=True, slots=True)

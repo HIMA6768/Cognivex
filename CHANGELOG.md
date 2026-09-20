@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-09-20 — R10-B0 validated Cox survival estimates
+
+- Extended the typed Track A/B prognosis output with finite, bounded, monotonic 1-, 3-, and 5-year model-estimated survival probabilities.
+- Used only each frozen Cox fitter's public `predict_survival_function` at 12, 36, and 60 months, including Lifelines-compatible off-index interpolation and no-extrapolation checks.
+- Preserved the existing log partial-hazard output and avoided any artifact, model, training, or Streamlit visual redesign change.
+
 ## 2026-09-20 — R10-A functional Streamlit integration
 
 - Connected the basic Streamlit Survival Analysis, Subtype Classification, and Gene Insights pages to the frozen R9 public service through a repository-relative cached accessor.

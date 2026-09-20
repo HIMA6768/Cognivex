@@ -10,7 +10,7 @@ from src.artifacts.inference_registry import ArtifactEntry
 from src.contracts.inference import AnalysisTrack, PrognosisResult, ResultLineage
 from src.preprocessing.track_b import track_b_feature_names
 
-from ._common import InferenceAdapterError, finite_scalar, ordered_frame, prognosis
+from ._common import cox_survival_estimates, InferenceAdapterError, finite_scalar, ordered_frame, prognosis
 
 _CLINICAL_CATEGORICAL = ("tumor_stage", "er_status_measured_by_ihc", "pr_status", "her2_status")
 
@@ -32,4 +32,8 @@ class TrackBInferenceAdapter:
         matrix = np.asarray(self._preprocessor.transform(frame), dtype=float)
         if tuple(track_b_feature_names(self._preprocessor)) != self.model_feature_names:
             raise InferenceAdapterError("R6 transformed feature order verification failed")
-        return prognosis(self._lineage, finite_scalar(self._model.predict_risk(matrix), "R6"))
+        return prognosis(
+            self._lineage,
+            finite_scalar(self._model.predict_risk(matrix), "R6"),
+            cox_survival_estimates(self._model.fitter, matrix, self.model_feature_names, "R6"),
+        )
