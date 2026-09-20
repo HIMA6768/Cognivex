@@ -46,4 +46,4 @@ def test_oncomap_overview_exposes_card_and_workflow_hierarchy() -> None:
     assert "2" in text
     assert "6" in text
     assert "Clinical + Genomic Data" in text
-    assert "Analyze a Patient" in text
+    assert any(button.label == "Analyze a Patient" for button in app.button)

@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-09-20 — R10-B1 OncoMap UI/UX redesign
+
+- Rebranded the visible Streamlit experience as OncoMap without changing internal Cognivex modules, artifacts, contracts, or historical lineage.
+- Added grouped navigation, shared responsive presentation primitives, Overview workflow/status cards, unified transient Patient Analysis, result-first survival/subtype rendering, aggregate Model Evaluation, and R8 Gene Insights views.
+- Added a checksum-verified aggregate R9 metric projection for frozen R5/R6/R7 evidence; UI pages do not read model or metric artifacts directly.
+- Preserved R9 readiness/error semantics, R10-B0’s actual 1/3/5-year Cox estimates, R7’s immutable six-class probability order, R8’s aggregate-only scope, and non-persistence of inputs/results. No training, fitting, artifact rewrite, deployment work, R11, or R12 work was added.
+
 ## 2026-09-20 — R10-B0 validated Cox survival estimates
 
 - Extended the typed Track A/B prognosis output with finite, bounded, monotonic 1-, 3-, and 5-year model-estimated survival probabilities.

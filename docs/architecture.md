@@ -1,5 +1,15 @@
 # Architecture
 
+## Current R10-B1 state
+
+The visible product is **OncoMap**, a Streamlit-only presentation layer over the frozen Cognivex research contracts. `src/ui/navigation.py` maps grouped display routes to existing renderer modules; it does not rename historical module/artifact identifiers. `src/ui/components/oncomap.py`, `charts.py`, `patient_analysis.py`, and `results.py` contain presentation/state helpers only.
+
+Patient Analysis creates one transient `AnalysisRequest` for Track A, Track B, and Track C through `AnalysisService.analyze`. Structured seven-clinical, fifty-expression, and eighteen-mutation controls use the verified R9 registry field order. R9 remains responsible for missing-field, invalid-input, artifact-unavailable, and inference-error states. Current widget/draft state remains in Streamlit session memory only; no input, output, probability, score, or history is written to disk.
+
+`AnalysisService.get_model_evaluation()` is a read-only aggregate projection. It re-verifies R5/R6/R7 checksums before parsing frozen textual metrics and returns typed aggregate values only. UI code never imports model adapters, artifact readers, preprocessors, or training modules. R8 continues through the separate global-only service getter.
+
+The R10-B0 survival contract remains unchanged: UI cards/chart consume actual frozen Cox values at 12/36/60 months only, preserve raw log relative hazard inside Technical details, and show a safe unavailable state when `survival_estimates` is absent. No intermediate curve values are generated in the UI.
+
 ## Current R10-B0 state
 
 The R10-A Streamlit layer is intentionally thin. `src.ui.analysis_service.get_analysis_service()` caches repository-relative construction of R9's `AnalysisService`; pages submit typed `AnalysisRequest` values through `submit_track_request()` and render only typed R9 outcomes. UI modules do not import model adapters, preprocessors, artifact loaders, or pickle handling. Gene Insights calls the separate R9 aggregate getter and renders all 68 global R8 effects without a patient-specific input or attribution path.
@@ -32,7 +42,7 @@ R8 is an analysis-only branch from the frozen R6 artifact boundary. `src/artifac
 
 ## Navigation
 
-The active order is Overview, Data / Cohort, Survival Analysis, Subtype Classification, Gene Insights, Model Comparison, and Methodology / About.
+The active OncoMap display order is Overview; Patient Analysis, Model Evaluation, Gene Insights; Dataset, Methodology, and About. Existing historical renderer modules remain in place behind those display labels.
 
 ## Planned increments
 

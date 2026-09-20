@@ -2,6 +2,12 @@
 
 Cognivex is a Python/Streamlit research prototype for **Breast Cancer Prognosis & Subtype Classification**. The central future comparison is clinical-only survival prognosis versus clinical-plus-genomic prognosis, with molecular subtype classification and gene-level model insight as separate analytical tasks.
 
+## R10-B1 status
+
+OncoMap is the visible Streamlit experience for the frozen Cognivex research prototype. Its grouped navigation provides Overview, Patient Analysis, Model Evaluation, Gene Insights, Dataset, Methodology, and About. A single transient Patient Analysis flow maps structured clinical and optional 50-expression/18-mutation inputs to the existing R9 service, then presents ready Track B survival estimates first (or Track A when Track B is unavailable), frozen Track C subtype probabilities in their fixed order, and a link to separate global R8 insights. The UI never loads model artifacts, derives features, or persists patient inputs/results.
+
+Model Evaluation reads only a checksum-verified aggregate R9 projection of frozen R5/R6/R7 textual metrics. Gene Insights renders R8's complete global 68-effect analysis, including its frozen 24 active and 44 near-zero summary, without causal or patient-specific claims. The dashboard is responsive and intentionally uses only actual 12-, 36-, and 60-month Cox outputs for its three-point survival chart.
+
 ## R10-B0 status
 
 R10-A connects the Streamlit research shell to the frozen R9 public service. R10-B0 extends ready Track A and Track B results with model-estimated 1-, 3-, and 5-year survival probabilities calculated by the frozen fitted Lifelines Cox models at 12, 36, and 60 months. The existing model log relative hazard score remains available. These survival estimates are internal research estimates, not validated clinical prognoses or treatment recommendations. The Subtype Classification page renders the frozen six-class Track C subtype/probability output. Gene Insights renders R8's aggregate 68-effect table only. Inputs and results are not persisted.
@@ -61,6 +67,13 @@ python -m venv .venv
 pip install -r requirements.txt
 python -m pip install -e ".[dev]"
 streamlit run app.py
+```
+
+For a headless health check after startup:
+
+```powershell
+streamlit run app.py --server.headless true --server.port 8501
+Invoke-WebRequest http://localhost:8501/_stcore/health
 ```
 
 Run tests with:
