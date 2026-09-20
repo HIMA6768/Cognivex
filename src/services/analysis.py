@@ -16,7 +16,9 @@ from src.inference.track_a import TrackAInferenceAdapter
 from src.inference.track_b import TrackBInferenceAdapter
 from src.inference.track_c import TrackCInferenceAdapter
 from src.contracts.inference import AggregateAnalysisError, PrognosticFeatureAnalysisOutcome
+from src.contracts.model_evaluation import ModelEvaluationOutcome
 from .prognostic_features import read_prognostic_feature_analysis
+from .model_evaluation import get_frozen_model_evaluation
 
 
 class AnalysisService:
@@ -108,3 +110,7 @@ class AnalysisService:
             return PrognosticFeatureAnalysisOutcome(
                 None, AggregateAnalysisError("ARTIFACT_UNAVAILABLE", "Aggregate analysis artifact is unavailable")
             )
+
+    def get_model_evaluation(self) -> ModelEvaluationOutcome:
+        """Return checksum-verified aggregate metrics without exposing runtime artifacts."""
+        return get_frozen_model_evaluation(self.registry.repository_root)
