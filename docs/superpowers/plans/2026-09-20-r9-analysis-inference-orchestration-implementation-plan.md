@@ -24,6 +24,7 @@
 - No Streamlit/FastAPI/Pydantic web types, UI, API, deployment, R10+, or historical engineer pickle use.
 - R8 is a separate aggregate-only, zero-input, read-only getter returning all 68 effects with no retry.
 - Persist only aggregate R9 audit evidence at `artifacts/audits/r9-inference-service-v1/audit.json` and `artifacts/audits/r9-inference-service-v1/checksums.sha256`.
+- Audit check 31 means this branch introduces no changes from `1eca09a75deea94e557632063837f2d9abc9683c` under `app.py` or `src/ui/`, and introduces no R10-specific presentation implementation. Existing pre-R9 UI shell files are permitted.
 - Frozen scope base: `1eca09a75deea94e557632063837f2d9abc9683c`.
 
 ## Review Focus
@@ -581,7 +582,7 @@ git commit -m "test(r9): verify inference privacy and runtime boundary"
 
 **Interfaces:**
 - Produces `InferenceServiceAuditCheck`, `InferenceServiceAuditReport`, `audit_inference_service(repository_root: Path, full_test_suite_summary: str) -> InferenceServiceAuditReport`, `write_inference_service_audit(repository_root: Path, full_test_suite_summary: str) -> InferenceServiceAuditReport`, `verify_inference_service_audit(repository_root: Path) -> InferenceServiceAuditReport`.
-- CLI write: `python scripts/audit_inference_service.py --full-test-suite-summary-file <path> --full-test-suite-passed`. CLI read-only: `python scripts/audit_inference_service.py --verify`.
+- CLI write: `python scripts/audit_inference_service.py --full-test-suite-summary-file <path> --full-test-suite-passed`. The production read-only CLI is `python scripts/audit_inference_service.py --verify`, but it is first invoked only in Task 11 after canonical audit evidence exists.
 
 - [ ] **Step 1: Write failing exact audit tests**
 
@@ -593,9 +594,13 @@ def test_audit_has_exactly_31_checks() -> None:
 def test_any_failed_check_blocks(monkeypatch) -> None:
     monkeypatch.setattr(audit, "_check_no_patient_persistence", lambda *_: False)
     assert audit_inference_service(canonical_root, "250 passed in 10.00s").status == "BLOCKED"
+
+def test_check_31_allows_preexisting_ui_but_blocks_new_r10_ui_change(monkeypatch) -> None:
+    assert check_r10_not_started(base_commit, unchanged_branch).passed
+    assert not check_r10_not_started(base_commit, branch_changing_app_py).passed
 ```
 
-Implement and test these exact checks in order: 1 R5 identity; 2 R6 identity; 3 R7 identity; 4 R8 identity/R6 lineage; 5 canonical paths; 6 engineer pickles unused; 7 no fitting/training; 8 exact global 75 proof; 9 R5 raw7; 10 R6 raw75; 11 R7 raw68; 12 R5 transform-only/12 order; 13 R6 transform-only/80 order; 14 R7 persisted pipeline only; 15 output kind/disclaimer; 16 no category/probability/recommendation; 17 frozen R7 class order; 18 finite normalized probabilities; 19 no NC; 20 partial readiness; 21 requested tracks; 22 isolation; 23 no feature echo; 24 no patient persistence; 25 R8 aggregate typed unavailable; 26 framework independent; 27 load once; 28 deterministic; 29 contracts/docs/metadata/behavior agree; 30 full suite pass; 31 R10 absent.
+Implement and test these exact checks in order: 1 R5 identity; 2 R6 identity; 3 R7 identity; 4 R8 identity/R6 lineage; 5 canonical paths; 6 engineer pickles unused; 7 no fitting/training; 8 exact global 75 proof; 9 R5 raw7; 10 R6 raw75; 11 R7 raw68; 12 R5 transform-only/12 order; 13 R6 transform-only/80 order; 14 R7 persisted pipeline only; 15 output kind/disclaimer; 16 no category/probability/recommendation; 17 frozen R7 class order; 18 finite normalized probabilities; 19 no NC; 20 partial readiness; 21 requested tracks; 22 isolation; 23 no feature echo; 24 no patient persistence; 25 R8 aggregate typed unavailable; 26 framework independent; 27 load once; 28 deterministic; 29 contracts/docs/metadata/behavior agree; 30 final full suite passes with zero R9 lifecycle skips; 31 R10 not started, meaning the branch diff from base has no changes under `app.py` or `src/ui/` and no R10-specific presentation implementation. Existing pre-R9 UI shell files remain allowed.
 
 - [ ] **Step 2: Verify failure**
 
@@ -618,15 +623,15 @@ def write_inference_service_audit(root: Path, summary: str) -> InferenceServiceA
 
 Writer can exercise synthetic fixtures but persists no values. `--verify` only reads existing audit/checksum evidence, recomputes read-only checks, and never trains/writes/analyzes a patient.
 
-- [ ] **Step 4: Run audit tests and exact verifier**
+Implement `read_pytest_full_suite_evidence(path: Path) -> FullSuiteEvidence` so the `-ra` output parser stores: the literal final passed-summary line, all failure/error node ids, and the tuple of skipped node ids under `tests/test_r9_canonical_provenance.py`. Audit check 30 passes only when the final summary reports passes with no failures/errors **and** that exact R9 lifecycle-skip tuple is empty. Do not infer this from the absence of a reason-text string.
+
+- [ ] **Step 4: Run audit tests with temporary evidence fixtures**
 
 Run: `python -m pytest tests/test_inference_service_audit.py tests/test_r9_canonical_provenance.py -q`
 
 Expected: PASS; canonical audit assertions may skip only before the first canonical evidence write.
 
-Run: `python scripts/audit_inference_service.py --verify`
-
-Expected: `PASS`, 31 checks, zero writes.
+The test fixture must create a temporary two-file audit bundle, call `verify_inference_service_audit(temp_repository_root)`, and assert `PASS` without reading or requiring the canonical `artifacts/audits/r9-inference-service-v1/` directory. Do **not** invoke the canonical `python scripts/audit_inference_service.py --verify` command in Task 10.
 
 - [ ] **Step 5: Commit**
 
@@ -653,7 +658,7 @@ def test_canonical_r9_audit_has_final_no_lifecycle_skip_summary() -> None:
     summary = json.loads(AUDIT.read_text())["full_test_suite_summary"]
     assert re.search(r"\b\d+ passed\b", summary)
     assert "failed" not in summary.lower()
-    assert "R9 audit is generated after bootstrap full-suite evidence" not in summary
+    assert json.loads(AUDIT.read_text())["full_suite_evidence"]["r9_lifecycle_skip_nodeids"] == []
 ```
 
 Also test audit file set/checksums and branch-history forbidden-scope diff from frozen base.
@@ -666,28 +671,28 @@ Expected: PASS except the only documented pre-audit skip.
 
 Run:
 ```powershell
-git diff --name-only 1eca09a75deea94e557632063837f2d9abc9683c..HEAD -- data artifacts/models src/training src/modeling
-git diff --name-only -- data artifacts/models src/training src/modeling
-Get-FileHash artifacts/models/track_a/r5a-track-a-baseline-v1/checksums.sha256 -Algorithm SHA256
-Get-FileHash artifacts/models/track_b/r6-track-b-v1/checksums.sha256 -Algorithm SHA256
-Get-FileHash artifacts/models/track_c/r7-track-c-v1/checksums.sha256 -Algorithm SHA256
-Get-FileHash artifacts/analysis/r8-prognostic-features-v1/checksums.sha256 -Algorithm SHA256
+git diff --name-only 1eca09a75deea94e557632063837f2d9abc9683c..HEAD -- data artifacts/models artifacts/analysis/r8-prognostic-features-v1 src/training src/modeling
+git diff --name-only -- data artifacts/models artifacts/analysis/r8-prognostic-features-v1 src/training src/modeling
+$frozenBundles = @('artifacts/models/track_a/r5a-track-a-baseline-v1', 'artifacts/models/track_b/r6-track-b-v1', 'artifacts/models/track_c/r7-track-c-v1', 'artifacts/analysis/r8-prognostic-features-v1')
+$beforeHashes = @{}
+foreach ($bundle in $frozenBundles) { Get-ChildItem -LiteralPath $bundle -Recurse -File | Sort-Object FullName | ForEach-Object { $beforeHashes[$_.FullName.Substring((Get-Location).Path.Length + 1)] = (Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant() } }
+$beforeHashes | ConvertTo-Json -Depth 2 | Set-Content -LiteralPath $env:TEMP\cognivex-r9-frozen-bundle-hashes-before.json -Encoding utf8
 ```
 
-Expected: prohibited scope lists empty; retain hashes.
+Expected: prohibited scope lists empty; the saved map contains a SHA-256 for **every file** in all four canonical R5/R6/R7/R8 bundles.
 
 - [ ] **Step 3: Bootstrap, audit, then final suite**
 
 Run:
 ```powershell
 python -c "from pathlib import Path; from src.services.analysis import AnalysisService; print(len(AnalysisService.from_canonical_artifacts(Path('.')).allowed_input_fields))"
-python -m pytest -q | Tee-Object -FilePath $env:TEMP\cognivex-r9-bootstrap-pytest.txt
+python -m pytest -q -ra | Tee-Object -FilePath $env:TEMP\cognivex-r9-bootstrap-pytest.txt
 python scripts/audit_inference_service.py --full-test-suite-summary-file $env:TEMP\cognivex-r9-bootstrap-pytest.txt --full-test-suite-passed
 python -m pytest tests/test_r9_canonical_provenance.py -q
-python -m pytest -q | Tee-Object -FilePath $env:TEMP\cognivex-r9-final-pytest.txt
+python -m pytest -q -ra | Tee-Object -FilePath $env:TEMP\cognivex-r9-final-pytest.txt
 ```
 
-Expected: smoke prints `75` without a record; bootstrap has zero failures and only pre-audit skip may exist; initial audit writes only two R9 evidence files; final suite has zero failures and zero R9 missing-audit lifecycle skips.
+Expected: smoke prints `75` without a record; bootstrap has zero failures and only pre-audit skip may exist; initial audit writes only two R9 evidence files; final suite has zero failures. The parser records every skipped R9 canonical-provenance node id, and the final evidence must contain the empty tuple/list—not merely lack a matching skip-reason string. Bootstrap evidence is never audit check-30 evidence.
 
 - [ ] **Step 4: Finalize, verify, and inspect scope**
 
@@ -699,20 +704,25 @@ python -m pytest tests/test_r9_canonical_provenance.py -q
 python -m compileall -q app.py src scripts tests
 python -m pip check
 git diff --check
-git diff --name-only 1eca09a75deea94e557632063837f2d9abc9683c..HEAD -- data artifacts/models src/training src/modeling
-git diff --name-only -- data artifacts/models src/training src/modeling
+git diff --name-only 1eca09a75deea94e557632063837f2d9abc9683c..HEAD -- data artifacts/models artifacts/analysis/r8-prognostic-features-v1 src/training src/modeling
+git diff --name-only -- data artifacts/models artifacts/analysis/r8-prognostic-features-v1 src/training src/modeling
 git diff --name-only 1eca09a75deea94e557632063837f2d9abc9683c..HEAD
+$beforeHashes = Get-Content -Raw -LiteralPath $env:TEMP\cognivex-r9-frozen-bundle-hashes-before.json | ConvertFrom-Json -AsHashtable
+$afterHashes = @{}
+foreach ($bundle in $frozenBundles) { Get-ChildItem -LiteralPath $bundle -Recurse -File | Sort-Object FullName | ForEach-Object { $afterHashes[$_.FullName.Substring((Get-Location).Path.Length + 1)] = (Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant() } }
+if ($beforeHashes.Count -ne $afterHashes.Count) { throw 'Frozen R5/R6/R7/R8 bundle file count changed' }
+foreach ($relativePath in $beforeHashes.Keys) { if (-not $afterHashes.ContainsKey($relativePath) -or $afterHashes[$relativePath] -ne $beforeHashes[$relativePath]) { throw "Frozen R5/R6/R7/R8 bundle hash changed: $relativePath" } }
 git status --short
 ```
 
-Expected: final audit 31/31, read-only verifier PASS, provenance no lifecycle skip, compile/pip/diff PASS, prohibited scopes empty, only known untracked `ai_handoff_data/` remains.
+Expected: final audit 31/31, first canonical read-only verifier PASS, provenance has an explicitly empty R9 lifecycle-skip node-id collection, compile/pip/diff PASS, every before/after R5/R6/R7/R8 file hash matches, prohibited scopes empty, only known untracked `ai_handoff_data/` remains.
 
 - [ ] **Step 5: Commit final docs/evidence and rerun branch scope**
 
 ```powershell
 git add README.md CHANGELOG.md docs/architecture.md docs/testing.md tests/test_r9_canonical_provenance.py artifacts/audits/r9-inference-service-v1/audit.json artifacts/audits/r9-inference-service-v1/checksums.sha256
 git commit -m "docs(r9): record analysis service verification evidence"
-git diff --name-only 1eca09a75deea94e557632063837f2d9abc9683c..HEAD -- data artifacts/models src/training src/modeling
+git diff --name-only 1eca09a75deea94e557632063837f2d9abc9683c..HEAD -- data artifacts/models artifacts/analysis/r8-prognostic-features-v1 src/training src/modeling
 git status --short
 ```
 
@@ -724,8 +734,10 @@ Expected: no prohibited branch-history scope and no untracked change except know
 - [x] Every public type/method used by later tasks is named in the producing task.
 - [x] Review Focus cases map to test tasks.
 - [x] Final audit check 30 uses the second full suite after audit creation; bootstrap evidence is never final.
+- [x] The final full suite uses `pytest -q -ra`; audit evidence proves an empty R9 lifecycle-skip node-id collection rather than relying on missing reason text.
 - [x] Final audit/checksum verification has an exact read-only command.
-- [x] Frozen scope checks compare both committed branch history and working tree to the stated base.
+- [x] Frozen scope checks protect R5/R6/R7 and the R8 analysis bundle in both branch history and working tree, and compare SHA-256 maps for every file in all four bundles.
+- [x] Audit check 31 permits existing UI shell files but blocks branch-introduced `app.py`, `src/ui/`, or R10-specific presentation changes.
 - [x] No R10/R11/R12, model fit/refit/tuning, UI/API, patient persistence, or historical engineer model is planned.
 - [x] No unfinished marker or vague verification-command placeholder is present.
 
