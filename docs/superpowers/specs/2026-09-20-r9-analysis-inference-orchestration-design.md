@@ -197,31 +197,80 @@ selection, or a historical engineer model.
 only production construction path. It will resolve repository-relative,
 hard-coded canonical bundle paths and reject any noncanonical location.
 
-The registry will perform these steps before deserializing a pickle:
+Artifact verification has two strict phases. No pickle deserialization may
+occur until every applicable pre-load gate has passed. Tests will use a
+loader spy to prove that a failed pre-load checksum, metadata, or contract
+gate produces zero `load_trusted_pickle(..., trusted=True)` calls.
 
-1. Require the expected canonical bundle path and expected file set.
-2. Verify each checksum manifest against every declared bundle file.
-3. Validate required metadata, experiment identity, target/feature counts,
-   class order, and source hashes.
-4. For R6, reuse `verify_and_load_track_b_source(...)`, including its frozen
-   tracked-state and R6 checksum gates.
-5. For R7, reuse `verify_track_c_checksums(...)` and add canonical-path,
-   metadata, contract, and pipeline-class validation before trusted loading.
-6. For R5, use `checksums.sha256`, `experiment.json`, the canonical
-   `PreprocessingSchema`, and loaded feature names to prove the seven raw and
-   12 transformed field contracts before trusted loading.
-7. For R8, verify the canonical bundle checksum manifest and require its R6
-   lineage values to match the already verified R6 registry identity. The
-   existing full semantic R8 recomputation verifier remains the read-only
-   audit/verification authority; R9 does not reload R6 merely to read the
-   aggregate table.
-8. Call `load_trusted_pickle(..., trusted=True)` only after these gates pass.
+### Pre-load verification
 
-An R5, R6, or R7 integrity failure prevents construction of that adapter.
-The registry may still construct adapters whose own artifacts verify; the
-service will report the affected track as `ARTIFACT_UNAVAILABLE`. A
-malformed R8 bundle makes only global R8 access unavailable. Historical
-engineer pickles and arbitrary caller-provided paths are always rejected.
+Pre-load verification uses only repository-relative paths and text/binary
+bytes that can be inspected without unpickling:
+
+1. Require the expected canonical repository-relative bundle path.
+2. Require the exact expected file set.
+3. Verify each checksum manifest against every declared bundle file.
+4. Validate metadata and experiment identity.
+5. Validate persisted raw feature contracts: R5's canonical
+   `PreprocessingSchema` plus persisted `experiment.json` configuration,
+   R6's `feature_contract.json`, and R7's `feature_contract.json`.
+6. Validate persisted class order/configuration where text artifacts provide
+   it: R5's 12 configured output names and Cox identity, R6's 75/80 feature
+   counts and frozen configuration, and R7's 68-feature and six-class
+   contract.
+7. Validate frozen lineage/source hashes, including R6 tracked-state checks
+   and R8-to-R6 lineage equality.
+8. For R8, verify the canonical aggregate bundle checksum manifest, metadata,
+   summary, and source-R6 identity. The existing full semantic R8
+   recomputation verifier remains the read-only audit/verification authority;
+   R9 does not load R6 a second time merely to read the aggregate table.
+
+Only after all applicable pre-load checks pass may
+`load_trusted_pickle(..., trusted=True)` be called.
+
+### Post-load validation
+
+Post-load validation examines trusted objects already admitted through the
+pre-load gate:
+
+- **R5:** require trusted preprocessor and `LifelinesCoxPHAdapter` object
+  types, fitted state, exact seven raw clinical fields, exact ordered
+  12-feature transformed output, and the expected Cox adapter/fitter identity.
+- **R6:** reuse `verify_and_load_track_b_source(...)`. Its own pre-load
+  checksum and frozen-state gates run before its trusted loads; after loading,
+  require the expected `PenalizedCoxPHAdapter`/`CoxPHFitter` identity, fitted
+  state, exact 80-feature order, and frozen configuration.
+- **R7:** require a trusted fitted scikit-learn `Pipeline`, exact verified
+  68-field raw contract, expected estimator identity, estimator class order,
+  and the frozen six-class taxonomy.
+
+Historical engineer pickles and arbitrary caller-provided paths are always
+rejected.
+
+### Service-construction failure isolation
+
+`AnalysisService.from_canonical_artifacts(repository_root)` first validates
+the repository root and canonical runtime configuration. That is the only
+class of failure that prevents service construction entirely.
+
+After the repository-level gate, R5, R6, R7, and R8 initialize independently:
+
+- a successfully verified R5/R6/R7 bundle creates one immutable available
+  adapter entry;
+- a verification or trusted-load failure creates an immutable unavailable
+  track entry containing only safe failure code/message metadata, not a path,
+  traceback, pickle detail, or exception text;
+- a successfully verified R8 bundle creates an immutable aggregate reader;
+  an R8 verification failure creates only an unavailable aggregate-reader
+  entry.
+
+The service therefore still constructs if one or more track artifacts are
+unavailable. During `analyze()`, an attempted unavailable R5/R6/R7 track
+returns `ARTIFACT_UNAVAILABLE` without a load or inference retry; independently
+verified ready tracks continue normally. If R8 is unavailable,
+`get_prognostic_feature_analysis()` alone returns its safe unavailable error;
+patient-track analysis remains usable. Artifact initialization happens only at
+service construction.
 
 ## 9. Request and Global Input Contracts
 
@@ -348,6 +397,13 @@ independent of Streamlit, FastAPI, pandas widgets, and ORM types. Every
 contract provides `to_dict()` using JSON-safe primitives.
 
 ```python
+class TrackReadinessState(StrEnum):
+    READY = "ready"
+    MISSING_REQUIRED_FIELDS = "missing_required_fields"
+    INVALID_INPUT = "invalid_input"
+    ARTIFACT_UNAVAILABLE = "artifact_unavailable"
+    INFERENCE_ERROR = "inference_error"
+
 @dataclass(frozen=True, slots=True)
 class ResultLineage:
     track: AnalysisTrack
@@ -379,6 +435,12 @@ class TrackError:
     invalid_fields: tuple[str, ...] = ()
 
 @dataclass(frozen=True, slots=True)
+class RequestError:
+    code: str
+    message: str
+    fields: tuple[str, ...] = ()
+
+@dataclass(frozen=True, slots=True)
 class TrackOutcome:
     track: AnalysisTrack
     state: TrackReadinessState
@@ -392,6 +454,21 @@ class AnalysisResponse:
     outcomes: tuple[TrackOutcome, ...]
     request_errors: tuple[RequestError, ...]
 ```
+
+`RequestError` is framework independent and contains field names only when
+useful. `RequestError`, `TrackError`, and every nested result must never
+contain feature values, filesystem paths, raw tracebacks, pickle internals, or
+deserialization exception text.
+
+`TrackOutcome` enforces these invariants in `__post_init__`:
+
+- when `state is TrackReadinessState.READY`, `result` must be populated and
+  `error` must be `None`;
+- when `state` is `MISSING_REQUIRED_FIELDS`, `INVALID_INPUT`,
+  `ARTIFACT_UNAVAILABLE`, or `INFERENCE_ERROR`, `result` must be `None` and
+  `error` must be populated;
+- contradictory state/result/error combinations raise `ValueError` during
+  contract construction.
 
 `ResultLineage.contract_artifact_sha256` is the checksum for the persisted
 contract source: R5 `experiment.json`, R6 `feature_contract.json`, and R7
@@ -489,7 +566,15 @@ or persist a patient-like prediction artifact.
 Focused tests must cover:
 
 - canonical-path-only construction, checksum mismatch isolation, historical
-  engineer-pickle rejection, artifact load-once behavior, and no fitting;
+  engineer-pickle rejection, pre-load loader-spy fail-fast behavior, artifact
+  load-once behavior, and no fitting;
+- corrupt R5 preserving independently verified R6/R7 service availability;
+  corrupt R6 preserving independently verified R5/R7 availability; corrupt
+  R7 preserving independently verified R5/R6 availability; and corrupt R8
+  preserving patient-track analysis;
+- unavailable requested tracks returning `ARTIFACT_UNAVAILABLE` without a
+  load or inference retry during `analyze()`, and artifact initialization
+  occurring only during service construction;
 - exact verified R5/R6/R7 identities and R8 lineage;
 - allowed-field union derived from frozen contracts, unknown-key rejection,
   and no dynamic discovery;
