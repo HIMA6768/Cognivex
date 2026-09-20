@@ -53,7 +53,7 @@ def _checks(passed: bool = True) -> tuple[PrognosticFeatureAuditCheck, ...]:
 def test_audit_names_are_exactly_numbered_one_through_thirty() -> None:
     assert len(R8_AUDIT_CHECK_NAMES) == 30
     assert R8_AUDIT_CHECK_NAMES[0] == "Canonical R6 bundle identity is correct."
-    assert R8_AUDIT_CHECK_NAMES[-1] == "R9 was not started."
+    assert R8_AUDIT_CHECK_NAMES[-1] == "R9 had not started at the frozen R8 final evidence commit."
     report = finalize_prognostic_feature_audit(_checks(), GOOD_SUMMARY)
     assert tuple(check.number for check in report.checks) == tuple(range(1, 31))
 
@@ -93,6 +93,12 @@ def test_audit_checks_frozen_r5_r6_r7_sources_and_artifacts(bundle) -> None:
 def test_audit_detects_fitting_imports_or_calls(monkeypatch) -> None:
     monkeypatch.setattr(audit_module, "R8_RUNTIME_PATHS", audit_module.R8_RUNTIME_PATHS + ("src/training/track_b.py",))
     assert audit_module._r8_has_no_fitting(ROOT) is False
+
+
+def test_check_thirty_scopes_r9_absence_to_frozen_r8_milestone() -> None:
+    """Later R9 runtime files must not rewrite R8's historical milestone fact."""
+    assert (ROOT / "src/inference").is_dir()
+    assert audit_module._r9_was_not_started_at_r8_milestone(ROOT) is True
 
 
 def test_audit_writer_adds_audit_before_final_checksum_manifest(bundle) -> None:

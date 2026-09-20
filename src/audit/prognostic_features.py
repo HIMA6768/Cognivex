@@ -56,12 +56,13 @@ R8_AUDIT_CHECK_NAMES = (
     "Final bundle checksums verify.",
     "Artifact generation is reproducible and read-only relative to R6.",
     "The complete test suite passes.",
-    "R9 was not started.",
+    "R9 had not started at the frozen R8 final evidence commit.",
 )
 
 R5_COMMIT = "93f669cf7638a09bcff0434f9f93590aa0c552e1"
 R6_COMMIT = "49a8414c1aa828c07cfa9f9dd207a2bdf311b078"
 R7_COMMIT = "97e6434634c3391acbd6e5e50dca316bef4ad6fb"
+R8_FINAL_EVIDENCE_COMMIT = "0662bda058f0c93f758f29e0fb033aca24e06721"
 R5_BUNDLE = Path("artifacts/models/track_a/r5a-track-a-baseline-v1")
 R7_BUNDLE = Path("artifacts/models/track_c/r7-track-c-v1")
 R5_PATHS = (
@@ -163,6 +164,18 @@ def _frozen_state_matches(root: Path, commit: str, paths: tuple[str, ...], bundl
         check=False,
     ).returncode == 0
     return unchanged and _bundle_checksums_match(root / bundle)
+
+
+def _r9_was_not_started_at_r8_milestone(root: Path) -> bool:
+    """Evaluate the historical R8 milestone tree, never the later working tree."""
+    result = subprocess.run(
+        ["git", "ls-tree", "-r", "--name-only", R8_FINAL_EVIDENCE_COMMIT, "--", "src/inference", "scripts/run_inference.py"],
+        cwd=root,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    return result.returncode == 0 and not result.stdout.strip()
 
 
 def _r8_has_no_fitting(root: Path) -> bool:
@@ -268,7 +281,7 @@ def audit_prognostic_feature_bundle(
         and lineage.get("hashes", {}).get("feature_contract.json") == source.verified_digests["feature_contract.json"]
     )
     inferred_policy = metadata.get("coefficient_contract", {}).get("inferential_fields", "")
-    r9_absent = not (root / "src/inference").exists() and not (root / "scripts/run_inference.py").exists()
+    r9_absent = _r9_was_not_started_at_r8_milestone(root)
     checks = (
         _check(1, source.bundle == (root / R6_BUNDLE_RELATIVE).resolve(), str(source.bundle)),
         _check(2, source.verified_digests["cox_model.pkl"] == "5d312d905974772ad0967ba8dbd47bce7de81dc3cca5fdee54f8ad259a3d86f2", source.verified_digests["cox_model.pkl"]),
@@ -299,7 +312,7 @@ def audit_prognostic_feature_bundle(
         _check(27, verification.checks.get("checksums", False), "bundle checksum manifest verifies"),
         _check(28, verification.checks.get("source_unchanged", False) and verification.checks.get("bundle_unchanged", False), "read-only verifier preserved source and bundle bytes"),
         _check(29, _successful_pytest_summary(full_test_suite_summary), full_test_suite_summary),
-        _check(30, r9_absent, "no R9 inference module or entrypoint"),
+        _check(30, r9_absent, "R9 absent at frozen R8 final evidence commit"),
     )
     return finalize_prognostic_feature_audit(checks, full_test_suite_summary)
 
