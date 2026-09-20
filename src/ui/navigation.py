@@ -78,6 +78,15 @@ def _select_group_page(group: str) -> None:
             st.session_state[_group_widget_key(other_group)] = None
 
 
+def navigate_to(page: Page) -> None:
+    """Select an existing destination from a callback without changing route contracts."""
+    if page not in PAGE_ORDER:
+        raise ValueError("page is not an active OncoMap navigation destination")
+    st.session_state[_SELECTED_PAGE_KEY] = page
+    for group, pages in NAVIGATION_GROUPS:
+        st.session_state[_group_widget_key(group)] = page if page in pages else None
+
+
 def render_navigation() -> Page:
     """Render and return a rerun-stable page selection."""
     selected_page = st.session_state.get(_SELECTED_PAGE_KEY)

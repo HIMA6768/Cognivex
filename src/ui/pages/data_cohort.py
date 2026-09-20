@@ -12,7 +12,7 @@ from src.contracts import (
     PreprocessingTask,
 )
 
-from ..components.layout import render_page_header
+from ..components.oncomap import render_page_intro
 from ..data_cohort_state import (
     get_metabric_ingestion_state,
     get_metabric_preprocessing_state,
@@ -36,9 +36,9 @@ def _exclusion_count(metadata, reason: EligibilityReasonCode) -> int:
 
 
 def render() -> None:
-    render_page_header(
-        "Data / Cohort",
-        "Validated aggregate METABRIC cohort information for research use only.",
+    render_page_intro(
+        "Dataset",
+        "METABRIC cohort overview: 1,904 prepared patients, 693 prepared columns, and a locked 1,332 / 286 / 286 split.",
     )
     refreshed = st.button("Refresh validated data", help="Reload repository-owned canonical artifacts.")
     result = get_metabric_ingestion_state(st.session_state, refresh=refreshed)

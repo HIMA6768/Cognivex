@@ -25,8 +25,8 @@ PAGE_RENDERERS: Mapping[Page, Callable[[], None]] = {
     Page.MODEL_COMPARISON: model_comparison.render,
     Page.GENE_INSIGHTS: gene_insights.render,
     Page.DATA_COHORT: data_cohort.render,
-    Page.METHODOLOGY_ABOUT: methodology_about.render,
-    Page.ABOUT: methodology_about.render,
+    Page.METHODOLOGY_ABOUT: methodology_about.render_methodology,
+    Page.ABOUT: methodology_about.render_about,
 }
 
 assert tuple(PAGE_RENDERERS) == PAGE_ORDER
