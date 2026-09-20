@@ -102,6 +102,9 @@ def render() -> None:
             horizontal=True,
             width="stretch",
         )
+        st.caption(
+            " · ".join(f"{label} {counts.get(label, 0):,}" for label in subtype_order)
+        )
         st.caption(f"NC excluded from Track C: {subtype.nc_count:,}. {NC_SURVIVAL_POLICY}")
 
     st.subheader("Data quality at a glance")

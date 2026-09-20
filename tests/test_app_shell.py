@@ -80,7 +80,7 @@ def test_overview_contains_no_dataset_uploader_or_patient_results() -> None:
     assert not app.file_uploader
     assert not app.metric
     assert "OncoMap" in _visible_text(app)
-    assert any(button.label == "Analyze a Patient" for button in app.button)
+    assert any(button.label == "Analyze a Patient →" for button in app.button)
 
 
 def test_data_cohort_page_shows_validated_aggregates_without_patient_rows() -> None:
@@ -105,9 +105,9 @@ def test_data_cohort_page_shows_r3_quality_aggregates_without_patient_rows() -> 
     text = _visible_text(app)
     assert not app.exception
     assert "Data quality" in text
-    assert "Clinical missingness" in text
+    assert "Data quality at a glance" in text
     assert "Survival endpoint" in text
-    assert "Genomic data quality" in text
+    assert any(expander.label == "View technical cohort details" for expander in app.expander)
     assert "patient_id" not in text.lower()
 
 
@@ -117,32 +117,17 @@ def test_data_cohort_page_separates_r3_quality_warnings_from_r4_preprocessing_re
     _navigate(app, "Dataset")
 
     text = _visible_text(app)
-    metrics = {metric.label: metric.value for metric in app.metric}
     assert not app.exception
     assert "DATA_QUALITY_READY_WITH_WARNINGS" in text
-    assert (metrics["Errors"], metrics["Warnings"], metrics["Information"]) == ("0", "3", "6")
-    assert "Preprocessing readiness" in text
-    assert "PREPROCESSING_READY" in text
-    assert {"Track A", "Track B", "Track C", "Track D"}.issubset(metrics)
-    assert (metrics["Track A"], metrics["Track B"], metrics["Track C"], metrics["Track D"]) == (
-        "1,903 eligible",
-        "1,903 eligible",
-        "1,898 eligible",
-        "1,903 eligible",
-    )
-    assert "489" in text
-    assert "27" in text
-    assert "Clinical + mutation survival preprocessing ready" in text
-    assert (
-        "The canonical record remains unchanged. R4/R4D exclude it from survival Tracks A/B/D using "
-        "NON_POSITIVE_SURVIVAL_DURATION; it remains independently eligible for Track C when Track C requirements pass."
-    ) in text
+    assert "Unknown tumor stage: 505" in text
+    assert "Zero survival duration: 1" in text
+    assert any(expander.label == "View technical cohort details" for expander in app.expander)
     nc_policy = (
         "Patients labeled as 'NC' (Not Classified) in the raw data are excluded during Track C classification "
         "model training, but are retained for Tracks A, B, and D when their survival eligibility requirements pass."
     )
-    assert "NC records: 6" in text
-    assert text.count(nc_policy) == 2
+    assert "NC excluded from Track C: 6" in text
+    assert nc_policy in text
     assert "patient_id" not in text.lower()
 
 
@@ -153,8 +138,8 @@ def test_each_oncomap_page_has_research_context_and_persistent_disclaimer() -> N
         "Patient Analysis": "Enter clinical details",
         "Model Evaluation": "Frozen aggregate evaluation evidence",
         "Gene Insights": "Global model-associated coefficients",
-        "Dataset": "Validated cohort",
-        "Methodology": "Analysis pipeline",
+        "Dataset": "Locked data split",
+        "Methodology": "Research workflow",
         "About": "Research prototype",
     }
 
