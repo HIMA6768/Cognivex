@@ -20,7 +20,7 @@
 - R7 returns the exact ordered classes `Basal`, `Her2`, `LumA`, `LumB`, `Normal`, `claudin-low`; probabilities are finite, six-long, normalized within `1e-8`, and never `NC`.
 - Reuse persisted preprocessing/pipelines and R4D mutation semantics. No `fit`, `fit_transform`, training, tuning, selection, or direct fitter prediction call.
 - Only `tumor_size` and `er_status_measured_by_ihc` permit `None`/NaN; materialize as `numpy.nan` for their frozen imputer. Reject bools, blank/nonfinite values, unsupported categories, and malformed mutations.
-- Requests, responses, errors, audit evidence, and logs never persist/echo feature values, identifiers, predictions, probabilities, scores, paths, tracebacks, or pickle internals. Fixtures are synthetic and nonclinical.
+- R9 responses may return only their intended in-memory model outputs: R5/R6 `log_partial_hazard`, R7 predicted subtype, and R7 six ordered probabilities. Responses must never echo raw input feature values. No request, prediction, probability, score, subtype, patient identifier, or feature payload may be persisted to disk, logs, or audit evidence; errors/audits/logs contain neither feature values nor patient-specific model outputs, paths, tracebacks, or pickle internals. Fixtures are synthetic and nonclinical.
 - No Streamlit/FastAPI/Pydantic web types, UI, API, deployment, R10+, or historical engineer pickle use.
 - R8 is a separate aggregate-only, zero-input, read-only getter returning all 68 effects with no retry.
 - Persist only aggregate R9 audit evidence at `artifacts/audits/r9-inference-service-v1/audit.json` and `artifacts/audits/r9-inference-service-v1/checksums.sha256`.
@@ -543,6 +543,13 @@ def test_response_and_workdir_never_contain_synthetic_value(service, complete_fe
     response = service.analyze(AnalysisRequest(complete_features))
     assert "synthetic-secret-value" not in json.dumps(response.to_dict())
     assert list(tmp_path.iterdir()) == []
+
+def test_response_exposes_only_intended_in_memory_outputs(service, complete_features) -> None:
+    response = service.analyze(AnalysisRequest(complete_features))
+    assert response.outcomes[0].result.output_kind == "log_partial_hazard"
+    assert response.outcomes[1].result.output_kind == "log_partial_hazard"
+    assert response.outcomes[2].result.predicted_class in FROZEN_SUBTYPE_CLASS_ORDER
+    assert len(response.outcomes[2].result.probabilities) == 6
 ```
 
 AST scan rejects `streamlit`, `fastapi`, `pydantic`, `src.training`, `fit`, and `fit_transform`. Also prove construction loads once, repeated calls do not reload, and errors are safe.
@@ -582,7 +589,7 @@ git commit -m "test(r9): verify inference privacy and runtime boundary"
 
 **Interfaces:**
 - Produces `InferenceServiceAuditCheck`, `InferenceServiceAuditReport`, `audit_inference_service(repository_root: Path, full_test_suite_summary: str) -> InferenceServiceAuditReport`, `write_inference_service_audit(repository_root: Path, full_test_suite_summary: str) -> InferenceServiceAuditReport`, `verify_inference_service_audit(repository_root: Path) -> InferenceServiceAuditReport`.
-- CLI write: `python scripts/audit_inference_service.py --full-test-suite-summary-file <path> --full-test-suite-passed`. The production read-only CLI is `python scripts/audit_inference_service.py --verify`, but it is first invoked only in Task 11 after canonical audit evidence exists.
+- Final CLI write: `python scripts/audit_inference_service.py --full-test-suite-summary-file <path> --full-test-suite-passed`; it requires all 31 checks to pass. Bootstrap CLI write: `python scripts/audit_inference_service.py --bootstrap --full-test-suite-summary-file <path> --full-test-suite-passed`; it is the sole allowed path to persist marked provisional evidence when check 30 is false solely because the approved missing-audit lifecycle skip exists. The production read-only CLI is `python scripts/audit_inference_service.py --verify`, but it is first invoked only in Task 11 after canonical audit evidence exists.
 
 - [ ] **Step 1: Write failing exact audit tests**
 
@@ -598,6 +605,13 @@ def test_any_failed_check_blocks(monkeypatch) -> None:
 def test_check_31_allows_preexisting_ui_but_blocks_new_r10_ui_change(monkeypatch) -> None:
     assert check_r10_not_started(base_commit, unchanged_branch).passed
     assert not check_r10_not_started(base_commit, branch_changing_app_py).passed
+
+def test_bootstrap_writes_provisional_blocked_evidence_and_verify_rejects_it(tmp_path) -> None:
+    completed = invoke_cli(tmp_path, "--bootstrap", bootstrap_summary_with_one_approved_skip)
+    assert completed.returncode == 0
+    assert read_audit(tmp_path)["provisional"] is True
+    assert read_audit(tmp_path)["status"] == "BLOCKED"
+    assert invoke_cli(tmp_path, "--verify").returncode != 0
 ```
 
 Implement and test these exact checks in order: 1 R5 identity; 2 R6 identity; 3 R7 identity; 4 R8 identity/R6 lineage; 5 canonical paths; 6 engineer pickles unused; 7 no fitting/training; 8 exact global 75 proof; 9 R5 raw7; 10 R6 raw75; 11 R7 raw68; 12 R5 transform-only/12 order; 13 R6 transform-only/80 order; 14 R7 persisted pipeline only; 15 output kind/disclaimer; 16 no category/probability/recommendation; 17 frozen R7 class order; 18 finite normalized probabilities; 19 no NC; 20 partial readiness; 21 requested tracks; 22 isolation; 23 no feature echo; 24 no patient persistence; 25 R8 aggregate typed unavailable; 26 framework independent; 27 load once; 28 deterministic; 29 contracts/docs/metadata/behavior agree; 30 final full suite passes with zero R9 lifecycle skips; 31 R10 not started, meaning the branch diff from base has no changes under `app.py` or `src/ui/` and no R10-specific presentation implementation. Existing pre-R9 UI shell files remain allowed.
@@ -623,7 +637,7 @@ def write_inference_service_audit(root: Path, summary: str) -> InferenceServiceA
 
 Writer can exercise synthetic fixtures but persists no values. `--verify` only reads existing audit/checksum evidence, recomputes read-only checks, and never trains/writes/analyzes a patient.
 
-Implement `read_pytest_full_suite_evidence(path: Path) -> FullSuiteEvidence` so the `-ra` output parser stores: the literal final passed-summary line, all failure/error node ids, and the tuple of skipped node ids under `tests/test_r9_canonical_provenance.py`. Audit check 30 passes only when the final summary reports passes with no failures/errors **and** that exact R9 lifecycle-skip tuple is empty. Do not infer this from the absence of a reason-text string.
+Implement `read_pytest_full_suite_evidence(path: Path) -> FullSuiteEvidence` so the `-ra` output parser stores: the literal final passed-summary line, all failure/error node ids, and the tuple of skipped node ids under `tests/test_r9_canonical_provenance.py`. Audit check 30 passes only when the final summary reports passes with no failures/errors **and** that exact R9 lifecycle-skip tuple is empty. Do not infer this from the absence of a reason-text string. Add `provisional: bool` and `mode: Literal["bootstrap", "final"]` to audit evidence. `--bootstrap` may exit zero only when failures/errors are empty and its R9 lifecycle-skip tuple is exactly the one approved missing-audit skip; it writes `provisional=true`, `mode="bootstrap"`, `status="BLOCKED"`, and leaves check 30 false. A normal writer rejects any non-PASS report, writes only `provisional=false`, `mode="final"`, and requires 31/31 PASS. `--verify` rejects absent, provisional, blocked, non-final, non-31-check, or checksum-invalid evidence.
 
 - [ ] **Step 4: Run audit tests with temporary evidence fixtures**
 
@@ -655,10 +669,14 @@ git commit -m "feat(r9): add independent inference service audit"
 def test_canonical_r9_audit_has_final_no_lifecycle_skip_summary() -> None:
     if not AUDIT.exists():
         pytest.skip("R9 audit is generated after bootstrap full-suite evidence")
-    summary = json.loads(AUDIT.read_text())["full_test_suite_summary"]
-    assert re.search(r"\b\d+ passed\b", summary)
-    assert "failed" not in summary.lower()
-    assert json.loads(AUDIT.read_text())["full_suite_evidence"]["r9_lifecycle_skip_nodeids"] == []
+    audit = json.loads(AUDIT.read_text())
+    if audit["provisional"]:
+        assert audit["mode"] == "bootstrap" and audit["status"] == "BLOCKED"
+        assert audit["full_suite_evidence"]["r9_lifecycle_skip_nodeids"] == [APPROVED_BOOTSTRAP_SKIP_NODEID]
+    else:
+        assert audit["mode"] == "final" and audit["status"] == "PASS"
+        assert re.search(r"\b\d+ passed\b", audit["full_test_suite_summary"])
+        assert audit["full_suite_evidence"]["r9_lifecycle_skip_nodeids"] == []
 ```
 
 Also test audit file set/checksums and branch-history forbidden-scope diff from frozen base.
@@ -687,20 +705,27 @@ Run:
 ```powershell
 python -c "from pathlib import Path; from src.services.analysis import AnalysisService; print(len(AnalysisService.from_canonical_artifacts(Path('.')).allowed_input_fields))"
 python -m pytest -q -ra | Tee-Object -FilePath $env:TEMP\cognivex-r9-bootstrap-pytest.txt
-python scripts/audit_inference_service.py --full-test-suite-summary-file $env:TEMP\cognivex-r9-bootstrap-pytest.txt --full-test-suite-passed
+if ($LASTEXITCODE -ne 0) { throw "Bootstrap full pytest failed with exit code $LASTEXITCODE" }
+python scripts/audit_inference_service.py --bootstrap --full-test-suite-summary-file $env:TEMP\cognivex-r9-bootstrap-pytest.txt --full-test-suite-passed
+if ($LASTEXITCODE -ne 0) { throw "Bootstrap audit failed with exit code $LASTEXITCODE" }
 python -m pytest tests/test_r9_canonical_provenance.py -q
+if ($LASTEXITCODE -ne 0) { throw "Bootstrap audit provenance test failed with exit code $LASTEXITCODE" }
 python -m pytest -q -ra | Tee-Object -FilePath $env:TEMP\cognivex-r9-final-pytest.txt
+if ($LASTEXITCODE -ne 0) { throw "Final full pytest failed with exit code $LASTEXITCODE" }
 ```
 
-Expected: smoke prints `75` without a record; bootstrap has zero failures and only pre-audit skip may exist; initial audit writes only two R9 evidence files; final suite has zero failures. The parser records every skipped R9 canonical-provenance node id, and the final evidence must contain the empty tuple/list—not merely lack a matching skip-reason string. Bootstrap evidence is never audit check-30 evidence.
+Expected: smoke prints `75` without a record; bootstrap has zero failures and exactly one approved missing-audit lifecycle skip. `--bootstrap` succeeds only by writing a provisional, `BLOCKED` audit with check 30 false; it is never final check-30 evidence. The provenance test exercises that provisional audit without an audit-file skip. Final suite has zero failures and parser-recorded empty R9 lifecycle skip node ids.
 
 - [ ] **Step 4: Finalize, verify, and inspect scope**
 
 Run:
 ```powershell
 python scripts/audit_inference_service.py --full-test-suite-summary-file $env:TEMP\cognivex-r9-final-pytest.txt --full-test-suite-passed
+if ($LASTEXITCODE -ne 0) { throw "Final audit failed with exit code $LASTEXITCODE" }
 python scripts/audit_inference_service.py --verify
+if ($LASTEXITCODE -ne 0) { throw "Final read-only audit verification failed with exit code $LASTEXITCODE" }
 python -m pytest tests/test_r9_canonical_provenance.py -q
+if ($LASTEXITCODE -ne 0) { throw "Final audit provenance test failed with exit code $LASTEXITCODE" }
 python -m compileall -q app.py src scripts tests
 python -m pip check
 git diff --check
@@ -715,7 +740,7 @@ foreach ($relativePath in $beforeHashes.Keys) { if (-not $afterHashes.ContainsKe
 git status --short
 ```
 
-Expected: final audit 31/31, first canonical read-only verifier PASS, provenance has an explicitly empty R9 lifecycle-skip node-id collection, compile/pip/diff PASS, every before/after R5/R6/R7/R8 file hash matches, prohibited scopes empty, only known untracked `ai_handoff_data/` remains.
+Expected: normal (non-bootstrap) writer accepts only the second full-suite summary and writes `provisional=false`, `mode="final"`, status PASS, and 31/31 PASS checks. The first canonical read-only verifier rejects provisional evidence and now passes only this final evidence. Provenance has explicitly empty R9 lifecycle-skip node ids; compile/pip/diff PASS; every before/after R5/R6/R7/R8 file hash matches; prohibited scopes empty; only known untracked `ai_handoff_data/` remains.
 
 - [ ] **Step 5: Commit final docs/evidence and rerun branch scope**
 
@@ -734,6 +759,7 @@ Expected: no prohibited branch-history scope and no untracked change except know
 - [x] Every public type/method used by later tasks is named in the producing task.
 - [x] Review Focus cases map to test tasks.
 - [x] Final audit check 30 uses the second full suite after audit creation; bootstrap evidence is never final.
+- [x] Bootstrap evidence is explicitly marked provisional/blocked with check 30 false; only the final writer can persist non-provisional 31/31 PASS evidence, and `--verify` rejects provisional evidence.
 - [x] The final full suite uses `pytest -q -ra`; audit evidence proves an empty R9 lifecycle-skip node-id collection rather than relying on missing reason text.
 - [x] Final audit/checksum verification has an exact read-only command.
 - [x] Frozen scope checks protect R5/R6/R7 and the R8 analysis bundle in both branch history and working tree, and compare SHA-256 maps for every file in all four bundles.
