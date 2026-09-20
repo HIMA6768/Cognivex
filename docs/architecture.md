@@ -1,5 +1,9 @@
 # Architecture
 
+## Current R9 state
+
+`src.artifacts.inference_registry` is the R9 trust boundary: canonical repository-relative R5/R6/R7/R8 bundles have their textual contracts and checksum manifests verified before any trusted-local pickle is deserialized. `src.services.analysis.AnalysisService` initializes model tracks independently, so one unavailable bundle cannot block other verified tracks. Its adapters only call persisted `transform`, `predict_risk`, `predict`, and `predict_proba`; no R9 module fits, retrains, or persists patient-level payloads. R5/R6 return only log partial hazard scores; R7 returns a frozen six-class subtype and normalized six-class probability tuple; R8 remains aggregate-only.
+
 ## Current R8 state
 
 `app.py` configures Streamlit and delegates to `src/ui/shell.py`. The shell applies the package-owned theme, renders typed navigation, dispatches focused page renderers, and displays the research-only disclaimer after every page.

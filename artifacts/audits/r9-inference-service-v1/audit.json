@@ -1,0 +1,166 @@
+{
+  "checks": [
+    {
+      "name": "R5 identity is verified.",
+      "number": 1,
+      "passed": true
+    },
+    {
+      "name": "R6 identity is verified.",
+      "number": 2,
+      "passed": true
+    },
+    {
+      "name": "R7 identity is verified.",
+      "number": 3,
+      "passed": true
+    },
+    {
+      "name": "R8 identity and source lineage are verified.",
+      "number": 4,
+      "passed": true
+    },
+    {
+      "name": "Only canonical repository-relative bundles are used.",
+      "number": 5,
+      "passed": true
+    },
+    {
+      "name": "Historical engineer pickles are unused.",
+      "number": 6,
+      "passed": true
+    },
+    {
+      "name": "Runtime does not fit or train.",
+      "number": 7,
+      "passed": true
+    },
+    {
+      "name": "Global raw namespace is exactly 75 fields.",
+      "number": 8,
+      "passed": true
+    },
+    {
+      "name": "R5 raw contract is exactly seven fields.",
+      "number": 9,
+      "passed": true
+    },
+    {
+      "name": "R6 raw contract is exactly 75 fields.",
+      "number": 10,
+      "passed": true
+    },
+    {
+      "name": "R7 raw contract is exactly 68 fields.",
+      "number": 11,
+      "passed": true
+    },
+    {
+      "name": "R5 uses its persisted twelve-feature transform.",
+      "number": 12,
+      "passed": true
+    },
+    {
+      "name": "R6 uses its persisted eighty-feature transform.",
+      "number": 13,
+      "passed": true
+    },
+    {
+      "name": "R7 uses its persisted pipeline.",
+      "number": 14,
+      "passed": true
+    },
+    {
+      "name": "Prognosis output is log partial hazard only.",
+      "number": 15,
+      "passed": true
+    },
+    {
+      "name": "No clinical category or recommendation contract exists.",
+      "number": 16,
+      "passed": true
+    },
+    {
+      "name": "R7 class order is frozen.",
+      "number": 17,
+      "passed": true
+    },
+    {
+      "name": "Subtype probability contract is normalized and finite.",
+      "number": 18,
+      "passed": true
+    },
+    {
+      "name": "NC cannot be emitted by Track C contract.",
+      "number": 19,
+      "passed": true
+    },
+    {
+      "name": "Track readiness supports partial requests.",
+      "number": 20,
+      "passed": true
+    },
+    {
+      "name": "Requested tracks are validated.",
+      "number": 21,
+      "passed": true
+    },
+    {
+      "name": "Track initialization is isolated.",
+      "number": 22,
+      "passed": true
+    },
+    {
+      "name": "Response contracts do not retain feature mappings.",
+      "number": 23,
+      "passed": true
+    },
+    {
+      "name": "Runtime writes no patient data.",
+      "number": 24,
+      "passed": true
+    },
+    {
+      "name": "R8 remains aggregate-only and independently available.",
+      "number": 25,
+      "passed": true
+    },
+    {
+      "name": "Runtime remains framework independent.",
+      "number": 26,
+      "passed": true
+    },
+    {
+      "name": "Artifacts are loaded only at service construction.",
+      "number": 27,
+      "passed": true
+    },
+    {
+      "name": "Runtime has no randomness.",
+      "number": 28,
+      "passed": true
+    },
+    {
+      "name": "Contracts, metadata, and behavior agree.",
+      "number": 29,
+      "passed": true
+    },
+    {
+      "name": "Final full suite passes with zero R9 lifecycle skips.",
+      "number": 30,
+      "passed": true
+    },
+    {
+      "name": "R10 was not started.",
+      "number": 31,
+      "passed": true
+    }
+  ],
+  "full_suite_evidence": {
+    "r9_lifecycle_skip_nodeids": []
+  },
+  "full_test_suite_summary": "........................................................................ [ 18%]\n........................................................................ [ 36%]\n........................................................................ [ 54%]\n........................................................................ [ 72%]\n........................................................................ [ 91%]\n...................................                                      [100%]\n============================== warnings summary ===============================\ntests/test_preprocessing_pipelines.py::test_track_a_uses_train_only_imputation_and_exact_original_missing_indicators\ntests/test_preprocessing_pipelines.py::test_track_a_is_deterministic_cloneable_and_ignores_unseen_categories\n  D:\\Cognivex\\.venv\\Lib\\site-packages\\sklearn\\preprocessing\\_encoders.py:262: UserWarning: Found unknown categories in columns [0] during transform. These unknown categories will be encoded as all zeros\n    warnings.warn(msg, UserWarning)\n\ntests/test_track_c_selection.py::test_selection_is_reproducible_with_fixed_seed_candidates\ntests/test_track_c_selection.py::test_selection_is_reproducible_with_fixed_seed_candidates\n  D:\\Cognivex\\.venv\\Lib\\site-packages\\sklearn\\svm\\_base.py:236: FutureWarning: The `probability` parameter was deprecated in 1.9 and will be removed in version 1.11. Use `CalibratedClassifierCV(SVC(), ensemble=False)` instead of `SVC(probability=True)`\n    warnings.warn(\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n395 passed, 4 warnings in 184.90s (0:03:04)\n",
+  "mode": "final",
+  "provisional": false,
+  "status": "PASS"
+}

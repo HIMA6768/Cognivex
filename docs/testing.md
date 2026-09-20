@@ -23,3 +23,5 @@ python -m pip check
 ```
 
 R7 tests cover the exact genomic-only 50/18/68 contract; canonical target eligibility and manifest ordering; shared R4D mutation semantics; candidate-specific train-only preprocessing; all four frozen classifier definitions; fixed-order sklearn metrics; validation-only Macro-F1 selection and tie handling; winner-only test access; deterministic cohort/prediction/probability digests; non-overwriting aggregate artifacts; read-only trusted reload; provenance evidence; and all 28 independent audit checks.
+
+R9 tests cover checksum-gated pre-load and post-load trust boundaries, independent per-track availability, exact transform-only R5/R6/R7 contracts, input validation/readiness isolation, output privacy, and R8 aggregate-only access. The audit lifecycle permits one explicitly marked pre-audit provenance skip during bootstrap; the final suite and final audit require zero R9 lifecycle skips.

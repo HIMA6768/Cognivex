@@ -2,6 +2,10 @@
 
 Cognivex is a Python/Streamlit research prototype for **Breast Cancer Prognosis & Subtype Classification**. The central future comparison is clinical-only survival prognosis versus clinical-plus-genomic prognosis, with molecular subtype classification and gene-level model insight as separate analytical tasks.
 
+## R9 status
+
+R9 adds a framework-independent, trusted-local analysis service over the frozen R5, R6, R7, and R8 artifacts. It verifies text contracts and checksums before trusted pickle deserialization, initializes each track independently, and exposes only in-memory R5/R6 log-relative-hazard scores and the R7 subtype/probability output. Requests, feature values, patient identifiers, predictions, and probabilities are never persisted. This is research software, not a clinical decision system.
+
 ## R8 status
 
 R8 adds a read-only prognostic genomic feature analysis of the frozen R6 Track B penalized Cox model. It excludes all 12 encoded clinical outputs and retains the complete ordered set of 50 expression plus 18 mutation-presence coefficients. Activity uses the frozen numerical rule `abs(beta) > 1e-6`; ranking uses descending absolute beta followed by frozen genomic order.

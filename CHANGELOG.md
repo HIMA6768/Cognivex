@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-09-20 — R9 trusted analysis orchestration
+
+- Added framework-independent result contracts, checksum-gated artifact registry, transform-only R5/R6/R7 adapters, independent per-track readiness, and a read-only R8 aggregate view.
+- Added an R9 audit lifecycle with provisional bootstrap evidence and final-only verification. No model fitting, refitting, tuning, Streamlit integration, patient-level persistence, or R10 presentation work was added.
+
 ## 2026-09-19 — R8 frozen-model prognostic genomic feature analysis
 
 - Added checksum-gated, read-only coefficient analysis of the frozen R6 Track B model with no fitting, tuning, model selection, patient-row access, or historical engineer pickle loading.
