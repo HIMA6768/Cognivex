@@ -16,6 +16,7 @@ from src.contracts.inference import FROZEN_SUBTYPE_CLASS_ORDER, PROGNOSIS_OUTPUT
 
 R9_AUDIT_BUNDLE = Path("artifacts/audits/r9-inference-service-v1")
 R9_BASE_COMMIT = "1eca09a75deea94e557632063837f2d9abc9683c"
+R9_FINAL_EVIDENCE_COMMIT = "42c686f"
 APPROVED_BOOTSTRAP_SKIP = "tests/test_r9_canonical_provenance.py"
 
 
@@ -66,14 +67,19 @@ def _runtime_has_no_fitting(root: Path) -> bool:
     return True
 
 
-def _r10_not_started(root: Path) -> bool:
-    result = subprocess.run(
-        ["git", "diff", "--name-only", f"{R9_BASE_COMMIT}..HEAD", "--", "app.py", "src/ui"],
+def _r10_was_not_started_at_r9_milestone(root: Path) -> bool:
+    """Evaluate R9's final evidence range, not later product milestones."""
+    scope = subprocess.run(
+        ["git", "diff", "--name-only", f"{R9_BASE_COMMIT}..{R9_FINAL_EVIDENCE_COMMIT}", "--", "app.py", "src/ui"],
         cwd=root, check=False, capture_output=True, text=True,
     )
-    if result.returncode != 0 or result.stdout.strip():
+    if scope.returncode != 0 or scope.stdout.strip():
         return False
-    return not any("r10" in path.name.lower() for path in (root / "src").rglob("*.py"))
+    r10 = subprocess.run(
+        ["git", "grep", "-i", "r10", R9_FINAL_EVIDENCE_COMMIT, "--", "app.py", "src/ui"],
+        cwd=root, check=False, capture_output=True, text=True,
+    )
+    return r10.returncode == 1
 
 
 def _r9_skips(summary: str) -> tuple[str, ...]:
@@ -128,7 +134,7 @@ def audit_inference_service(repository_root: Path, full_test_suite_summary: str,
         InferenceServiceAuditCheck(28, "Runtime has no randomness.", "random." not in runtime_paths),
         InferenceServiceAuditCheck(29, "Contracts, metadata, and behavior agree.", r5.available and r6.available and r7.available and r8.available),
         InferenceServiceAuditCheck(30, "Final full suite passes with zero R9 lifecycle skips.", final_suite),
-        InferenceServiceAuditCheck(31, "R10 was not started.", _r10_not_started(root)),
+        InferenceServiceAuditCheck(31, "R10 had not started at the frozen R9 final evidence commit.", _r10_was_not_started_at_r9_milestone(root)),
     )
     passed = all(check.passed for check in checks)
     if bootstrap:

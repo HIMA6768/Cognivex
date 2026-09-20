@@ -33,3 +33,10 @@ def test_bootstrap_accepts_pytest_windows_path_separator() -> None:
         bootstrap=True,
     )
     assert report.r9_lifecycle_skip_nodeids == ("tests/test_r9_canonical_provenance.py",)
+
+
+def test_check_thirty_one_scopes_r10_absence_to_frozen_r9_milestone() -> None:
+    from src.audit import inference_service as audit
+
+    assert (ROOT / "src/ui/analysis_service.py").is_file()
+    assert audit._r10_was_not_started_at_r9_milestone(ROOT) is True
