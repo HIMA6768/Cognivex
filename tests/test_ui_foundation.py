@@ -11,21 +11,23 @@ class _ThemeRecorder:
         self.calls.append(("markdown", body, unsafe_allow_html))
 
 
-class _SidebarRecorder:
-    def __init__(self, selected) -> None:
-        self.selected = selected
+class _NavigationRecorder:
+    def __init__(self) -> None:
+        self.sidebar = self
+        self.session_state: dict[str, object] = {}
         self.calls: list[dict[str, object]] = []
 
-    def radio(self, label, options, *, format_func, key) -> object:
+    def radio(self, label, options, *, index, format_func, key, on_change, args) -> object:
         self.calls.append(
             {
                 "label": label,
                 "options": tuple(options),
                 "labels": tuple(format_func(option) for option in options),
                 "key": key,
+                "index": index,
             }
         )
-        return self.selected
+        return options[index] if index is not None else None
 
 
 class _StreamlitRecorder:
@@ -42,26 +44,26 @@ class _StreamlitRecorder:
         self.calls.append(("caption", body))
 
 
-def test_navigation_preserves_the_approved_biomedical_order() -> None:
+def test_navigation_preserves_the_approved_oncomap_order() -> None:
     from src.ui.navigation import PAGE_ORDER, PAGE_SPECS, Page
 
     assert PAGE_ORDER == (
         Page.OVERVIEW,
-        Page.DATA_COHORT,
         Page.SURVIVAL_ANALYSIS,
-        Page.SUBTYPE_CLASSIFICATION,
-        Page.GENE_INSIGHTS,
         Page.MODEL_COMPARISON,
+        Page.GENE_INSIGHTS,
+        Page.DATA_COHORT,
         Page.METHODOLOGY_ABOUT,
+        Page.ABOUT,
     )
     assert [PAGE_SPECS[page].label for page in PAGE_ORDER] == [
         "Overview",
-        "Data / Cohort",
-        "Survival Analysis",
-        "Subtype Classification",
+        "Patient Analysis",
+        "Model Evaluation",
         "Gene Insights",
-        "Model Comparison",
-        "Methodology / About",
+        "Dataset",
+        "Methodology",
+        "About",
     ]
 
 
@@ -96,23 +98,38 @@ def test_apply_theme_injects_only_the_trusted_static_stylesheet(monkeypatch) -> 
     assert recorder.calls == [("markdown", f"<style>{theme.APP_CSS}</style>", True)]
 
 
-def test_navigation_uses_an_accessible_label_and_stable_widget_key(monkeypatch) -> None:
+def test_navigation_uses_accessible_group_labels_and_stable_widget_keys(monkeypatch) -> None:
     from src.ui import navigation
-    from src.ui.navigation import PAGE_ORDER, PAGE_SPECS, Page
+    from src.ui.navigation import Page
 
-    sidebar = _SidebarRecorder(Page.GENE_INSIGHTS)
-    monkeypatch.setattr(navigation.st, "sidebar", sidebar)
+    recorder = _NavigationRecorder()
+    monkeypatch.setattr(navigation, "st", recorder)
 
     selected = navigation.render_navigation()
 
-    assert selected is Page.GENE_INSIGHTS
-    assert sidebar.calls == [
+    assert selected is Page.OVERVIEW
+    assert recorder.calls == [
         {
-            "label": "Navigation",
-            "options": PAGE_ORDER,
-            "labels": tuple(PAGE_SPECS[page].label for page in PAGE_ORDER),
-            "key": "primary_navigation",
-        }
+            "label": "ONCOMAP",
+            "options": (Page.OVERVIEW,),
+            "labels": ("Overview",),
+            "key": "oncomap_navigation_oncomap",
+            "index": 0,
+        },
+        {
+            "label": "ANALYSIS",
+            "options": (Page.SURVIVAL_ANALYSIS, Page.MODEL_COMPARISON, Page.GENE_INSIGHTS),
+            "labels": ("Patient Analysis", "Model Evaluation", "Gene Insights"),
+            "key": "oncomap_navigation_analysis",
+            "index": None,
+        },
+        {
+            "label": "RESEARCH",
+            "options": (Page.DATA_COHORT, Page.METHODOLOGY_ABOUT, Page.ABOUT),
+            "labels": ("Dataset", "Methodology", "About"),
+            "key": "oncomap_navigation_research",
+            "index": None,
+        },
     ]
 
 

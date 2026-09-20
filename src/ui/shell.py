@@ -14,7 +14,6 @@ from .pages import (
     methodology_about,
     model_comparison,
     overview,
-    subtype_classification,
     survival_analysis,
 )
 from .theme import apply_theme
@@ -22,12 +21,12 @@ from .theme import apply_theme
 
 PAGE_RENDERERS: Mapping[Page, Callable[[], None]] = {
     Page.OVERVIEW: overview.render,
-    Page.DATA_COHORT: data_cohort.render,
     Page.SURVIVAL_ANALYSIS: survival_analysis.render,
-    Page.SUBTYPE_CLASSIFICATION: subtype_classification.render,
-    Page.GENE_INSIGHTS: gene_insights.render,
     Page.MODEL_COMPARISON: model_comparison.render,
+    Page.GENE_INSIGHTS: gene_insights.render,
+    Page.DATA_COHORT: data_cohort.render,
     Page.METHODOLOGY_ABOUT: methodology_about.render,
+    Page.ABOUT: methodology_about.render,
 }
 
 assert tuple(PAGE_RENDERERS) == PAGE_ORDER
@@ -45,9 +44,8 @@ def render_app() -> None:
     apply_theme()
     st.sidebar.markdown(
         '<div class="cv-sidebar-brand">'
-        '<span class="cv-sidebar-product-name">Breast Cancer Prognosis &amp; '
-        'Subtype Classification</span>'
-        '<p>Clinical and genomic research analytics</p>'
+        '<span class="cv-sidebar-product-name">OncoMap</span>'
+        '<p>Breast Cancer Prognosis &amp; Molecular Subtype Analysis</p>'
         '</div>',
         unsafe_allow_html=True,
     )

@@ -40,14 +40,10 @@ def _visible_text(app: AppTest) -> str:
     )
 
 
-EXPECTED_PAGES = [
-    "Overview",
-    "Data / Cohort",
-    "Survival Analysis",
-    "Subtype Classification",
-    "Gene Insights",
-    "Model Comparison",
-    "Methodology / About",
+EXPECTED_PAGE_GROUPS = [
+    ["Overview"],
+    ["Patient Analysis", "Model Evaluation", "Gene Insights"],
+    ["Dataset", "Methodology", "About"],
 ]
 
 DISCLAIMER = (
@@ -57,15 +53,15 @@ DISCLAIMER = (
 )
 
 
-def test_app_starts_with_biomedical_branding_and_approved_navigation() -> None:
+def test_app_starts_with_oncomap_branding_and_approved_navigation() -> None:
     app = _run_app()
 
     assert not app.exception
-    assert app.sidebar.radio[0].label == "Navigation"
-    assert app.sidebar.radio[0].options == EXPECTED_PAGES
+    assert [radio.label for radio in app.sidebar.radio] == ["ONCOMAP", "ANALYSIS", "RESEARCH"]
+    assert [radio.options for radio in app.sidebar.radio] == EXPECTED_PAGE_GROUPS
     text = _visible_text(app)
-    assert "Breast Cancer Prognosis & Subtype Classification" in text
-    assert "Clinical and genomic research analytics" in text
+    assert "OncoMap" in text
+    assert "Breast Cancer Prognosis & Molecular Subtype Analysis" in text
     assert "Research prototype" in text
     assert DISCLAIMER in text
 
@@ -221,5 +217,5 @@ def test_page_configuration_precedes_rendering_and_uses_biomedical_metadata() ->
     }
 
     assert calls.index(page_config_call) < calls.index(render_app_call)
-    assert values["page_title"] == "Breast Cancer Prognosis & Subtype Classification"
+    assert values["page_title"] == "OncoMap | Breast Cancer Research Analysis"
     assert values["initial_sidebar_state"] == "auto"
