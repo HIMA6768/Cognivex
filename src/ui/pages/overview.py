@@ -6,6 +6,7 @@ import streamlit as st
 
 from ..analysis_service import get_analysis_service
 from ..components.oncomap import (
+    render_brand_mark,
     render_metric_card,
     render_page_intro,
     render_status_badge,
@@ -15,14 +16,14 @@ from ..navigation import Page, navigate_to
 
 
 def render() -> None:
-    render_page_intro(
-        "OncoMap",
-        "Breast Cancer Prognosis & Molecular Subtype Analysis",
-    )
-    st.markdown(
-        "Combine clinical and genomic data to explore modeled survival, molecular subtype, and global genomic associations."
-    )
-    st.button("Analyze a Patient", type="primary", on_click=navigate_to, args=(Page.SURVIVAL_ANALYSIS,))
+    hero, decoration = st.columns((4, 1))
+    with hero:
+        render_page_intro("OncoMap", "Breast Cancer Prognosis & Molecular Subtype Analysis")
+        st.markdown("Combine clinical and genomic data to explore modeled survival, molecular subtype, and global genomic associations.")
+        st.caption("Research Prototype")
+        st.button("Analyze a Patient →", type="primary", on_click=navigate_to, args=(Page.SURVIVAL_ANALYSIS,))
+    with decoration:
+        render_brand_mark(decorative=True)
 
     cards = st.columns(4)
     for column, label, value, detail in zip(
@@ -42,14 +43,16 @@ def render() -> None:
     try:
         registry = get_analysis_service().registry
         statuses = (
-            ("Track A", registry.track_a.available),
-            ("Track B", registry.track_b.available),
-            ("Track C", registry.track_c.available),
-            ("R8 aggregate analysis", registry.r8.available),
+            ("Track A — Clinical Cox", registry.track_a.available),
+            ("Track B — Clinical + Genomic Cox", registry.track_b.available),
+            ("Track C — Molecular Subtype Classification", registry.track_c.available),
+            ("R8 — Global Genomic Associations", registry.r8.available),
         )
         columns = st.columns(4)
         for column, (label, ready) in zip(columns, statuses, strict=True):
             with column:
                 render_status_badge(label, ready=ready)
+                st.caption(f"{label} — {'READY' if ready else 'UNAVAILABLE'}")
     except Exception:
         st.warning("Model availability is temporarily unavailable. Patient analysis remains governed by safe R9 readiness states.")
+    st.caption("Research prototype only. Outputs are model-based research estimates, not clinical recommendations.")

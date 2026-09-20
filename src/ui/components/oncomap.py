@@ -47,3 +47,17 @@ def render_research_disclaimer() -> None:
         "Model-estimated survival probability from the frozen METABRIC Cox model. "
         "Research use only; not a clinically validated prognosis or treatment recommendation."
     )
+
+
+def render_brand_mark(*, decorative: bool = False) -> None:
+    """Render a package-owned inline DNA mark without external assets."""
+    size = "116" if decorative else "28"
+    aria = 'aria-hidden="true"' if decorative else 'aria-label="OncoMap DNA mark" role="img"'
+    st.markdown(
+        f'''<svg class="cv-dna-mark" width="{size}" height="{size}" viewBox="0 0 120 120" {aria} xmlns="http://www.w3.org/2000/svg">
+        <path d="M36 10c42 20 42 80 0 100M84 10c-42 20-42 80 0 100" fill="none" stroke="#0F9E9A" stroke-width="8" stroke-linecap="round"/>
+        <path d="M43 27h34M52 49h16M52 71h16M43 93h34" stroke="#2563EB" stroke-width="7" stroke-linecap="round"/>
+        <circle cx="60" cy="10" r="5" fill="#2563EB"/><circle cx="60" cy="110" r="5" fill="#0F9E9A"/>
+        </svg>''',
+        unsafe_allow_html=True,
+    )

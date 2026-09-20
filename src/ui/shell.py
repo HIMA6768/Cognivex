@@ -7,6 +7,7 @@ from collections.abc import Callable, Mapping
 import streamlit as st
 
 from .components.layout import render_shell_status
+from .components.oncomap import render_brand_mark
 from .navigation import PAGE_ORDER, Page, render_navigation
 from .pages import (
     data_cohort,
@@ -43,13 +44,14 @@ def render_app() -> None:
     """Render the persistent shell and the selected pending-data page."""
     apply_theme()
     st.sidebar.markdown(
-        '<div class="cv-sidebar-brand">'
+        '<div class="cv-sidebar-brand cv-sidebar-brand--with-mark">'
         '<span class="cv-sidebar-product-name">OncoMap</span>'
         '<p>Breast Cancer Prognosis &amp; Molecular Subtype Analysis</p>'
         '</div>',
         unsafe_allow_html=True,
     )
     with st.sidebar:
+        render_brand_mark()
         render_shell_status()
     selected_page = render_navigation()
 

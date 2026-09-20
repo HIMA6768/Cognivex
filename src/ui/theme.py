@@ -40,6 +40,23 @@ APP_CSS = """
     color: var(--cv-surface);
 }
 
+.cv-sidebar-brand--with-mark {
+    display: inline-block;
+    vertical-align: top;
+    max-width: calc(100% - 2.4rem);
+}
+
+[data-testid="stSidebar"] .cv-dna-mark {
+    display: inline-block;
+    vertical-align: top;
+    margin: 0.1rem 0 0 0.35rem;
+}
+
+.cv-dna-mark {
+    max-width: 100%;
+    height: auto;
+}
+
 .cv-sidebar-product-name {
     display: block;
     font-size: 1.3rem;
