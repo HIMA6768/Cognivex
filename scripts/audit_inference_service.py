@@ -4,6 +4,11 @@ from __future__ import annotations
 
 import argparse
 from pathlib import Path
+import sys
+
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 
 from src.audit.inference_service import verify_inference_service_audit, write_inference_service_audit
 
@@ -15,7 +20,7 @@ def main() -> int:
     parser.add_argument("--full-test-suite-summary-file", type=Path)
     parser.add_argument("--full-test-suite-passed", action="store_true")
     args = parser.parse_args()
-    root = Path(__file__).resolve().parents[1]
+    root = ROOT
     if args.verify:
         verify_inference_service_audit(root)
         print("PASS: final R9 audit evidence verifies")

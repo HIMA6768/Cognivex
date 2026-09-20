@@ -79,7 +79,7 @@ def _r10_not_started(root: Path) -> bool:
 def _r9_skips(summary: str) -> tuple[str, ...]:
     return tuple(
         APPROVED_BOOTSTRAP_SKIP for line in summary.splitlines()
-        if "SKIPPED" in line and APPROVED_BOOTSTRAP_SKIP in line
+        if "SKIPPED" in line and APPROVED_BOOTSTRAP_SKIP in line.replace("\\", "/")
     )
 
 

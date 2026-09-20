@@ -24,3 +24,12 @@ def test_bootstrap_audit_is_explicitly_provisional_and_blocked() -> None:
     assert report.provisional is True
     assert report.status == "BLOCKED"
     assert report.checks[29].passed is False
+
+
+def test_bootstrap_accepts_pytest_windows_path_separator() -> None:
+    report = audit_inference_service(
+        ROOT,
+        "249 passed, 1 skipped in 10.00s\nSKIPPED [1] tests\\test_r9_canonical_provenance.py: bootstrap",
+        bootstrap=True,
+    )
+    assert report.r9_lifecycle_skip_nodeids == ("tests/test_r9_canonical_provenance.py",)
