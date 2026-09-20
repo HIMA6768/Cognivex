@@ -164,7 +164,7 @@ AnalysisRequest
 
 AnalysisService.get_prognostic_feature_analysis()
   -> verified R8 aggregate reader
-  -> PrognosticFeatureAnalysisView
+  -> PrognosticFeatureAnalysisOutcome
 ```
 
 Service construction verifies and trusted-loads canonical artifacts once. The
@@ -250,8 +250,9 @@ rejected.
 ### Service-construction failure isolation
 
 `AnalysisService.from_canonical_artifacts(repository_root)` first validates
-the repository root and canonical runtime configuration. That is the only
-class of failure that prevents service construction entirely.
+the repository root, canonical runtime configuration, and global input
+namespace. Those are the only classes of failure that prevent service
+construction entirely.
 
 After the repository-level gate, R5, R6, R7, and R8 initialize independently:
 
@@ -268,7 +269,8 @@ The service therefore still constructs if one or more track artifacts are
 unavailable. During `analyze()`, an attempted unavailable R5/R6/R7 track
 returns `ARTIFACT_UNAVAILABLE` without a load or inference retry; independently
 verified ready tracks continue normally. If R8 is unavailable,
-`get_prognostic_feature_analysis()` alone returns its safe unavailable error;
+`get_prognostic_feature_analysis()` alone returns its typed safe unavailable
+outcome;
 patient-track analysis remains usable. Artifact initialization happens only at
 service construction.
 
@@ -298,10 +300,30 @@ class AnalysisTrack(StrEnum):
     TRACK_C = "track_c"
 ```
 
-The global allowed field union is derived at service construction from the
-verified R5 raw clinical contract and verified R6/R7 raw contracts. It must
-contain exactly 75 distinct fields. The service does not dynamically discover
-features from dataframe dtypes, prefixes, or caller keys.
+The canonical global input namespace is established during service
+construction, after pre-load contract verification and before `analyze()` is
+usable. It must contain exactly 75 distinct fields and has two accepted proof
+routes:
+
+- **Route A:** a successfully pre-load-verified R6 raw contract establishes
+  the exact 75 ordered fields directly.
+- **Route B:** a successfully pre-load-verified R5 seven-clinical-field
+  contract plus a successfully pre-load-verified R7 68-genomic-field contract
+  establish the same 75-field union.
+
+When both proof routes are available, their ordered union must agree exactly.
+Once established, post-load adapter failure cannot alter this namespace: a
+post-load R5 failure with verified R6, a post-load R6 failure with verified
+R5/R7, or a post-load R7 failure with verified R6 still permits service
+construction with the original 75 fields.
+
+If neither route can establish the canonical namespace, including when both
+genomic persisted contracts fail their pre-load contract gates, service
+construction fails with a repository-level
+`GLOBAL_INPUT_CONTRACT_UNAVAILABLE` failure. This is not an individual-track
+inference failure because the service cannot safely determine which request
+keys are valid globally. The service does not dynamically discover features
+from dataframe dtypes, prefixes, or caller keys.
 
 Keys are exact, case-sensitive frozen names; R9 applies no key normalization.
 An unknown key is a global `UNKNOWN_FIELD` request error and no requested
@@ -441,6 +463,16 @@ class RequestError:
     fields: tuple[str, ...] = ()
 
 @dataclass(frozen=True, slots=True)
+class AggregateAnalysisError:
+    code: str
+    message: str
+
+@dataclass(frozen=True, slots=True)
+class PrognosticFeatureAnalysisOutcome:
+    view: PrognosticFeatureAnalysisView | None
+    error: AggregateAnalysisError | None
+
+@dataclass(frozen=True, slots=True)
 class TrackOutcome:
     track: AnalysisTrack
     state: TrackReadinessState
@@ -469,6 +501,13 @@ deserialization exception text.
   `error` must be populated;
 - contradictory state/result/error combinations raise `ValueError` during
   contract construction.
+
+`PrognosticFeatureAnalysisOutcome` enforces parallel aggregate-access
+invariants in `__post_init__`:
+
+- when R8 is available, `view` is populated and `error` is `None`;
+- when R8 is unavailable, `view` is `None` and `error` is populated;
+- contradictory view/error combinations raise `ValueError`.
 
 `ResultLineage.contract_artifact_sha256` is the checksum for the persisted
 contract source: R5 `experiment.json`, R6 `feature_contract.json`, and R7
@@ -515,13 +554,28 @@ persisted R7 pipeline is self-contained. It does not use clinical fields.
 
 ## 16. R8 Aggregate Analysis Access
 
-`AnalysisService.get_prognostic_feature_analysis()` returns a separate
-`PrognosticFeatureAnalysisView` containing:
+The public aggregate-access method is exactly:
+
+```python
+def get_prognostic_feature_analysis(
+    self,
+) -> PrognosticFeatureAnalysisOutcome: ...
+```
+
+When R8 is verified, the returned outcome contains a separate
+`PrognosticFeatureAnalysisView` with `error=None`. The view contains:
 
 - R8 analysis ID, schema version, source R6 lineage, and coefficient policy;
 - aggregate summary counts;
 - all 68 ordered `PrognosticFeatureEffectView` records; and
 - neutral aggregate interpretation text.
+
+When R8 initialization failed, the returned outcome contains `view=None` and
+one safe `AggregateAnalysisError` with the stable code
+`ARTIFACT_UNAVAILABLE`. It does not retry loading and never exposes paths,
+tracebacks, checksum values, deserialization details, or a normal-flow
+exception to a future R10 caller. R8 unavailability never prevents
+independently valid R5/R6/R7 inference.
 
 It takes no patient features. The initial interface has no `active_only`
 filter; R10 can filter the returned in-memory records for display without
@@ -568,6 +622,10 @@ Focused tests must cover:
 - canonical-path-only construction, checksum mismatch isolation, historical
   engineer-pickle rejection, pre-load loader-spy fail-fast behavior, artifact
   load-once behavior, and no fitting;
+- R6-alone and R5-plus-R7 proof routes establishing the same exact 75-field
+  union when healthy; post-load adapter failure leaving that established union
+  unchanged; failure of both proof routes blocking construction; and no
+  dtype/prefix/caller-key feature discovery;
 - corrupt R5 preserving independently verified R6/R7 service availability;
   corrupt R6 preserving independently verified R5/R7 availability; corrupt
   R7 preserving independently verified R5/R6 availability; and corrupt R8
@@ -589,6 +647,9 @@ Focused tests must cover:
 - track failure isolation and artifact failure closed behavior;
 - no input echo, no payload-bearing error, no patient analysis file write;
 - R8 full 68-effect read-only access without patient input;
+- healthy and unavailable `PrognosticFeatureAnalysisOutcome` values, their
+  view/error invariants, stable unavailable code, and no normal-flow exception
+  or retry for an unavailable R8 reader;
 - no Streamlit/FastAPI imports; and
 - repeated valid input producing identical response contracts.
 
@@ -604,7 +665,7 @@ be explicit PASS/FAIL; one failure blocks the R9 gate.
 5. Only canonical repository artifact paths are accepted.
 6. Historical engineer pickles are unused.
 7. R9 contains no fitting/training imports or `fit`/`fit_transform` calls.
-8. The global allowed union is derived from frozen contracts.
+8. The exact 75-field global namespace is derived through a frozen-contract proof route.
 9. R5 required fields are exactly the frozen seven clinical fields.
 10. R6 required fields are exactly the frozen 75 fields.
 11. R7 required fields are exactly the frozen 68 fields.
@@ -621,7 +682,7 @@ be explicit PASS/FAIL; one failure blocks the R9 gate.
 22. Safe track failure isolation is correct.
 23. Responses and errors do not echo feature values.
 24. No patient-level request/result data is persisted.
-25. R8 is global, aggregate-only, and read-only.
+25. R8 is global, aggregate-only, read-only, and returns a typed unavailable outcome.
 26. Runtime modules are framework independent.
 27. A service instance loads each required artifact once.
 28. Repeated frozen inference is deterministic.
