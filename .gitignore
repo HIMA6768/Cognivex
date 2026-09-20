@@ -29,3 +29,10 @@ artifacts/models/**/pipeline.pkl
 
 # R6-P0 imported engineer model artifacts are reference-only and untrusted
 cognivex_ml/models/*.pkl
+
+# Local AI handoff copies are reference-only. The selected 68-feature contract
+# below remains tracked because Track B/C load it through a repository-relative path.
+/ai_handoff_data/*
+!/ai_handoff_data/v1/
+/ai_handoff_data/v1/*
+!/ai_handoff_data/v1/selected_features.txt
