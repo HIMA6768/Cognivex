@@ -49,7 +49,7 @@ def test_patient_analysis_demo_reaches_result_first_survival_and_subtype_output(
 
     assert not app.exception
     assert "Step 1: Clinical details" in str(app.subheader[0].value)
-    next(button for button in app.button if button.label.startswith("Load synthetic demo profile")).click()
+    next(button for button in app.button if button.label.startswith("Load full synthetic demo")).click()
     app.run(timeout=30)
     next(button for button in app.button if button.label == "Save and continue").click()
     app.run(timeout=30)
@@ -71,3 +71,126 @@ def test_patient_analysis_demo_reaches_result_first_survival_and_subtype_output(
     assert "5 years" in visible_markdown.lower()
     assert "Predicted subtype" in visible_markdown
     assert any(expander.label == "Technical details" for expander in app.expander)
+
+
+def _patient_analysis_app() -> AppTest:
+    app = AppTest.from_file(ROOT / "app.py")
+    app.run(timeout=30)
+    app.sidebar.radio[1].set_value("Patient Analysis")
+    app.run(timeout=30)
+    return app
+
+
+def _button(app: AppTest, label: str):
+    return next(button for button in app.button if button.label == label)
+
+
+def _input(app: AppTest, label: str):
+    return next(widget for widget in (*app.number_input, *app.text_input) if widget.label == label)
+
+
+def _complete_clinical_values(app: AppTest) -> None:
+    _input(app, "Age at diagnosis (years)").set_value(55.0)
+    _input(app, "Tumor size (cm)").set_value(2.4)
+    _input(app, "Positive lymph nodes").set_value(1.0)
+    next(widget for widget in app.selectbox if widget.label == "Tumor stage").set_value("2")
+    next(widget for widget in app.selectbox if widget.label == "ER status").set_value("Positive")
+    next(widget for widget in app.selectbox if widget.label == "PR status").set_value("Positive")
+    next(widget for widget in app.selectbox if widget.label == "HER2 status").set_value("Negative")
+    app.run(timeout=30)
+
+
+def _advance_demo_to_results(app: AppTest) -> None:
+    _button(app, "Load full synthetic demo — clinical + genomic (not patient data)").click()
+    app.run(timeout=30)
+    _button(app, "Save and continue").click()
+    app.run(timeout=30)
+    _button(app, "Save and continue").click()
+    app.run(timeout=30)
+    _button(app, "Continue to run").click()
+    app.run(timeout=30)
+    _button(app, "Run analysis").click()
+    app.run(timeout=30)
+
+
+def test_fresh_session_keeps_genomic_fields_absent_and_only_clinical_track_ready() -> None:
+    app = _patient_analysis_app()
+    _complete_clinical_values(app)
+    _button(app, "Save and continue").click()
+    app.run(timeout=30)
+
+    assert all(widget.value is None for widget in app.number_input)
+    assert all(widget.value == "" for widget in app.text_input)
+    _button(app, "Save and continue").click()
+    app.run(timeout=30)
+    metrics = {metric.label: metric.value for metric in app.metric}
+    assert metrics["Clinical fields"] == "7/7"
+    assert metrics["Expression fields"] == "0/50"
+    assert metrics["Mutation fields"] == "0/18"
+    _button(app, "Continue to run").click()
+    app.run(timeout=30)
+    _button(app, "Run analysis").click()
+    app.run(timeout=30)
+    assert any("Primary result: Clinical-only prognosis" in str(item.value) for item in app.caption)
+    assert not any(metric.label == "Predicted subtype" for metric in app.metric)
+
+
+def test_loading_demo_reflects_every_genomic_value_in_visible_widgets() -> None:
+    app = _patient_analysis_app()
+    _button(app, "Load full synthetic demo — clinical + genomic (not patient data)").click()
+    app.run(timeout=30)
+    _button(app, "Save and continue").click()
+    app.run(timeout=30)
+
+    assert all(widget.value == 0.0 for widget in app.number_input)
+    assert all(widget.value == "0" for widget in app.text_input)
+    assert any(button.label == "Load synthetic genomic demo" for button in app.button)
+    assert any(button.label == "Clear genomic data" for button in app.button)
+    _button(app, "Save and continue").click()
+    app.run(timeout=30)
+    metrics = {metric.label: metric.value for metric in app.metric}
+    assert metrics["Expression fields"] == "50/50"
+    assert metrics["Mutation fields"] == "18/18"
+
+
+def test_clearing_visible_demo_genomic_values_removes_them_from_review() -> None:
+    app = _patient_analysis_app()
+    _button(app, "Load full synthetic demo — clinical + genomic (not patient data)").click()
+    app.run(timeout=30)
+    _button(app, "Save and continue").click()
+    app.run(timeout=30)
+    app.number_input[0].set_value(None)
+    app.text_input[0].set_value("")
+    app.run(timeout=30)
+    _button(app, "Save and continue").click()
+    app.run(timeout=30)
+
+    metrics = {metric.label: metric.value for metric in app.metric}
+    assert metrics["Expression fields"] == "49/50"
+    assert metrics["Mutation fields"] == "17/18"
+
+
+def test_edit_inputs_preserves_current_values_and_invalidates_result() -> None:
+    app = _patient_analysis_app()
+    _advance_demo_to_results(app)
+    assert any(button.label == "← Edit inputs" for button in app.button)
+
+    _button(app, "← Edit inputs").click()
+    app.run(timeout=30)
+
+    assert "Step 1: Clinical details" in str(app.subheader[0].value)
+    assert _input(app, "Age at diagnosis (years)").value == 55.0
+    assert "Step 5: Results" not in "\n".join(str(item.value) for item in app.subheader)
+
+
+def test_start_new_analysis_clears_patient_values_and_previous_result() -> None:
+    app = _patient_analysis_app()
+    _advance_demo_to_results(app)
+    assert any(button.label == "Start new analysis" for button in app.button)
+
+    _button(app, "Start new analysis").click()
+    app.run(timeout=30)
+
+    assert "Step 1: Clinical details" in str(app.subheader[0].value)
+    assert _input(app, "Age at diagnosis (years)").value is None
+    assert "Step 5: Results" not in "\n".join(str(item.value) for item in app.subheader)

@@ -6,7 +6,11 @@ from src.ui.analysis_service import get_analysis_service
 import streamlit as st
 
 from src.ui.components.oncomap import render_page_intro
-from src.ui.components.patient_analysis import render_patient_analysis
+from src.ui.components.patient_analysis import (
+    edit_patient_inputs,
+    render_patient_analysis,
+    start_new_patient_analysis,
+)
 from src.ui.components.results import render_patient_results
 
 
@@ -18,6 +22,10 @@ def render() -> None:
         st.error("ARTIFACT_UNAVAILABLE: Canonical analysis service is unavailable.")
         return
     if "oncomap_patient_response" in st.session_state and st.session_state.get("oncomap_patient_stage") == 5:
-        render_patient_results(st.session_state["oncomap_patient_response"])
+        render_patient_results(
+            st.session_state["oncomap_patient_response"],
+            on_edit_inputs=edit_patient_inputs,
+            on_start_new=start_new_patient_analysis,
+        )
     else:
         render_patient_analysis(service)

@@ -56,11 +56,44 @@ def _set_stage(stage: int) -> None:
     st.session_state[_STAGE_KEY] = stage
 
 
-def _load_demo(profile: Mapping[str, str | float]) -> None:
-    for field, value in profile.items():
-        st.session_state[_input_key(field)] = value
-    st.session_state[_DRAFT_KEY] = dict(profile)
+def _invalidate_response() -> None:
+    """Discard an in-memory result whenever the transient input changes."""
     st.session_state.pop(_RESPONSE_KEY, None)
+
+
+def _load_demo(profile: Mapping[str, str | float]) -> None:
+    st.session_state[_DRAFT_KEY] = dict(profile)
+    _invalidate_response()
+    _set_stage(1)
+
+
+def _load_genomic_demo(profile: Mapping[str, str | float], genomic_fields: tuple[str, ...]) -> None:
+    draft = dict(st.session_state.get(_DRAFT_KEY, {}))
+    draft.update({field: profile[field] for field in genomic_fields})
+    st.session_state[_DRAFT_KEY] = draft
+    _invalidate_response()
+
+
+def _clear_genomic_data(genomic_fields: tuple[str, ...]) -> None:
+    draft = dict(st.session_state.get(_DRAFT_KEY, {}))
+    for field in genomic_fields:
+        draft.pop(field, None)
+        st.session_state.pop(_input_key(field), None)
+    st.session_state[_DRAFT_KEY] = draft
+    _invalidate_response()
+
+
+def edit_patient_inputs() -> None:
+    """Return to clinical inputs with the canonical transient values preserved."""
+    _invalidate_response()
+    _set_stage(1)
+
+
+def start_new_patient_analysis() -> None:
+    """Clear all transient patient state without persisting a result history."""
+    for key in tuple(st.session_state):
+        if key.startswith(_INPUT_PREFIX) or key in {_DRAFT_KEY, _RESPONSE_KEY, _STAGE_KEY}:
+            st.session_state.pop(key, None)
     _set_stage(1)
 
 
@@ -83,19 +116,40 @@ def _provided_value(field: str) -> str | float | None:
 
 
 def collect_patient_values(fields: tuple[str, ...]) -> dict[str, str | float | None]:
-    """Collect only transient widget values that the user actually supplied."""
+    """Read only the canonical draft, never stale hidden widget state."""
+    draft = st.session_state.get(_DRAFT_KEY, {})
+    return {field: draft[field] for field in fields if field in draft and draft[field] is not None}
+
+
+def _snapshot_visible_fields(fields: tuple[str, ...]) -> None:
     draft = dict(st.session_state.get(_DRAFT_KEY, {}))
     for field in fields:
-        if (value := _provided_value(field)) is not None:
+        if (value := _provided_value(field)) is None:
+            draft.pop(field, None)
+        else:
             draft[field] = value
-    return {field: draft[field] for field in fields if field in draft and draft[field] is not None}
+    st.session_state[_DRAFT_KEY] = draft
+
+
+def _sync_field_to_draft(field: str) -> None:
+    _snapshot_visible_fields((field,))
+    _invalidate_response()
+
+
+def _hydrate_visible_fields(fields: tuple[str, ...]) -> None:
+    """Populate newly rendered widgets from the single canonical draft."""
+    draft = st.session_state.get(_DRAFT_KEY, {})
+    for field in fields:
+        key = _input_key(field)
+        if field in draft:
+            st.session_state[key] = draft[field]
+        else:
+            st.session_state.pop(key, None)
 
 
 def _save_and_advance(fields: tuple[str, ...], stage: int) -> None:
     """Snapshot transient widget state before Streamlit removes hidden step widgets."""
-    draft = dict(st.session_state.get(_DRAFT_KEY, {}))
-    draft.update(collect_patient_values(fields))
-    st.session_state[_DRAFT_KEY] = draft
+    _snapshot_visible_fields(fields)
     _set_stage(stage)
 
 
@@ -109,31 +163,33 @@ def _clinical_input(clinical_fields: tuple[str, ...]) -> None:
         "pr_status": "PR status",
         "her2_status": "HER2 status",
     }
+    _hydrate_visible_fields(clinical_fields)
     left, right = st.columns(2)
     for index, field in enumerate(clinical_fields):
         with (left if index % 2 == 0 else right):
             label = labels[field]
             if field in _CLINICAL_NUMERIC:
-                st.number_input(label, value=None, step=0.1, key=_input_key(field))
+                st.number_input(label, value=None, step=0.1, key=_input_key(field), on_change=_sync_field_to_draft, args=(field,))
             elif field == "tumor_stage":
-                st.selectbox(label, (None, "1", "2", "3", "4", "Unknown"), key=_input_key(field))
+                st.selectbox(label, (None, "1", "2", "3", "4", "Unknown"), key=_input_key(field), on_change=_sync_field_to_draft, args=(field,))
             else:
-                st.selectbox(label, (None, "Negative", "Positive", "Unknown"), key=_input_key(field))
+                st.selectbox(label, (None, "Negative", "Positive", "Unknown"), key=_input_key(field), on_change=_sync_field_to_draft, args=(field,))
 
 
 def _genomic_input(expression_fields: tuple[str, ...], mutation_fields: tuple[str, ...]) -> None:
     st.caption("Advanced profile: enter only values you have. R9 reports readiness for incomplete input without the UI deriving any model features.")
+    _hydrate_visible_fields(expression_fields + mutation_fields)
     expression_tab, mutation_tab = st.tabs(("Gene expression (50)", "Mutation annotations (18)"))
     with expression_tab:
         columns = st.columns(2)
         for index, field in enumerate(expression_fields):
             with columns[index % 2]:
-                st.number_input(field, value=None, step=0.01, format="%.4f", key=_input_key(field))
+                st.number_input(field, value=None, step=0.01, format="%.4f", key=_input_key(field), on_change=_sync_field_to_draft, args=(field,))
     with mutation_tab:
         columns = st.columns(2)
         for index, field in enumerate(mutation_fields):
             with columns[index % 2]:
-                st.text_input(field, key=_input_key(field), placeholder="0 or mutation annotation")
+                st.text_input(field, key=_input_key(field), placeholder="0 or mutation annotation", on_change=_sync_field_to_draft, args=(field,))
 
 
 def render_patient_analysis(service) -> None:
@@ -145,17 +201,17 @@ def render_patient_analysis(service) -> None:
         st.error("ARTIFACT_UNAVAILABLE: Frozen input contracts are unavailable.")
         return
     all_fields = clinical_fields + genomic_fields
+    demo_profile = synthetic_demo_profile(clinical_fields, expression_fields, mutation_fields)
     stage = int(st.session_state.get(_STAGE_KEY, 1))
     stage = min(max(stage, 1), 5)
     st.session_state[_STAGE_KEY] = stage
     render_patient_steps(stage)
-    st.button(
-        "Load synthetic demo profile — not patient data",
-        on_click=_load_demo,
-        args=(synthetic_demo_profile(clinical_fields, expression_fields, mutation_fields),),
-    )
-
     if stage == 1:
+        st.button(
+            "Load full synthetic demo — clinical + genomic (not patient data)",
+            on_click=_load_demo,
+            args=(demo_profile,),
+        )
         st.subheader("Step 1: Clinical details")
         st.caption("These seven inputs support the prognosis models. Fields left blank remain partial input for R9 readiness handling.")
         _clinical_input(clinical_fields)
@@ -163,6 +219,9 @@ def render_patient_analysis(service) -> None:
         return
     if stage == 2:
         st.subheader("Step 2: Genomic profile")
+        demo, clear = st.columns(2)
+        demo.button("Load synthetic genomic demo", on_click=_load_genomic_demo, args=(demo_profile, genomic_fields))
+        clear.button("Clear genomic data", on_click=_clear_genomic_data, args=(genomic_fields,))
         _genomic_input(expression_fields, mutation_fields)
         previous, next_step = st.columns(2)
         previous.button("Back", on_click=_set_stage, args=(1,))

@@ -84,9 +84,12 @@ def _render_subtype(result: SubtypeClassificationResult) -> None:
     st.caption("Subtype probabilities are displayed in the frozen six-class R9 order.")
 
 
-def render_patient_results(response: AnalysisResponse) -> None:
+def render_patient_results(response: AnalysisResponse, *, on_edit_inputs, on_start_new) -> None:
     """Render only current in-memory R9 response data; never persist a result history."""
     st.subheader("Step 5: Results")
+    edit, restart = st.columns(2)
+    edit.button("← Edit inputs", on_click=on_edit_inputs)
+    restart.button("Start new analysis", on_click=on_start_new)
     for error in response.request_errors:
         st.error(f"{error.code}: {error.message}")
     track_a = _outcome_by_track(response, AnalysisTrack.TRACK_A)
