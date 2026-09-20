@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-09-20 — R10-A functional Streamlit integration
+
+- Connected the basic Streamlit Survival Analysis, Subtype Classification, and Gene Insights pages to the frozen R9 public service through a repository-relative cached accessor.
+- Added typed readiness, safe error, intended output, and aggregate-only R8 rendering. No model contract, artifact, inference behavior, persistence, visual redesign, R11, or R12 work was added.
+
 ## 2026-09-20 — R9 trusted analysis orchestration
 
 - Added framework-independent result contracts, checksum-gated artifact registry, transform-only R5/R6/R7 adapters, independent per-track readiness, and a read-only R8 aggregate view.

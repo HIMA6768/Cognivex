@@ -1,5 +1,9 @@
 # Architecture
 
+## Current R10-A state
+
+The R10-A Streamlit layer is intentionally thin. `src.ui.analysis_service.get_analysis_service()` caches repository-relative construction of R9's `AnalysisService`; pages submit typed `AnalysisRequest` values through `submit_track_request()` and render only typed R9 outcomes. UI modules do not import model adapters, preprocessors, artifact loaders, or pickle handling. Gene Insights calls the separate R9 aggregate getter and renders all 68 global R8 effects without a patient-specific input or attribution path.
+
 ## Current R9 state
 
 `src.artifacts.inference_registry` is the R9 trust boundary: canonical repository-relative R5/R6/R7/R8 bundles have their textual contracts and checksum manifests verified before any trusted-local pickle is deserialized. `src.services.analysis.AnalysisService` initializes model tracks independently, so one unavailable bundle cannot block other verified tracks. Its adapters only call persisted `transform`, `predict_risk`, `predict`, and `predict_proba`; no R9 module fits, retrains, or persists patient-level payloads. R5/R6 return only log partial hazard scores; R7 returns a frozen six-class subtype and normalized six-class probability tuple; R8 remains aggregate-only.

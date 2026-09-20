@@ -14,8 +14,11 @@ def test_ui_service_accessor_caches_one_repository_relative_r9_construction(monk
         return sentinel
 
     analysis_service.get_analysis_service.clear()
-    monkeypatch.setattr(analysis_service.AnalysisService, "from_canonical_artifacts", construct)
+    try:
+        monkeypatch.setattr(analysis_service.AnalysisService, "from_canonical_artifacts", construct)
 
-    assert analysis_service.get_analysis_service() is sentinel
-    assert analysis_service.get_analysis_service() is sentinel
-    assert calls == [Path(__file__).resolve().parents[1]]
+        assert analysis_service.get_analysis_service() is sentinel
+        assert analysis_service.get_analysis_service() is sentinel
+        assert calls == [Path(__file__).resolve().parents[1]]
+    finally:
+        analysis_service.get_analysis_service.clear()
