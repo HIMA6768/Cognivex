@@ -40,6 +40,14 @@ def _visible_text(app: AppTest) -> str:
     )
 
 
+def _navigate(app: AppTest, destination: str) -> None:
+    group_index = 0 if destination == "Overview" else 1 if destination in {
+        "Patient Analysis", "Model Evaluation", "Gene Insights"
+    } else 2
+    app.sidebar.radio[group_index].set_value(destination)
+    app.run(timeout=APP_TEST_TIMEOUT_SECONDS)
+
+
 EXPECTED_PAGE_GROUPS = [
     ["Overview"],
     ["Patient Analysis", "Model Evaluation", "Gene Insights"],
@@ -66,19 +74,19 @@ def test_app_starts_with_oncomap_branding_and_approved_navigation() -> None:
     assert DISCLAIMER in text
 
 
-def test_overview_contains_no_dataset_uploader_metrics_or_patient_results() -> None:
+def test_overview_contains_no_dataset_uploader_or_patient_results() -> None:
     app = _run_app()
 
     assert not app.file_uploader
     assert not app.metric
-    assert "Canonical cohort quality is available" in _visible_text(app)
+    assert "OncoMap" in _visible_text(app)
+    assert any(button.label == "Analyze a Patient" for button in app.button)
 
 
 def test_data_cohort_page_shows_validated_aggregates_without_patient_rows() -> None:
     """Replacing aggregate rendering with source rows or an unvalidated state must fail this test."""
     app = _run_app()
-    app.sidebar.radio[0].set_value("Data / Cohort")
-    app.run(timeout=APP_TEST_TIMEOUT_SECONDS)
+    _navigate(app, "Dataset")
 
     text = _visible_text(app)
     assert not app.exception
@@ -92,8 +100,7 @@ def test_data_cohort_page_shows_validated_aggregates_without_patient_rows() -> N
 def test_data_cohort_page_shows_r3_quality_aggregates_without_patient_rows() -> None:
     """Removing R3 readiness context or exposing source rows would break the Cohort boundary."""
     app = _run_app()
-    app.sidebar.radio[0].set_value("Data / Cohort")
-    app.run(timeout=APP_TEST_TIMEOUT_SECONDS)
+    _navigate(app, "Dataset")
 
     text = _visible_text(app)
     assert not app.exception
@@ -107,8 +114,7 @@ def test_data_cohort_page_shows_r3_quality_aggregates_without_patient_rows() -> 
 def test_data_cohort_page_separates_r3_quality_warnings_from_r4_preprocessing_readiness() -> None:
     """Conflating canonical limitations with R4 readiness would mislead research users."""
     app = _run_app()
-    app.sidebar.radio[0].set_value("Data / Cohort")
-    app.run(timeout=APP_TEST_TIMEOUT_SECONDS)
+    _navigate(app, "Dataset")
 
     text = _visible_text(app)
     metrics = {metric.label: metric.value for metric in app.metric}
@@ -140,48 +146,36 @@ def test_data_cohort_page_separates_r3_quality_warnings_from_r4_preprocessing_re
     assert "patient_id" not in text.lower()
 
 
-def test_each_page_has_an_honest_pending_state_and_persistent_disclaimer() -> None:
+def test_each_oncomap_page_has_research_context_and_persistent_disclaimer() -> None:
     app = _run_app()
     expected_copy = {
-        "Overview": "Canonical cohort quality is available",
-        "Data / Cohort": "Validated cohort",
-        "Survival Analysis": "Track A clinical input",
-        "Subtype Classification": "Track C genomic input",
-        "Gene Insights": "Global R8 prognostic feature analysis",
-        "Model Comparison": "Evaluation pending model handoff",
-        "Methodology / About": "Clinical-only versus clinical-plus-genomic prognosis",
+        "Overview": "Analysis workflow",
+        "Patient Analysis": "Enter clinical details",
+        "Model Evaluation": "Frozen aggregate evaluation evidence",
+        "Gene Insights": "Global model-associated coefficients",
+        "Dataset": "Validated cohort",
+        "Methodology": "Analysis pipeline",
+        "About": "Research prototype",
     }
 
-    for destination, pending_copy in expected_copy.items():
-        app.sidebar.radio[0].set_value(destination)
-        app.run(timeout=APP_TEST_TIMEOUT_SECONDS)
+    for destination, expected in expected_copy.items():
+        _navigate(app, destination)
 
         text = _visible_text(app)
         assert not app.exception
-        assert pending_copy in text
+        assert expected in text
         assert DISCLAIMER in text
 
 
-def test_subtype_page_uses_the_frozen_r9_taxonomy() -> None:
-    app = _run_app()
-    app.sidebar.radio[0].set_value("Subtype Classification")
-    app.run(timeout=APP_TEST_TIMEOUT_SECONDS)
-
-    text = _visible_text(app)
-    assert "frozen six-class R9 subtype classifier" in text
-    assert "Basal" not in text  # Classes appear only in R9 output after a request, not as invented UI results.
-
-
-def test_model_pages_expose_r9_functional_input_surfaces_without_an_exception() -> None:
+def test_analysis_and_aggregate_pages_expose_r9_functional_surfaces_without_an_exception() -> None:
     app = _run_app()
     expectations = {
-        "Survival Analysis": "Track A clinical input",
-        "Subtype Classification": "Track C genomic input",
-        "Gene Insights": "Global R8 prognostic feature analysis",
+        "Patient Analysis": "Step 1: Clinical details",
+        "Gene Insights": "Strongest model-associated features",
+        "Model Evaluation": "Prognosis evaluation",
     }
     for destination, expected in expectations.items():
-        app.sidebar.radio[0].set_value(destination)
-        app.run(timeout=APP_TEST_TIMEOUT_SECONDS)
+        _navigate(app, destination)
         assert not app.exception
         assert expected in _visible_text(app)
 
