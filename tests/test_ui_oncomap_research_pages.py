@@ -38,7 +38,9 @@ def test_overview_explains_system_facts_workflow_and_patient_cta() -> None:
     assert "2" in text
     assert "6" in text
     assert "Clinical + Genomic Data" in text
-    assert any(button.label == "Analyze a Patient" for button in app.button)
+    assert "Research Prototype" in text
+    assert "Clinical Cox" in text
+    assert any(button.label == "Analyze a Patient →" for button in app.button)
 
 
 def test_model_evaluation_and_gene_insights_use_frozen_aggregate_views() -> None:
@@ -50,6 +52,8 @@ def test_model_evaluation_and_gene_insights_use_frozen_aggregate_views() -> None
     assert not app.exception
     assert "0.651" in text
     assert "0.641" in text
+    assert "0.625" in text
+    assert "Test difference" in text
     assert "Overall evidence is mixed" in text
     assert "Test Macro-F1" in text
 
@@ -64,6 +68,17 @@ def test_model_evaluation_and_gene_insights_use_frozen_aggregate_views() -> None
     assert "not causal findings" in text
 
 
+def test_chart_helpers_use_grouped_metrics_and_display_safe_probability_formatting(monkeypatch) -> None:
+    from src.ui.components import charts
+
+    calls: list[tuple[object, dict[str, object]]] = []
+    monkeypatch.setattr(charts.st, "bar_chart", lambda frame, **kwargs: calls.append((frame, kwargs)))
+    charts.render_metric_comparison_chart((("Track A", 0.651, 0.625), ("Track B", 0.645, 0.641)))
+
+    assert calls[0][1]["stack"] is False
+    assert list(calls[0][0].columns) == ["Validation", "Test"]
+
+
 def test_dataset_methodology_and_about_are_aggregate_research_pages() -> None:
     app = _app()
     app.sidebar.radio[2].set_value("Dataset")
@@ -72,12 +87,26 @@ def test_dataset_methodology_and_about_are_aggregate_research_pages() -> None:
     assert not app.exception
     assert "METABRIC" in dataset_text
     assert "1,332" in dataset_text
+    assert "68 genomic model inputs" in dataset_text.lower()
+    assert "7 clinical model inputs" in dataset_text.lower()
+    assert "Events" in dataset_text and "1,103" in dataset_text
+    assert "NC excluded from Track C" in dataset_text
+    assert any(expander.label == "View technical cohort details" for expander in app.expander)
     assert "patient_id" not in dataset_text.lower()
 
     app.sidebar.radio[2].set_value("Methodology")
     app.run(timeout=30)
-    assert "Analysis pipeline" in _text(app)
+    methodology_text = _text(app)
+    assert "Patient Inputs" in methodology_text
+    assert "Validation + Frozen Preprocessing" in methodology_text
+    assert "1/3/5-year model-estimated survival" in methodology_text
+    assert any(expander.label == "View technical methodology" for expander in app.expander)
 
     app.sidebar.radio[2].set_value("About")
     app.run(timeout=30)
-    assert "Research prototype" in _text(app)
+    about_text = _text(app)
+    assert "Research prototype" in about_text
+    assert "What it analyzes" in about_text
+    assert "Research Limitations" in about_text
+    assert any(button.label == "Analyze a Patient" for button in app.button)
+    assert any(button.label == "View Methodology" for button in app.button)

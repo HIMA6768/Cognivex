@@ -24,11 +24,16 @@ def test_patient_analysis_builds_one_exact_r9_request_and_a_labelled_demo_profil
 
     assert set(profile) == set(service.allowed_input_fields)
     assert len(profile) == 75
-    assert all(profile[field] == 0.0 for field in track_c_fields[:50])
-    assert all(profile[field] == "0" for field in track_c_fields[50:])
+    assert any(profile[field] != 0.0 for field in track_c_fields[:50])
+    assert all(isinstance(profile[field], float) for field in track_c_fields[:50])
+    assert all(profile[field] != "0" for field in track_c_fields[50:])
     request = build_patient_request(profile)
     assert request.requested_tracks == (AnalysisTrack.TRACK_A, AnalysisTrack.TRACK_B, AnalysisTrack.TRACK_C)
-    assert request.features == profile
+    assert request.features["tumor_size"] == 24.0
+    assert profile["tumor_size"] == 2.4
+    assert {field: request.features[field] for field in track_c_fields} == {
+        field: profile[field] for field in track_c_fields
+    }
 
 
 def test_patient_analysis_keeps_partial_values_for_r9_readiness() -> None:
@@ -133,6 +138,9 @@ def test_fresh_session_keeps_genomic_fields_absent_and_only_clinical_track_ready
     app.run(timeout=30)
     assert any("Primary result: Clinical-only prognosis" in str(item.value) for item in app.caption)
     assert not any(metric.label == "Predicted subtype" for metric in app.metric)
+    warnings = "\n".join(str(item.value) for item in app.warning)
+    assert "Genomic profile incomplete. Clinical + genomic prognosis and molecular subtype classification require all 68 genomic inputs." in warnings
+    assert any(expander.label == "View missing genomic fields" for expander in app.expander)
 
 
 def test_loading_demo_reflects_every_genomic_value_in_visible_widgets() -> None:
@@ -142,8 +150,8 @@ def test_loading_demo_reflects_every_genomic_value_in_visible_widgets() -> None:
     _button(app, "Save and continue").click()
     app.run(timeout=30)
 
-    assert all(widget.value == 0.0 for widget in app.number_input)
-    assert all(widget.value == "0" for widget in app.text_input)
+    assert any(widget.value != 0.0 for widget in app.number_input)
+    assert all(widget.value not in (None, "") for widget in app.text_input)
     assert any(button.label == "Load synthetic genomic demo" for button in app.button)
     assert any(button.label == "Clear genomic data" for button in app.button)
     _button(app, "Save and continue").click()
@@ -151,6 +159,56 @@ def test_loading_demo_reflects_every_genomic_value_in_visible_widgets() -> None:
     metrics = {metric.label: metric.value for metric in app.metric}
     assert metrics["Expression fields"] == "50/50"
     assert metrics["Mutation fields"] == "18/18"
+
+
+def test_genomic_demo_is_explicit_and_clear_then_reload_preserves_absent_vs_zero() -> None:
+    app = _patient_analysis_app()
+    _complete_clinical_values(app)
+    _button(app, "Save and continue").click()
+    app.run(timeout=30)
+
+    assert all(widget.value is None for widget in app.number_input)
+    assert all(widget.value == "" for widget in app.text_input)
+
+    _button(app, "Load synthetic genomic demo").click()
+    app.run(timeout=30)
+    assert len(app.number_input) == 50
+    assert len(app.text_input) == 18
+    assert any(widget.value != 0.0 for widget in app.number_input)
+    assert all(widget.value not in (None, "") for widget in app.text_input)
+
+    _button(app, "Clear genomic data").click()
+    app.run(timeout=30)
+    assert all(widget.value is None for widget in app.number_input)
+    assert all(widget.value == "" for widget in app.text_input)
+
+    _button(app, "Load synthetic genomic demo").click()
+    app.run(timeout=30)
+    assert any(widget.value != 0.0 for widget in app.number_input)
+    assert all(widget.value not in (None, "") for widget in app.text_input)
+
+
+def test_explicit_genomic_zero_is_present_but_untouched_fields_remain_absent() -> None:
+    app = _patient_analysis_app()
+    _complete_clinical_values(app)
+    _button(app, "Save and continue").click()
+    app.run(timeout=30)
+    app.number_input[0].set_value(0.0)
+    app.run(timeout=30)
+    _button(app, "Save and continue").click()
+    app.run(timeout=30)
+
+    metrics = {metric.label: metric.value for metric in app.metric}
+    assert metrics["Expression fields"] == "1/50"
+    assert metrics["Mutation fields"] == "0/18"
+
+
+def test_build_patient_request_converts_ui_centimetres_to_frozen_mm_contract() -> None:
+    from src.ui.components.patient_analysis import build_patient_request
+
+    request = build_patient_request({"tumor_size": 2.4, "age_at_diagnosis": 55.0})
+
+    assert request.features == {"tumor_size": 24.0, "age_at_diagnosis": 55.0}
 
 
 def test_clearing_visible_demo_genomic_values_removes_them_from_review() -> None:

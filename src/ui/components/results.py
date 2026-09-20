@@ -15,7 +15,7 @@ from src.contracts.inference import (
 )
 
 from ..navigation import Page, navigate_to
-from .charts import render_named_bar_chart
+from .charts import render_probability_bars
 from .oncomap import render_metric_card, render_research_disclaimer
 
 
@@ -23,14 +23,37 @@ def _outcome_by_track(response: AnalysisResponse, track: AnalysisTrack) -> Track
     return next((outcome for outcome in response.outcomes if outcome.track is track), None)
 
 
-def _render_readiness(outcome: TrackOutcome | None, label: str) -> None:
+def _render_readiness(outcome: TrackOutcome | None, label: str, *, show_fields: bool = True) -> None:
     if outcome is None:
         return
     if outcome.state is TrackReadinessState.READY:
         return
     assert outcome.error is not None
-    fields = f" Missing fields: {', '.join(outcome.error.missing_fields)}." if outcome.error.missing_fields else ""
+    fields = f" Missing fields: {', '.join(outcome.error.missing_fields)}." if show_fields and outcome.error.missing_fields else ""
     st.warning(f"{label}: {outcome.error.message}{fields}")
+
+
+def _render_incomplete_genomics(track_b: TrackOutcome | None, track_c: TrackOutcome | None) -> bool:
+    """Summarize missing genomic inputs without hiding R9's exact field evidence."""
+    missing = tuple(
+        dict.fromkeys(
+            field
+            for outcome in (track_b, track_c)
+            if outcome is not None
+            and outcome.state is TrackReadinessState.MISSING_REQUIRED_FIELDS
+            and outcome.error is not None
+            for field in outcome.error.missing_fields
+        )
+    )
+    if not missing:
+        return False
+    st.warning(
+        "Genomic profile incomplete. Clinical + genomic prognosis and molecular "
+        "subtype classification require all 68 genomic inputs."
+    )
+    with st.expander("View missing genomic fields"):
+        st.markdown(", ".join(missing))
+    return True
 
 
 def render_survival_estimate_unavailable(result: PrognosisResult) -> None:
@@ -77,9 +100,8 @@ def _render_subtype(result: SubtypeClassificationResult) -> None:
     st.subheader("Molecular subtype")
     probability = result.probabilities[result.class_order.index(result.predicted_class)]
     render_metric_card("Predicted subtype", result.predicted_class, f"{probability * 100:.1f}% model probability")
-    render_named_bar_chart(
+    render_probability_bars(
         tuple((label, probability) for label, probability in zip(result.class_order, result.probabilities, strict=True)),
-        value_label="Model probability",
     )
     st.caption("Subtype probabilities are displayed in the frozen six-class R9 order.")
 
@@ -95,6 +117,7 @@ def render_patient_results(response: AnalysisResponse, *, on_edit_inputs, on_sta
     track_a = _outcome_by_track(response, AnalysisTrack.TRACK_A)
     track_b = _outcome_by_track(response, AnalysisTrack.TRACK_B)
     track_c = _outcome_by_track(response, AnalysisTrack.TRACK_C)
+    genomics_incomplete = _render_incomplete_genomics(track_b, track_c)
     primary = track_b if track_b and track_b.state is TrackReadinessState.READY else track_a
     if primary and isinstance(primary.result, PrognosisResult):
         label = "Clinical + genomic prognosis" if primary.track is AnalysisTrack.TRACK_B else "Clinical-only prognosis"
@@ -102,7 +125,7 @@ def render_patient_results(response: AnalysisResponse, *, on_edit_inputs, on_sta
         if primary.track is AnalysisTrack.TRACK_B and track_a and track_a.state is TrackReadinessState.READY:
             st.caption("A clinical-only research-model result is also available in Technical details; this is not a patient-specific model comparison.")
     else:
-        _render_readiness(track_b, "Clinical + genomic prognosis")
+        _render_readiness(track_b, "Clinical + genomic prognosis", show_fields=not genomics_incomplete)
         _render_readiness(track_a, "Clinical-only prognosis")
 
     if track_c and track_c.state is TrackReadinessState.READY and isinstance(track_c.result, SubtypeClassificationResult):
@@ -111,7 +134,7 @@ def render_patient_results(response: AnalysisResponse, *, on_edit_inputs, on_sta
         else:
             _render_subtype(track_c.result)
     else:
-        _render_readiness(track_c, "Molecular subtype")
+        _render_readiness(track_c, "Molecular subtype", show_fields=not genomics_incomplete)
 
     st.subheader("Global genomic insights")
     st.caption("Genomic associations are global R8 model results and are not patient-specific attributions.")

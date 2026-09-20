@@ -5,7 +5,7 @@ from __future__ import annotations
 import streamlit as st
 
 from src.ui.analysis_service import get_analysis_service
-from src.ui.components.charts import render_named_bar_chart
+from src.ui.components.charts import render_ranked_coefficient_chart
 from src.ui.components.oncomap import render_metric_card, render_page_intro
 
 
@@ -25,7 +25,12 @@ def render() -> None:
                 render_metric_card(label, str(value))
         st.subheader("Strongest model-associated features")
         ranked = tuple(sorted(active, key=lambda effect: effect.rank))[:12]
-        render_named_bar_chart(((effect.raw_feature_name, effect.abs_beta) for effect in ranked), value_label="Absolute coefficient")
+        render_ranked_coefficient_chart(
+            (
+                (effect.raw_feature_name, effect.beta, effect.direction_display)
+                for effect in ranked
+            )
+        )
         st.caption("Direction labels describe higher modeled hazard, lower modeled hazard, or effectively zero association under the frozen R8 threshold.")
         with st.expander("View all genomic features"):
             st.dataframe(
@@ -34,7 +39,7 @@ def render() -> None:
                     "Feature": [item.effect.raw_feature_name for item in effects],
                     "Association": [item.effect.direction_display for item in effects],
                     "Status": ["Active" if item.effect.is_active else "Near-zero" for item in effects],
-                    "Coefficient": [item.effect.beta for item in effects],
+                    "Coefficient": [f"{item.effect.beta:.3f}" for item in effects],
                 },
                 hide_index=True,
                 width="stretch",

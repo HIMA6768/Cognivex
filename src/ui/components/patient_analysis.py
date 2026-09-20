@@ -24,8 +24,18 @@ _STAGE_LABELS = ("Clinical", "Genomic", "Review", "Run", "Results")
 
 
 def build_patient_request(values: Mapping[str, str | int | float | None]) -> AnalysisRequest:
-    """Create one exact R9 request without UI-side feature validation or derivation."""
-    return AnalysisRequest(dict(values), (AnalysisTrack.TRACK_A, AnalysisTrack.TRACK_B, AnalysisTrack.TRACK_C))
+    """Create one exact R9 request from UI values without feature derivation.
+
+    The UI labels tumour size in centimetres for readability, whereas the
+    frozen METABRIC clinical contract records ``tumor_size`` in millimetres.
+    This presentation-unit conversion is performed once at the UI/R9 request
+    boundary; no model preprocessing is duplicated here.
+    """
+    request_values = dict(values)
+    tumor_size = request_values.get("tumor_size")
+    if isinstance(tumor_size, (int, float)) and not isinstance(tumor_size, bool):
+        request_values["tumor_size"] = float(tumor_size) * 10.0
+    return AnalysisRequest(request_values, (AnalysisTrack.TRACK_A, AnalysisTrack.TRACK_B, AnalysisTrack.TRACK_C))
 
 
 def synthetic_demo_profile(
@@ -45,7 +55,18 @@ def synthetic_demo_profile(
     }
     if tuple(clinical) != clinical_fields or len(expression_fields) != 50 or len(mutation_fields) != 18:
         raise ValueError("frozen patient-analysis contract is unavailable")
-    return {**clinical, **{field: 0.0 for field in expression_fields}, **{field: "0" for field in mutation_fields}}
+    # A deterministic synthetic profile keeps the demo visibly distinct from
+    # blank fields and an explicit zero. Values are merely valid inputs, not
+    # representative patient measurements or model recommendations.
+    expression = {
+        field: round((index + 1) / 100.0, 4)
+        for index, field in enumerate(expression_fields)
+    }
+    mutation = {
+        field: f"SYN{index + 1}A"
+        for index, field in enumerate(mutation_fields)
+    }
+    return {**clinical, **expression, **mutation}
 
 
 def _input_key(field: str) -> str:
