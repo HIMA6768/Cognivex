@@ -15,6 +15,21 @@ from src.contracts import AnalysisTrack
 ROOT = Path(__file__).resolve().parents[1]
 
 
+def _clone_with_lf_checkout(tmp_path: Path, *, shallow: bool) -> Path:
+    clone = tmp_path / ("shallow-lf-clone" if shallow else "lf-clone")
+    source = ROOT.as_uri() if shallow else str(ROOT)
+    command = ["git", "clone", "--quiet", "--no-checkout"]
+    if shallow:
+        command.append("--depth=1")
+    else:
+        command.extend(("--local", "--no-hardlinks"))
+    subprocess.run([*command, source, str(clone)], check=True, capture_output=True, text=True)
+    subprocess.run(["git", "-C", str(clone), "config", "core.autocrlf", "false"], check=True)
+    subprocess.run(["git", "-C", str(clone), "config", "core.eol", "lf"], check=True)
+    subprocess.run(["git", "-C", str(clone), "checkout", "--quiet", "HEAD"], check=True)
+    return clone
+
+
 def test_registry_loads_verified_canonical_contracts_once() -> None:
     registry = build_canonical_registry(ROOT)
     assert registry.global_contract.raw_fields == registry.track_b.required_fields
@@ -140,3 +155,26 @@ def test_clean_clone_builds_the_exact_global_contract_without_local_handoff_meta
         + contract["mutation_features"]
     )
     assert len(raw_features) == 75
+
+
+@pytest.mark.parametrize("shallow", (False, True))
+def test_lf_only_tracked_checkout_builds_the_canonical_registry(tmp_path: Path, shallow: bool) -> None:
+    """Canonical trust verification must be independent of checkout line endings/history depth."""
+    clean_root = _clone_with_lf_checkout(tmp_path, shallow=shallow)
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-c",
+            (
+                "from pathlib import Path; "
+                "from src.artifacts.inference_registry import build_canonical_registry; "
+                "registry = build_canonical_registry(Path('.')); "
+                "assert registry.track_a.available and registry.track_b.available and registry.track_c.available; "
+                "assert len(registry.global_contract.raw_fields) == 75"
+            ),
+        ],
+        cwd=clean_root,
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 0, result.stderr

@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-import hashlib
 import json
 import logging
 from pathlib import Path
@@ -11,6 +10,7 @@ from typing import Any
 
 from sklearn.pipeline import Pipeline
 
+from src.artifacts.checksums import manifest_digest_matches, sha256_file
 from src.artifacts.prognostic_features import verify_and_load_track_b_source
 from src.artifacts.survival import load_trusted_pickle
 from src.artifacts.track_c import verify_track_c_checksums
@@ -33,7 +33,7 @@ _TRACK_RUNTIME_FILES: dict[AnalysisTrack, tuple[Path, tuple[str, ...]]] = {
 
 
 def _sha256(path: Path) -> str:
-    return hashlib.sha256(path.read_bytes()).hexdigest()
+    return sha256_file(path)
 
 
 def _checksums(bundle: Path) -> dict[str, str]:
@@ -45,7 +45,9 @@ def _checksums(bundle: Path) -> dict[str, str]:
         raise ValueError("checksum manifest is malformed")
     entries = {name: digest for digest, name in rows}
     expected = {path.name for path in bundle.iterdir() if path.is_file() and path.name != "checksums.sha256"}
-    if set(entries) != expected or any(_sha256(bundle / name) != digest for name, digest in entries.items()):
+    if set(entries) != expected or any(
+        not manifest_digest_matches(bundle / name, digest) for name, digest in entries.items()
+    ):
         raise ValueError("checksum verification failed")
     return entries
 

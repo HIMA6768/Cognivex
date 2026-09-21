@@ -5,7 +5,6 @@ from __future__ import annotations
 import csv
 from dataclasses import dataclass
 from datetime import datetime, timezone
-import hashlib
 from importlib.metadata import version
 import json
 from pathlib import Path
@@ -15,6 +14,7 @@ from typing import Mapping
 from lifelines import CoxPHFitter
 from sklearn.pipeline import Pipeline
 
+from src.artifacts.checksums import manifest_digest_matches, sha256_file
 from src.modeling.track_b import PenalizedCoxPHAdapter
 from src.preprocessing.track_b import track_b_feature_names
 from src.contracts import (
@@ -43,6 +43,13 @@ R6_CHECKSUM_FILES = frozenset(
 R6_TRACKED_FILES = tuple(sorted(R6_CHECKSUM_FILES - {"cox_model.pkl", "preprocessor.pkl"})) + (
     "checksums.sha256",
 )
+R6_FROZEN_SOURCE_FILES = (
+    "src/training/track_b.py",
+    "src/modeling/track_b.py",
+    "src/artifacts/track_b.py",
+    "src/preprocessing/track_b.py",
+    "scripts/train_track_b.py",
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -68,7 +75,7 @@ class PrognosticFeatureBundleVerification:
 
 
 def _sha256(path: Path) -> str:
-    return hashlib.sha256(path.read_bytes()).hexdigest()
+    return sha256_file(path)
 
 
 def _read_json(path: Path) -> dict[str, object]:
@@ -78,8 +85,23 @@ def _read_json(path: Path) -> dict[str, object]:
     return payload
 
 
+def _frozen_commit_is_available(root: Path) -> bool:
+    return subprocess.run(
+        ["git", "cat-file", "-e", f"{R6_FROZEN_COMMIT}^{{commit}}"],
+        cwd=root,
+        capture_output=True,
+        check=False,
+    ).returncode == 0
+
+
 def verify_frozen_r6_tracked_state(repository_root: Path) -> None:
-    """Require every tracked R6 trust-anchor byte to match the frozen R6 commit."""
+    """Protect frozen R6 sources while allowing shallow deployment checkouts.
+
+    The checksum manifest protects the exact artifact payload.  When the
+    historic R6 commit is locally available, the dedicated R6 source and
+    textual trust-anchor files must additionally match it.  Deployment clones
+    may be shallow; absence of that historical Git object is not source drift.
+    """
     root = Path(repository_root).resolve()
     relative_paths = [(R6_BUNDLE_RELATIVE / name).as_posix() for name in R6_TRACKED_FILES]
     tracked = subprocess.run(
@@ -90,8 +112,10 @@ def verify_frozen_r6_tracked_state(repository_root: Path) -> None:
     )
     if tracked.returncode != 0:
         raise ValueError("canonical R6 trust-anchor files must remain tracked")
+    if not _frozen_commit_is_available(root):
+        return
     unchanged = subprocess.run(
-        ["git", "diff", "--quiet", R6_FROZEN_COMMIT, "--", *relative_paths],
+        ["git", "diff", "--quiet", R6_FROZEN_COMMIT, "--", *relative_paths, *R6_FROZEN_SOURCE_FILES],
         cwd=root,
         capture_output=True,
         check=False,
@@ -117,9 +141,12 @@ def verify_r6_checksums(bundle: Path) -> dict[str, str]:
         digests[name] = digest.lower()
     if set(digests) != R6_CHECKSUM_FILES:
         raise ValueError("R6 checksum manifest does not cover the exact canonical file set")
+    actual_files = {path.name for path in root.iterdir() if path.is_file()}
+    if actual_files != R6_CHECKSUM_FILES | {"checksums.sha256"}:
+        raise ValueError("R6 bundle contains an unexpected file")
     for name, expected in digests.items():
         path = root / name
-        if not path.is_file() or _sha256(path) != expected:
+        if not path.is_file() or not manifest_digest_matches(path, expected):
             raise ValueError(f"R6 checksum verification failed for {name}")
     return digests
 
@@ -523,7 +550,7 @@ def _verify_bundle_checksums(bundle: Path) -> bool:
         return False
     expected_names = {path.name for path in root.iterdir() if path.is_file() and path.name != "checksums.sha256"}
     return set(entries) == expected_names and all(
-        (root / name).is_file() and _sha256(root / name) == digest
+        (root / name).is_file() and manifest_digest_matches(root / name, digest)
         for name, digest in entries.items()
     )
 
