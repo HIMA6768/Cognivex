@@ -6,7 +6,6 @@ import json
 from pathlib import Path
 
 from src.artifacts.inference_registry import R5_BUNDLE, R6_BUNDLE, R7_BUNDLE, _canonical, _checksums
-from src.artifacts.track_c import verify_track_c_checksums
 from src.contracts.model_evaluation import (
     ClassificationMetricView,
     ModelEvaluationView,
@@ -32,6 +31,33 @@ def _number(payload: dict[str, object], *keys: str) -> float:
     return float(value)
 
 
+def model_evaluation_artifact_file_state(repository_root: Path) -> dict[str, object]:
+    """Return safe server-side evidence for aggregate-metric loading failures."""
+    root = Path(repository_root).resolve()
+    state: dict[str, object] = {}
+    for label, relative in (("track_a", R5_BUNDLE), ("track_b", R6_BUNDLE), ("track_c", R7_BUNDLE)):
+        bundle = root / relative
+        metrics = bundle / "metrics.json"
+        try:
+            _checksums(bundle)
+            verification: dict[str, object] = {"passed": True}
+        except Exception as error:
+            verification = {
+                "passed": False,
+                "exception_class": type(error).__name__,
+                "exception_message": str(error),
+            }
+        state[label] = {
+            "bundle": relative.as_posix(),
+            "bundle_exists": bundle.is_dir(),
+            "metrics_path": (relative / "metrics.json").as_posix(),
+            "metrics_exists": metrics.is_file(),
+            "metrics_size_bytes": metrics.stat().st_size if metrics.is_file() else None,
+            "checksum_verification": verification,
+        }
+    return state
+
+
 def read_frozen_model_evaluation(repository_root: Path) -> ModelEvaluationView:
     """Verify aggregate text bundles, then read frozen metrics without model deserialization."""
     root = Path(repository_root).resolve()
@@ -40,8 +66,7 @@ def read_frozen_model_evaluation(repository_root: Path) -> ModelEvaluationView:
     r7_bundle = _canonical(root, R7_BUNDLE)
     _checksums(r5_bundle)
     _checksums(r6_bundle)
-    if not verify_track_c_checksums(r7_bundle):
-        raise ValueError("R7 checksum verification failed")
+    _checksums(r7_bundle)
 
     r5 = _json(r5_bundle / "metrics.json")
     r6 = _json(r6_bundle / "metrics.json")
