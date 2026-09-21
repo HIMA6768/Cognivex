@@ -6,3 +6,4 @@ streamlit>=1.39,<2
 shap
 xgboost
 azure-cosmos
+python-dotenv
