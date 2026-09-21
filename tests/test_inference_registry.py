@@ -9,6 +9,11 @@ import sys
 import pytest
 
 from src.artifacts.inference_registry import build_canonical_registry
+from src.artifacts.prognostic_features import (
+    R6_BUNDLE_RELATIVE,
+    verify_frozen_r6_tracked_state,
+    verify_r6_checksums,
+)
 from src.contracts import AnalysisTrack
 
 
@@ -178,3 +183,33 @@ def test_lf_only_tracked_checkout_builds_the_canonical_registry(tmp_path: Path, 
         text=True,
     )
     assert result.returncode == 0, result.stderr
+
+
+def test_r6_checksum_verification_rejects_one_protected_binary_byte_in_lf_checkout(tmp_path: Path) -> None:
+    clean_root = _clone_with_lf_checkout(tmp_path, shallow=False)
+    bundle = clean_root / R6_BUNDLE_RELATIVE
+    model = bundle / "cox_model.pkl"
+    model.write_bytes(model.read_bytes() + b"tamper")
+
+    with pytest.raises(ValueError, match="checksum verification failed for cox_model.pkl"):
+        verify_r6_checksums(bundle)
+
+
+def test_r6_checksum_verification_rejects_an_unexpected_model_binary(tmp_path: Path) -> None:
+    clean_root = _clone_with_lf_checkout(tmp_path, shallow=False)
+    bundle = clean_root / R6_BUNDLE_RELATIVE
+    unexpected = bundle / "unapproved_model.pkl"
+    unexpected.write_bytes(b"not a trusted model")
+    subprocess.run(["git", "-C", str(clean_root), "add", str(unexpected)], check=True)
+
+    with pytest.raises(ValueError, match="unexpected file"):
+        verify_r6_checksums(bundle)
+
+
+def test_r6_frozen_source_drift_is_rejected_when_frozen_commit_is_available(tmp_path: Path) -> None:
+    clean_root = _clone_with_lf_checkout(tmp_path, shallow=False)
+    source = clean_root / "src/training/track_b.py"
+    source.write_text(source.read_text(encoding="utf-8") + "\n# test-only source drift\n", encoding="utf-8")
+
+    with pytest.raises(ValueError, match="frozen R6 tracked files differ"):
+        verify_frozen_r6_tracked_state(clean_root)
