@@ -65,6 +65,13 @@ R7_COMMIT = "97e6434634c3391acbd6e5e50dca316bef4ad6fb"
 R8_FINAL_EVIDENCE_COMMIT = "0662bda058f0c93f758f29e0fb033aca24e06721"
 R5_BUNDLE = Path("artifacts/models/track_a/r5a-track-a-baseline-v1")
 R7_BUNDLE = Path("artifacts/models/track_c/r7-track-c-v1")
+_CANONICAL_DEPLOYMENT_PICKLES = (
+    (R5_BUNDLE / "preprocessor.pkl").as_posix(),
+    (R5_BUNDLE / "cox_model.pkl").as_posix(),
+    (Path("artifacts/models/track_b/r6-track-b-v1") / "preprocessor.pkl").as_posix(),
+    (Path("artifacts/models/track_b/r6-track-b-v1") / "cox_model.pkl").as_posix(),
+    (R7_BUNDLE / "pipeline.pkl").as_posix(),
+)
 R5_PATHS = (
     "src/training/track_a.py",
     "src/modeling/survival.py",
@@ -158,8 +165,23 @@ def _bundle_checksums_match(bundle: Path) -> bool:
 
 
 def _frozen_state_matches(root: Path, commit: str, paths: tuple[str, ...], bundle: Path) -> bool:
+    bundle_prefix = f"{bundle.as_posix()}/"
+    deployment_pickle_exclusions = tuple(
+        f":(exclude){path}"
+        for path in _CANONICAL_DEPLOYMENT_PICKLES
+        if path.startswith(bundle_prefix)
+    )
     unchanged = subprocess.run(
-        ["git", "diff", "--quiet", commit, "--", *paths, bundle.as_posix()],
+        [
+            "git",
+            "diff",
+            "--quiet",
+            commit,
+            "--",
+            *paths,
+            bundle.as_posix(),
+            *deployment_pickle_exclusions,
+        ],
         cwd=root,
         check=False,
     ).returncode == 0

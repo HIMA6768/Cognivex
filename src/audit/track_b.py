@@ -29,6 +29,10 @@ _R5_PATHS = (
     "src/preprocessing/pipelines.py",
     _R5_BUNDLE.as_posix(),
 )
+_R5_DEPLOYMENT_PICKLES = (
+    (_R5_BUNDLE / "preprocessor.pkl").as_posix(),
+    (_R5_BUNDLE / "cox_model.pkl").as_posix(),
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -57,7 +61,15 @@ def _r5_artifacts_match(root: Path) -> bool:
         if _sha256(bundle / name) != expected:
             return False
     diff = subprocess.run(
-        ["git", "diff", "--quiet", _R5_COMMIT, "--", *_R5_PATHS],
+        [
+            "git",
+            "diff",
+            "--quiet",
+            _R5_COMMIT,
+            "--",
+            *_R5_PATHS,
+            *(f":(exclude){path}" for path in _R5_DEPLOYMENT_PICKLES),
+        ],
         cwd=root,
         check=False,
     )
