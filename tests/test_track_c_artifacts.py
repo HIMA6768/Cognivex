@@ -35,19 +35,24 @@ def synthetic_run():
     return make_synthetic_track_c_run()
 
 
-def test_track_c_bundle_contains_required_aggregate_files_and_ignored_pipeline(
+def test_track_c_bundle_contains_required_aggregate_files_and_tracked_canonical_pipeline(
     tmp_path: Path, synthetic_run
 ) -> None:
     prepared, selection, result = synthetic_run
     bundle = write_track_c_artifacts(selection, result, prepared, tmp_path)
 
     assert {path.name for path in bundle.iterdir()} == REQUIRED
-    ignored = subprocess.run(
-        ["git", "check-ignore", "-q", str(ROOT / "artifacts/models/track_c/r7-track-c-v1/pipeline.pkl")],
+    tracked = subprocess.run(
+        [
+            "git",
+            "ls-files",
+            "--error-unmatch",
+            "artifacts/models/track_c/r7-track-c-v1/pipeline.pkl",
+        ],
         cwd=ROOT,
         check=False,
     )
-    assert ignored.returncode == 0
+    assert tracked.returncode == 0
 
 
 def test_track_c_bundle_refuses_to_overwrite_existing_experiment(tmp_path: Path, synthetic_run) -> None:

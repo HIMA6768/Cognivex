@@ -22,9 +22,17 @@ env/
 .coverage
 htmlcov/
 
-# Canonical frozen inference binaries under artifacts/models/ are
-# checksum-verified, tracked deployment assets. Do not add arbitrary or
-# untrusted pickle files.
+# Ignore generated or untrusted model binaries. The five named canonical R5,
+# R6, and R7 inference artifacts below are checksum-verified tracked assets
+# required by clean deployment clones.
+artifacts/models/**/preprocessor.pkl
+artifacts/models/**/cox_model.pkl
+artifacts/models/**/pipeline.pkl
+!artifacts/models/track_a/r5a-track-a-baseline-v1/preprocessor.pkl
+!artifacts/models/track_a/r5a-track-a-baseline-v1/cox_model.pkl
+!artifacts/models/track_b/r6-track-b-v1/preprocessor.pkl
+!artifacts/models/track_b/r6-track-b-v1/cox_model.pkl
+!artifacts/models/track_c/r7-track-c-v1/pipeline.pkl
 
 # R6-P0 imported engineer model artifacts are reference-only and untrusted
 cognivex_ml/models/*.pkl
