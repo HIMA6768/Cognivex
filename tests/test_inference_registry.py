@@ -1,9 +1,12 @@
 from __future__ import annotations
 
 import json
+import logging
 from pathlib import Path
 import subprocess
 import sys
+
+import pytest
 
 from src.artifacts.inference_registry import build_canonical_registry
 from src.contracts import AnalysisTrack
@@ -43,6 +46,42 @@ def test_failed_track_initialization_is_isolated(monkeypatch) -> None:
     assert registry.track_b.error_code == "ARTIFACT_UNAVAILABLE"
     assert registry.track_c.available
     assert registry.r8.available
+
+
+@pytest.mark.parametrize(
+    ("track", "loader_name"),
+    (
+        (AnalysisTrack.TRACK_A, "_r5"),
+        (AnalysisTrack.TRACK_B, "_r6"),
+        (AnalysisTrack.TRACK_C, "_r7"),
+    ),
+)
+def test_registry_logs_safe_per_track_runtime_state_on_loader_failure(
+    monkeypatch, caplog, track: AnalysisTrack, loader_name: str
+) -> None:
+    """Masked loader failures must retain safe server-side diagnostic evidence."""
+    import src.artifacts.inference_registry as registry_module
+
+    def fail_loader(_root: Path):
+        raise RuntimeError(f"simulated {track.value} loader failure")
+
+    monkeypatch.setattr(registry_module, loader_name, fail_loader)
+
+    with caplog.at_level(logging.ERROR, logger="src.artifacts.inference_registry"):
+        registry = registry_module.build_canonical_registry(ROOT)
+
+    assert not registry.entry(track).available
+    assert "[ONCOMAP_TRACK_LOAD_ERROR]" in caplog.text
+    assert f"track={track.value.removeprefix('track_').upper()}" in caplog.text
+    assert "exception_class=RuntimeError" in caplog.text
+    assert f"simulated {track.value} loader failure" in caplog.text
+    assert "Traceback" in caplog.text
+    assert "checksum_verification" in caplog.text
+    if track is AnalysisTrack.TRACK_C:
+        assert "pipeline.pkl" in caplog.text
+    else:
+        assert "preprocessor.pkl" in caplog.text
+        assert "cox_model.pkl" in caplog.text
 
 
 def test_clean_clone_builds_the_exact_global_contract_without_local_handoff_metadata(tmp_path: Path) -> None:

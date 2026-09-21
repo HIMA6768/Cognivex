@@ -48,7 +48,9 @@ def test_ui_service_accessor_logs_initialization_failure_without_exposing_it_to_
         assert "repository_root=" in caplog.text
         assert "python_version=" in caplog.text
         assert "package_versions=" in caplog.text
-        assert "canonical_artifacts=" in caplog.text
+        assert "canonical_artifact_files=" in caplog.text
+        assert "preprocessor.pkl" in caplog.text
+        assert "pipeline.pkl" in caplog.text
         assert "Traceback" in caplog.text
         assert any(record.name == "src.services.analysis" for record in caplog.records)
     finally:

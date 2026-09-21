@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 import hashlib
 import json
+import logging
 from pathlib import Path
 from typing import Any
 
@@ -23,6 +24,14 @@ R7_BUNDLE = Path("artifacts/models/track_c/r7-track-c-v1")
 R8_BUNDLE = Path("artifacts/analysis/r8-prognostic-features-v1")
 
 
+LOGGER = logging.getLogger(__name__)
+_TRACK_RUNTIME_FILES: dict[AnalysisTrack, tuple[Path, tuple[str, ...]]] = {
+    AnalysisTrack.TRACK_A: (R5_BUNDLE, ("preprocessor.pkl", "cox_model.pkl")),
+    AnalysisTrack.TRACK_B: (R6_BUNDLE, ("preprocessor.pkl", "cox_model.pkl")),
+    AnalysisTrack.TRACK_C: (R7_BUNDLE, ("pipeline.pkl",)),
+}
+
+
 def _sha256(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
@@ -39,6 +48,53 @@ def _checksums(bundle: Path) -> dict[str, str]:
     if set(entries) != expected or any(_sha256(bundle / name) != digest for name, digest in entries.items()):
         raise ValueError("checksum verification failed")
     return entries
+
+
+def _track_runtime_file_state(root: Path, track: AnalysisTrack) -> dict[str, object]:
+    """Return safe file-presence and checksum evidence without loading a model."""
+    relative_bundle, names = _TRACK_RUNTIME_FILES[track]
+    bundle = root / relative_bundle
+    files: dict[str, dict[str, int | bool | None]] = {}
+    for name in names:
+        path = bundle / name
+        exists = path.is_file()
+        files[name] = {"exists": exists, "size_bytes": path.stat().st_size if exists else None}
+    try:
+        _checksums(bundle)
+        checksum_verification: dict[str, object] = {"passed": True}
+    except Exception as error:
+        checksum_verification = {
+            "passed": False,
+            "exception_class": type(error).__name__,
+            "exception_message": str(error),
+        }
+    return {
+        "bundle": relative_bundle.as_posix(),
+        "bundle_exists": bundle.is_dir(),
+        "files": files,
+        "checksum_verification": checksum_verification,
+    }
+
+
+def canonical_artifact_file_state(root: Path) -> dict[str, object]:
+    """Return safe expected-file diagnostics for the canonical runtime bundles."""
+    resolved_root = Path(root).resolve()
+    return {
+        track.value: _track_runtime_file_state(resolved_root, track)
+        for track in _TRACK_RUNTIME_FILES
+    } | {"r8_bundle_exists": (resolved_root / R8_BUNDLE).is_dir()}
+
+
+def _log_track_load_failure(root: Path, track: AnalysisTrack, error: Exception) -> None:
+    """Emit server-only evidence for an isolated canonical track-load failure."""
+    LOGGER.exception(
+        "[ONCOMAP_TRACK_LOAD_ERROR] track=%s exception_class=%s "
+        "exception_message=%s runtime_files=%s",
+        track.value.removeprefix("track_").upper(),
+        type(error).__name__,
+        str(error),
+        _track_runtime_file_state(root, track),
+    )
 
 
 @dataclass(frozen=True, slots=True)
@@ -147,7 +203,8 @@ def build_canonical_registry(repository_root: Path) -> CanonicalArtifactRegistry
     for track, loader in ((AnalysisTrack.TRACK_A, _r5), (AnalysisTrack.TRACK_B, _r6), (AnalysisTrack.TRACK_C, _r7)):
         try:
             entries[track] = loader(root)
-        except Exception:
+        except Exception as error:
+            _log_track_load_failure(root, track, error)
             entries[track] = _unavailable(track)
     r6_fields = entries[AnalysisTrack.TRACK_B].required_fields
     r5_r7 = entries[AnalysisTrack.TRACK_A].required_fields + entries[AnalysisTrack.TRACK_C].required_fields

@@ -11,11 +11,8 @@ import sys
 
 from src.artifacts.inference_registry import (
     CanonicalArtifactRegistry,
-    R5_BUNDLE,
-    R6_BUNDLE,
-    R7_BUNDLE,
-    R8_BUNDLE,
     build_canonical_registry,
+    canonical_artifact_file_state,
 )
 from src.contracts.inference import (
     AnalysisRequest, AnalysisResponse, AnalysisTrack, R9_SCHEMA_VERSION,
@@ -33,7 +30,6 @@ from .model_evaluation import get_frozen_model_evaluation
 
 LOGGER = logging.getLogger(__name__)
 _RUNTIME_PACKAGES = ("lifelines", "scikit-learn", "numpy", "pandas", "scipy", "cloudpickle")
-_CANONICAL_BUNDLES = (R5_BUNDLE, R6_BUNDLE, R7_BUNDLE, R8_BUNDLE)
 
 
 def _package_versions() -> dict[str, str]:
@@ -47,9 +43,9 @@ def _package_versions() -> dict[str, str]:
     return versions
 
 
-def _artifact_path_status(root: Path) -> dict[str, bool]:
-    """Report only canonical bundle path existence, never artifact contents."""
-    return {relative.as_posix(): (root / relative).is_dir() for relative in _CANONICAL_BUNDLES}
+def _artifact_path_status(root: Path) -> dict[str, object]:
+    """Report safe expected-file state, never artifact or model contents."""
+    return canonical_artifact_file_state(root)
 
 
 def log_canonical_initialization_failure(root: Path, error: Exception) -> None:
@@ -57,7 +53,7 @@ def log_canonical_initialization_failure(root: Path, error: Exception) -> None:
     LOGGER.exception(
         "[ONCOMAP_INIT_ERROR] canonical AnalysisService initialization failed; "
         "exception_class=%s exception_message=%s repository_root=%s "
-        "canonical_artifacts=%s python_version=%s package_versions=%s",
+        "canonical_artifact_files=%s python_version=%s package_versions=%s",
         type(error).__name__,
         str(error),
         root,
