@@ -10,6 +10,7 @@ from .components.layout import render_shell_status
 from .components.oncomap import render_brand_mark
 from .navigation import PAGE_ORDER, Page, render_navigation
 from .pages import (
+    cloud_integrated_subtype_classifier,
     data_cohort,
     gene_insights,
     methodology_about,
@@ -25,6 +26,7 @@ PAGE_RENDERERS: Mapping[Page, Callable[[], None]] = {
     Page.SURVIVAL_ANALYSIS: survival_analysis.render,
     Page.MODEL_COMPARISON: model_comparison.render,
     Page.GENE_INSIGHTS: gene_insights.render,
+    Page.CLOUD_SUBTYPE_CLASSIFIER: cloud_integrated_subtype_classifier.render,
     Page.DATA_COHORT: data_cohort.render,
     Page.METHODOLOGY_ABOUT: methodology_about.render_methodology,
     Page.ABOUT: methodology_about.render_about,

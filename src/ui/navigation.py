@@ -12,11 +12,11 @@ class Page(str, Enum):
     """Approved R1 destinations in stable display order."""
 
     OVERVIEW = "overview"
-    DATA_COHORT = "data_cohort"
     SURVIVAL_ANALYSIS = "survival_analysis"
-    SUBTYPE_CLASSIFICATION = "subtype_classification"
-    GENE_INSIGHTS = "gene_insights"
     MODEL_COMPARISON = "model_comparison"
+    GENE_INSIGHTS = "gene_insights"
+    CLOUD_SUBTYPE_CLASSIFIER = "cloud_based_classifier"
+    DATA_COHORT = "data_cohort"
     METHODOLOGY_ABOUT = "methodology_about"
     ABOUT = "about"
 
@@ -35,6 +35,7 @@ PAGE_ORDER: tuple[Page, ...] = (
     Page.SURVIVAL_ANALYSIS,
     Page.MODEL_COMPARISON,
     Page.GENE_INSIGHTS,
+    Page.CLOUD_SUBTYPE_CLASSIFIER,
     Page.DATA_COHORT,
     Page.METHODOLOGY_ABOUT,
     Page.ABOUT,
@@ -42,13 +43,11 @@ PAGE_ORDER: tuple[Page, ...] = (
 
 PAGE_SPECS: dict[Page, PageSpec] = {
     Page.OVERVIEW: PageSpec("Overview", "overview", "ONCOMAP"),
-    Page.DATA_COHORT: PageSpec("Dataset", "data_cohort", "RESEARCH"),
     Page.SURVIVAL_ANALYSIS: PageSpec("Patient Analysis", "survival_analysis", "ANALYSIS"),
-    Page.SUBTYPE_CLASSIFICATION: PageSpec(
-        "Subtype Classification", "subtype_classification", "ANALYSIS"
-    ),
-    Page.GENE_INSIGHTS: PageSpec("Gene Insights", "gene_insights", "ANALYSIS"),
     Page.MODEL_COMPARISON: PageSpec("Model Evaluation", "model_comparison", "ANALYSIS"),
+    Page.GENE_INSIGHTS: PageSpec("Gene Insights", "gene_insights", "ANALYSIS"),
+    Page.CLOUD_SUBTYPE_CLASSIFIER: PageSpec("Subtype Classifier", "cloud_sub_classifier", "ANALYSIS"),
+    Page.DATA_COHORT: PageSpec("Dataset", "data_cohort", "RESEARCH"),
     Page.METHODOLOGY_ABOUT: PageSpec("Methodology", "methodology_about", "RESEARCH"),
     Page.ABOUT: PageSpec("About", "about", "RESEARCH"),
 }
@@ -56,7 +55,15 @@ PAGE_SPECS: dict[Page, PageSpec] = {
 
 NAVIGATION_GROUPS: tuple[tuple[str, tuple[Page, ...]], ...] = (
     ("ONCOMAP", (Page.OVERVIEW,)),
-    ("ANALYSIS", (Page.SURVIVAL_ANALYSIS, Page.MODEL_COMPARISON, Page.GENE_INSIGHTS)),
+    (
+        "ANALYSIS",
+        (
+            Page.SURVIVAL_ANALYSIS,
+            Page.MODEL_COMPARISON,
+            Page.GENE_INSIGHTS,
+            Page.CLOUD_SUBTYPE_CLASSIFIER,
+        ),
+    ),
     ("RESEARCH", (Page.DATA_COHORT, Page.METHODOLOGY_ABOUT, Page.ABOUT)),
 )
 
