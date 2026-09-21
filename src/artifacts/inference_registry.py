@@ -13,7 +13,6 @@ from sklearn.pipeline import Pipeline
 from src.artifacts.checksums import manifest_digest_matches, sha256_file
 from src.artifacts.prognostic_features import verify_and_load_track_b_source
 from src.artifacts.survival import load_trusted_pickle
-from src.artifacts.track_c import verify_track_c_checksums
 from src.contracts.inference import AnalysisTrack
 from src.modeling.survival import LifelinesCoxPHAdapter
 
@@ -172,8 +171,7 @@ def _r6(root: Path) -> ArtifactEntry:
 
 def _r7(root: Path) -> ArtifactEntry:
     bundle = _canonical(root, R7_BUNDLE)
-    if not verify_track_c_checksums(bundle):
-        raise ValueError("R7 checksum verification failed")
+    _checksums(bundle)
     contract = json.loads((bundle / "feature_contract.json").read_text(encoding="utf-8"))
     metadata = json.loads((bundle / "metadata.json").read_text(encoding="utf-8"))
     fields = tuple(contract["raw_feature_names"])

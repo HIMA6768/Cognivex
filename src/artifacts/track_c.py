@@ -5,6 +5,7 @@ from __future__ import annotations
 import csv
 from dataclasses import dataclass
 from datetime import datetime, timezone
+import hashlib
 import json
 import math
 from pathlib import Path
@@ -24,7 +25,6 @@ from src.evaluation.classification import (
     probability_digest,
     reorder_and_validate_probabilities,
 )
-from src.artifacts.checksums import manifest_digest_matches, sha256_file
 
 from .survival import load_trusted_pickle
 
@@ -66,7 +66,7 @@ class TrackCBundleVerification:
 
 
 def _sha256(path: Path) -> str:
-    return sha256_file(path)
+    return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
 def _write_json(path: Path, payload: dict[str, Any]) -> None:
@@ -231,7 +231,7 @@ def verify_track_c_checksums(bundle: Path) -> bool:
     expected = {path.name for path in root.iterdir() if path.name != "checksums.sha256"}
     required = REQUIRED_TRACK_C_FILES - {"checksums.sha256"}
     return required.issubset(expected) and set(declared) == expected and all(
-        (root / name).is_file() and manifest_digest_matches(root / name, digest)
+        (root / name).is_file() and _sha256(root / name) == digest
         for name, digest in declared.items()
     )
 

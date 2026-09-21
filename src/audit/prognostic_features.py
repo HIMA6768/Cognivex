@@ -22,6 +22,7 @@ from src.artifacts.prognostic_features import (
     verify_and_load_track_b_source,
     verify_prognostic_feature_bundle,
 )
+from src.artifacts.checksums import manifest_digest_matches, sha256_file
 from src.contracts import COEF_EPS, DIRECTION_DISPLAY_TEXT, EffectDirection
 from src.contracts.analysis import SerializableContract
 
@@ -142,9 +143,7 @@ def finalize_prognostic_feature_audit(
 
 
 def _sha256(path: Path) -> str:
-    import hashlib
-
-    return hashlib.sha256(path.read_bytes()).hexdigest()
+    return sha256_file(path)
 
 
 def _bundle_checksums_match(bundle: Path) -> bool:
@@ -157,7 +156,7 @@ def _bundle_checksums_match(bundle: Path) -> bool:
     return (
         all(len(parts) == 2 for parts in entries)
         and {parts[1] for parts in entries} == expected
-        and all(_sha256(root / name) == digest for digest, name in entries)
+        and all(manifest_digest_matches(root / name, digest) for digest, name in entries)
     )
 
 

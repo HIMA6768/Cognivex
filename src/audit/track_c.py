@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import csv
 from dataclasses import dataclass
-import hashlib
 import json
 import math
 from pathlib import Path
@@ -20,6 +19,7 @@ from src.artifacts.track_c import (
     verify_track_c_bundle,
     verify_track_c_checksums,
 )
+from src.artifacts.checksums import manifest_digest_matches, sha256_file
 from src.contracts.analysis import SerializableContract
 from src.data import TRACK_C_CLASS_ORDER
 from src.data.metabric import MetabricPaths
@@ -93,7 +93,7 @@ class TrackCAuditReport(SerializableContract):
 
 
 def _sha256(path: Path) -> str:
-    return hashlib.sha256(path.read_bytes()).hexdigest()
+    return sha256_file(path)
 
 
 def _bundle_checksums_match(bundle: Path) -> bool:
@@ -103,7 +103,7 @@ def _bundle_checksums_match(bundle: Path) -> bool:
         return False
     for line in checksum.read_text(encoding="utf-8").splitlines():
         parts = line.split(maxsplit=1)
-        if len(parts) != 2 or not (root / parts[1]).is_file() or _sha256(root / parts[1]) != parts[0]:
+        if len(parts) != 2 or not (root / parts[1]).is_file() or not manifest_digest_matches(root / parts[1], parts[0]):
             return False
     return True
 
