@@ -3,10 +3,20 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from importlib.metadata import PackageNotFoundError, version
+import logging
 from numbers import Real
 from pathlib import Path
+import sys
 
-from src.artifacts.inference_registry import CanonicalArtifactRegistry, build_canonical_registry
+from src.artifacts.inference_registry import (
+    CanonicalArtifactRegistry,
+    R5_BUNDLE,
+    R6_BUNDLE,
+    R7_BUNDLE,
+    R8_BUNDLE,
+    build_canonical_registry,
+)
 from src.contracts.inference import (
     AnalysisRequest, AnalysisResponse, AnalysisTrack, R9_SCHEMA_VERSION,
     RequestError, TrackError, TrackOutcome, TrackReadinessState,
@@ -19,6 +29,42 @@ from src.contracts.inference import AggregateAnalysisError, PrognosticFeatureAna
 from src.contracts.model_evaluation import ModelEvaluationOutcome
 from .prognostic_features import read_prognostic_feature_analysis
 from .model_evaluation import get_frozen_model_evaluation
+
+
+LOGGER = logging.getLogger(__name__)
+_RUNTIME_PACKAGES = ("lifelines", "scikit-learn", "numpy", "pandas", "scipy", "cloudpickle")
+_CANONICAL_BUNDLES = (R5_BUNDLE, R6_BUNDLE, R7_BUNDLE, R8_BUNDLE)
+
+
+def _package_versions() -> dict[str, str]:
+    """Return non-sensitive runtime package versions for deployment diagnostics."""
+    versions: dict[str, str] = {}
+    for package in _RUNTIME_PACKAGES:
+        try:
+            versions[package] = version(package)
+        except PackageNotFoundError:
+            versions[package] = "not-installed"
+    return versions
+
+
+def _artifact_path_status(root: Path) -> dict[str, bool]:
+    """Report only canonical bundle path existence, never artifact contents."""
+    return {relative.as_posix(): (root / relative).is_dir() for relative in _CANONICAL_BUNDLES}
+
+
+def log_canonical_initialization_failure(root: Path, error: Exception) -> None:
+    """Emit server-only initialization evidence while preserving caller-safe failures."""
+    LOGGER.exception(
+        "[ONCOMAP_INIT_ERROR] canonical AnalysisService initialization failed; "
+        "exception_class=%s exception_message=%s repository_root=%s "
+        "canonical_artifacts=%s python_version=%s package_versions=%s",
+        type(error).__name__,
+        str(error),
+        root,
+        _artifact_path_status(root),
+        sys.version,
+        _package_versions(),
+    )
 
 
 class AnalysisService:

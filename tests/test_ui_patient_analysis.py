@@ -46,6 +46,25 @@ def test_patient_analysis_keeps_partial_values_for_r9_readiness() -> None:
     assert request.requested_tracks == (AnalysisTrack.TRACK_A, AnalysisTrack.TRACK_B, AnalysisTrack.TRACK_C)
 
 
+def test_patient_page_keeps_initialization_failure_user_safe(monkeypatch) -> None:
+    """Server diagnostics must not replace the public safe error state."""
+    from src.ui.pages import survival_analysis
+
+    def fail() -> object:
+        raise RuntimeError("simulated artifact loader failure")
+
+    monkeypatch.setattr(survival_analysis, "get_analysis_service", fail)
+    app = AppTest.from_file(ROOT / "app.py")
+    app.run(timeout=30)
+    app.sidebar.radio[1].set_value("Patient Analysis")
+    app.run(timeout=30)
+
+    assert not app.exception
+    assert [str(item.value) for item in app.error] == [
+        "ARTIFACT_UNAVAILABLE: Canonical analysis service is unavailable."
+    ]
+
+
 def test_patient_analysis_demo_reaches_result_first_survival_and_subtype_output() -> None:
     app = AppTest.from_file(ROOT / "app.py")
     app.run(timeout=30)

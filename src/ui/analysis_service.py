@@ -6,7 +6,7 @@ from pathlib import Path
 
 import streamlit as st
 
-from src.services.analysis import AnalysisService
+from src.services.analysis import AnalysisService, log_canonical_initialization_failure
 
 
 def repository_root() -> Path:
@@ -17,4 +17,9 @@ def repository_root() -> Path:
 @st.cache_resource(show_spinner=False)
 def get_analysis_service(root: Path | None = None) -> AnalysisService:
     """Construct the trusted R9 service once per Streamlit resource cache."""
-    return AnalysisService.from_canonical_artifacts(repository_root() if root is None else Path(root))
+    resolved_root = (repository_root() if root is None else Path(root)).resolve()
+    try:
+        return AnalysisService.from_canonical_artifacts(resolved_root)
+    except Exception as error:
+        log_canonical_initialization_failure(resolved_root, error)
+        raise
