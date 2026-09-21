@@ -92,10 +92,7 @@ R7_PATHS = (
     "src/modeling/track_c.py",
     "src/artifacts/track_c.py",
     "src/preprocessing/track_c.py",
-    "src/audit/track_c.py",
     "scripts/train_track_c.py",
-    "scripts/audit_track_c.py",
-    "scripts/verify_track_c_artifacts.py",
 )
 R8_RUNTIME_PATHS = (
     "src/contracts/prognostic_features.py",

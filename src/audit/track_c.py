@@ -42,9 +42,7 @@ R6_PATHS = (
     "src/modeling/track_b.py",
     "src/artifacts/track_b.py",
     "src/preprocessing/track_b.py",
-    "src/audit/track_b.py",
     "scripts/train_track_b.py",
-    "scripts/audit_track_b.py",
 )
 
 AUDIT_CHECK_NAMES = (
