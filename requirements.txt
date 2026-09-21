@@ -5,3 +5,4 @@ scikit-learn>=1.5,<2
 streamlit>=1.39,<2
 shap
 xgboost
+azure-cosmos
