@@ -1,89 +1,93 @@
-# Cognivex
+# 🧠 Cognivex - Multi-Modal Breast Cancer Analytics & Subtype Classification Platform
 
-Cognivex is a Python/Streamlit research prototype for **Breast Cancer Prognosis & Subtype Classification**. The central future comparison is clinical-only survival prognosis versus clinical-plus-genomic prognosis, with molecular subtype classification and gene-level model insight as separate analytical tasks.
+[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://your-streamlit-app-link.streamlit.app)
+[![Python Version](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/)
 
-## R10-B1 status
 
-OncoMap is the visible Streamlit experience for the frozen Cognivex research prototype. Its grouped navigation provides Overview, Patient Analysis, Model Evaluation, Gene Insights, Dataset, Methodology, and About. A single transient Patient Analysis flow maps structured clinical and optional 50-expression/18-mutation inputs to the existing R9 service, then presents ready Track B survival estimates first (or Track A when Track B is unavailable), frozen Track C subtype probabilities in their fixed order, and a link to separate global R8 insights. The UI never loads model artifacts, derives features, or persists patient inputs/results.
+**Cognivex** is an advanced, cloud-integrated machine learning and clinical analytics platform designed for comprehensive breast cancer patient profiling, multi-modal survival analysis, subtype classification, and model explainability using SHAP.
 
-Model Evaluation reads only a checksum-verified aggregate R9 projection of frozen R5/R6/R7 textual metrics. Gene Insights renders R8's complete global 68-effect analysis, including its frozen 24 active and 44 near-zero summary, without causal or patient-specific claims. The dashboard is responsive and intentionally uses only actual 12-, 36-, and 60-month Cox outputs for its three-point survival chart.
+---
+## 🚀 Live Demo
+live application link: 
+https://oncomap-cognivex.streamlit.app/
+---
 
-## R10-B0 status
+## 🔬 End-to-End Project Workflow & Architecture
 
-R10-A connects the Streamlit research shell to the frozen R9 public service. R10-B0 extends ready Track A and Track B results with model-estimated 1-, 3-, and 5-year survival probabilities calculated by the frozen fitted Lifelines Cox models at 12, 36, and 60 months. The existing model log relative hazard score remains available. These survival estimates are internal research estimates, not validated clinical prognoses or treatment recommendations. The Subtype Classification page renders the frozen six-class Track C subtype/probability output. Gene Insights renders R8's aggregate 68-effect table only. Inputs and results are not persisted.
+### EDA & Advanced Feature Engineering
+* **Dimensionality Reduction:** Cleaned and processed raw multi-omic datasets, reducing **694 initial features** down to a highly optimized and predictive subset containing **21 clinical features, 50 genes, and 18 mutated features**.
+* **Feature Selection Techniques:** Applied statistical feature engineering, model-based feature selection, and ANOVA tests to isolate the most clinically relevant biomarkers.
 
-## R9 status
+###  Multi-Modal Survival Analysis (`lifelines`)
+* **Clinical-Only Baseline:** Modeled patient survival probabilities utilizing standard clinical parameters using the `lifelines` library.
+* **Multi-Modal Integration:** Evaluated shifts and performance changes in survival predictions upon combining clinical metrics with genomic and mutation profiles.
 
-R9 adds a framework-independent, trusted-local analysis service over the frozen R5, R6, R7, and R8 artifacts. It verifies text contracts and checksums before trusted pickle deserialization, initializes each track independently, and exposes only in-memory R5/R6 log-relative-hazard scores and the R7 subtype/probability output. Requests, feature values, patient identifiers, predictions, and probabilities are never persisted. This is research software, not a clinical decision system.
+###  Subtype Classification Pipeline
+Trained and benchmarked multiple state-of-the-art machine learning algorithms for robust breast cancer subtype classification:
+* **Logistic Regression**
+* **Random Forest**
+* **XGBoost**
+* **Support Vector Machines (SVM)**
 
-## R8 status
+### Cloud Database Integration
+* Securely connected with **Azure Cosmos DB** to dynamically fetch, manage, and store patient records and analytical insights in real time.
 
-R8 adds a read-only prognostic genomic feature analysis of the frozen R6 Track B penalized Cox model. It excludes all 12 encoded clinical outputs and retains the complete ordered set of 50 expression plus 18 mutation-presence coefficients. Activity uses the frozen numerical rule `abs(beta) > 1e-6`; ranking uses descending absolute beta followed by frozen genomic order.
+###  Patient-Centric Predictive Insights
+* Generates granular, individual-level predictions for both patient survival probabilities and molecular subtypes through an intuitive interface.
 
-The current frozen evidence has 24 active and 44 effectively-zero coefficients. All 68 remain in the canonical table. These are model-associated coefficients from one internally evaluated penalized model—not causal effects, validated biomarkers, or clinical recommendations. R8 performs no fitting and persists no patient-level data.
+### Explainablity with SHAP
+* Integrated **SHAP (SHapley Additive exPlanations)** to ensure clinical transparency, utilizing:
+  * **Bar Plots** for global feature importance.
+  * **Decision Plots** for multi-feature pathway evaluations.
+  * **Force Plots** for individualized patient prediction breakdowns.
 
-The aggregate bundle is under `artifacts/analysis/r8-prognostic-features-v1/`, with a read-only verifier and independent 30-check audit. See [R8 analysis details](docs/prognostic_feature_analysis.md).
+---
 
-## R7 status
 
-R7 adds a six-class molecular subtype classifier using exactly 50 selected expression features and 18 R4D-derived mutation-presence features, with zero clinical predictors. Track C eligibility is 1,330 train, 285 validation, and 283 test; NC exclusions are 2/1/3 and apply only to Track C.
+## 🛠️ Tech Stack & Libraries
+* **Frontend & UI:** Streamlit
+* **Survival Analysis:** `lifelines`
+* **Machine Learning & Modeling:** Scikit-Learn(Logistic Regression, Random Forest, SVM), XGBoost, Joblib
+* **Explainable AI:** SHAP
+* **Cloud Infrastructure:** Azure Cosmos DB (`azure-cosmos`)
+* **Environment/Config:** Python-Dotenv, Streamlit Secrets (TOML)
 
-Four frozen candidates were selected by validation Macro-F1 only. Random Forest won at 0.771384 validation Macro-F1. Its one-time final test evaluation produced Macro-F1 0.734176, weighted F1 0.748642, accuracy 0.749117, and balanced accuracy 0.719373. These are locked internal-split research results, not clinical validation or biological evidence. The test set did not influence selection.
+---
 
-The ignored trusted-local pipeline and committed aggregate evidence live under `artifacts/models/track_c/r7-track-c-v1/`; a read-only reload verifier and independent 28-check audit reproduce the frozen result.
+## ⚙️ Installation & Local Setup
 
-## R6 survival foundation
+1. **Clone the repository:**
+   ```bash
+   git clone [https://github.com/HIMA6768/Cognivex.git](https://github.com/HIMA6768/Cognivex.git)
+   cd Cognivex
+   ```
 
-R6 adds a penalized clinical-plus-genomic Cox proportional-hazards comparison on top of the frozen R5A clinical baseline and canonical R2–R4D METABRIC foundation. The repository includes:
+2. **Install dependencies:**
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-- seven research-oriented navigation destinations;
-- a responsive, accessible visual system;
-- domain-neutral environment configuration;
-- framework-independent pending-result contracts;
-- SHA-256, schema, mapping, and locked-split validation;
-- aggregate-only cohort/session-state integration; and
-- deterministic error/warning/information quality findings, cached with the validated cohort;
-- fresh sklearn-compatible preprocessors for clinical survival, clinical-plus-mRNA survival, subtype classification, and clinical-plus-mutation survival; and
-- fit-local binary mutation selection at an inclusive 5% prevalence threshold plus all-173-gene log1p mutation burden; and
-- a train-only, unpenalized Track A `CoxPHFitter` with fixed reference-category encoding, validation-only development evaluation, PH diagnostics, and versioned local artifacts; and
-- a Track B pipeline with the same seven raw clinical predictors, exactly 50 selected expression predictors, exactly 18 R4D-derived mutation-presence predictors, validation-only regularization selection, and versioned local artifacts; and
-- a persistent research/educational disclaimer.
+3. **Configure Environment Secrets:**
+   Setup Streamlit Cloud Secrets (TOML format) or a `.env` file locally:
+   ```toml
+   URL = "your_azure_cosmos_url"
+   KEY = "your_azure_cosmos_key"
+   database = "breastcancer_DB"
+   container = "patient_details"
+   ```
 
-The active application uses `data/metabric/prepared/METABRIC_prepared.csv` for cohort records. The immutable raw source and supplied metadata are retained for integrity and reproducibility checks. No patient-level rows are rendered.
+4. **Run the application locally:**
+   ```bash
+   streamlit run app.py
+   ```
 
-The current canonical scan is `DATA_QUALITY_READY_WITH_WARNINGS`. Track A produces 12 reference-coded model features. Track B produces 80 model features from the frozen seven-field clinical contract plus the explicit 68-field genomic contract. All six predefined penalized Cox candidates converged; validation selected `penalizer=0.05`, `l1_ratio=0.5`. Track B C-index was 0.685775 on training, 0.644544 on validation, and 0.640915 on the one-time frozen-winner test evaluation. Relative to frozen Track A, the delta was -0.006152 on validation and +0.015932 on test. These are internal development results, not clinical-performance claims or evidence of generalizable genomic benefit.
+---
+## 👥 Contributors
+* Sajal Kumar
+*  Himadri Ghosh
+* Anay Mishra
+* Ajiti Kumari Shaw
+* Saurav Kumar
+* Siddharth Thakur
 
-## R6 provenance
 
-The AI-engineer `cognivex_ml/` tree remains disconnected reference material. The active model reads only `data/metabric/prepared/METABRIC_prepared.csv` with the locked 1,332/286/286 manifest. The 18 annotation-string mutation fields are converted through the existing R4D contract without modifying the source CSV: trimmed numeric zero is absence, valid non-zero annotation is presence, and missing/malformed values fail clearly. Historical engineer pickles are not loaded.
-
-## Run locally
-
-Requires Python 3.11 or newer.
-
-```powershell
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-pip install -r requirements.txt
-python -m pip install -e ".[dev]"
-streamlit run app.py
-```
-
-For a headless health check after startup:
-
-```powershell
-streamlit run app.py --server.headless true --server.port 8501
-Invoke-WebRequest http://localhost:8501/_stcore/health
-```
-
-Run tests with:
-
-```powershell
-python -m pytest -q
-```
-
-## Safety boundary
-
-This is a research and educational prototype. It is not a diagnostic medical device, treatment recommendation system, validated clinical prognosis system, or substitute for qualified oncology care. Do not use it for patient care.
-
-See the generated [R8 report](artifacts/analysis/r8-prognostic-features-v1/report.md), [R7 report](artifacts/models/track_c/r7-track-c-v1/report.md), [R6 report](artifacts/models/track_b/r6-track-b-v1/report.md), [R6-P0 compatibility audit](docs/r6_p0_engineer_compatibility.md), [R5A survival baseline](docs/survival_baseline.md), [architecture](docs/architecture.md), [model training](docs/model_training.md), [model evaluation](docs/model_evaluation.md), [testing](docs/testing.md), and [limitations](docs/limitations.md).
